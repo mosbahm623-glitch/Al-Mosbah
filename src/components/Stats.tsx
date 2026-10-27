@@ -1,6 +1,6 @@
 import { money } from '../lib/format'
 
-export type Stat = { label: string; value: number; tone?: 'ok' | 'err' }
+type Stat = { label: string; value: number; tone?: 'ok' | 'err' }
 
 /** Row of amount tiles (ج.م) used at the top of the detail pages. */
 export default function Stats({ items }: { items: Stat[] }) {

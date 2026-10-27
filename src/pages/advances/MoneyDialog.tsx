@@ -37,8 +37,8 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
     setError(null)
     const values = { amount: value, [cfg.dateColumn]: date, ...(cfg.notes ? { notes: notes.trim() || null } : {}) }
     const { error: err } = row
-      ? await supabase.from(cfg.table).update(values).eq('id', row.id)
-      : await supabase.from(cfg.table).insert({ ...values, advance_id: advanceId })
+      ? await supabase.from(cfg.table).update(values as never).eq('id', row.id)
+      : await supabase.from(cfg.table).insert({ ...values, advance_id: advanceId } as never)
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')
     onSaved()

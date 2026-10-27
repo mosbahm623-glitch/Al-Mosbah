@@ -16,7 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-export type NavItem = {
+type NavItem = {
   path: string
   label: string
   icon: LucideIcon
@@ -25,7 +25,7 @@ export type NavItem = {
   module?: Module
 }
 
-export type NavGroup = { title?: string; items: NavItem[] }
+type NavGroup = { title?: string; items: NavItem[] }
 
 export const NAV: NavGroup[] = [
   {

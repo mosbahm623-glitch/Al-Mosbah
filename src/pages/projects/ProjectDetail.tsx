@@ -9,7 +9,7 @@ import { useProjectData } from '../../lib/useProjectData'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
 import StatusChip from './StatusChip'
 import ProjectDialog from './ProjectDialog'
-import EntryDialog from './EntryDialog'
+import EntryDialog from '../../components/EntryDialog'
 import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {

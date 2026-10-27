@@ -37,7 +37,8 @@ export default function ProjectReport({ id }: { id: string }) {
   const data = entries
   const balance = project.income - project.expenses
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
-  const cols = withContractor ? 6 : 5
+  const withBank = entries.some((e) => e.bank)
+  const cols = 5 + (withContractor ? 1 : 0) + (withBank ? 1 : 0)
 
   async function excel() {
     if (!project) return
@@ -157,6 +158,7 @@ export default function ProjectReport({ id }: { id: string }) {
                 <th className="w-date">التاريخ</th>
                 <th>اسم المصروف</th>
                 {withContractor && <th>المقاول</th>}
+                {withBank && <th>البنك</th>}
                 <th>ملاحظات</th>
                 <th className="w-amount">المبلغ</th>
               </tr>
@@ -168,6 +170,7 @@ export default function ProjectReport({ id }: { id: string }) {
                   <td className="num">{dateText(e.entry_date)}</td>
                   <td>{e.item}</td>
                   {withContractor && <td>{e.contractor?.name}</td>}
+                  {withBank && <td>{e.bank?.name}</td>}
                   <td>{e.notes}</td>
                   <td className="num">{money(e.amount)}</td>
                 </tr>

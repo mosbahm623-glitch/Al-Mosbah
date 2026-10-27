@@ -73,6 +73,7 @@ export default function EntryList({ entries, isAdmin, onEdit }: Props) {
                   <th>البند</th>
                   <th>اسم المصروف</th>
                   <th>المقاول</th>
+                  <th>البنك</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
                   {isAdmin && <th><span className="sr-only">إجراءات</span></th>}
@@ -92,6 +93,7 @@ export default function EntryList({ entries, isAdmin, onEdit }: Props) {
                     <td>{e.category}</td>
                     <td className="strong">{e.item}{e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}</td>
                     <td className="muted">{e.contractor?.name}</td>
+                    <td className="muted">{e.bank?.name}</td>
                     <td className="muted">{e.notes}</td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}

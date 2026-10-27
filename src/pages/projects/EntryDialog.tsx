@@ -13,6 +13,7 @@ const KINDS = [
 
 type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 type Contractor = { id: string; name: string }
+type Bank = { id: string; name: string }
 
 type Props = {
   projectId: string
@@ -30,11 +31,14 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   const fetchContractors = useCallback(() => supabase.from('contractors').select('id,name').order('name'), [])
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Contractor[]>(fetchContractors)
+  const fetchBanks = useCallback(() => supabase.from('bank_accounts').select('id,name').order('name'), [])
+  const banks = useAsync<Bank[]>(fetchBanks)
 
   const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
   const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')
   const [itemName, setItemName] = useState(entry?.item ?? '')
   const [contractorName, setContractorName] = useState(entry?.contractor?.name ?? '')
+  const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
   const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
   const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
   const [date, setDate] = useState(() => entry?.entry_date ?? new Date().toLocaleDateString('en-CA'))
@@ -63,6 +67,13 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     const existing = contractors.data?.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
     if (existing) return existing.id
     const { data, error: err } = await supabase.from('contractors').insert({ name }).select('id').single()
+    return err || !data ? null : (data.id as string)
+  }
+
+  async function findOrCreateBank(name: string) {
+    const existing = banks.data?.find((b) => b.name.trim().toLowerCase() === name.toLowerCase())
+    if (existing) return existing.id
+    const { data, error: err } = await supabase.from('bank_accounts').insert({ name }).select('id').single()
     return err || !data ? null : (data.id as string)
   }
 
@@ -95,6 +106,14 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
         return setError('ما قدرناش نحفظ اسم المقاول، جرّب تاني')
       }
     }
+    let bankId: string | null = null
+    if (isExpense && !fromAdvance && bankName.trim()) {
+      bankId = await findOrCreateBank(bankName.trim())
+      if (!bankId) {
+        setSaving(false)
+        return setError('ما قدرناش نحفظ اسم البنك، جرّب تاني')
+      }
+    }
     if (isExpense && category && !category.expense_items.some((i) => i.name === itemName.trim())) {
       // remember the name so it shows up as a suggestion next time; the entry does not depend on it
       await supabase.from('expense_items').insert({ name: itemName.trim(), category_id: category.id })
@@ -105,6 +124,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
       category: isExpense ? category!.name : incomeLabel.trim(),
       item: isExpense ? itemName.trim() : null,
       contractor_id: contractorId,
+      bank_id: bankId,
       amount: value,
       entry_date: date,
       notes: notes.trim() || null,
@@ -176,6 +196,15 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
                 {contractors.data?.map((c) => <option key={c.id} value={c.name} />)}
               </datalist>
             </label>
+            {!fromAdvance && (
+              <label className="field">
+                البنك / الحساب
+                <input value={bankName} onChange={(e) => setBankName(e.target.value)} list="bank-names" placeholder="مدفوع من أنهي بنك (اختياري)" />
+                <datalist id="bank-names">
+                  {banks.data?.map((b) => <option key={b.id} value={b.name} />)}
+                </datalist>
+              </label>
+            )}
           </>
         ) : (
           <label className="field span-2">

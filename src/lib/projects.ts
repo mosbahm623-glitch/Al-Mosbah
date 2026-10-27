@@ -20,6 +20,7 @@ export type Entry = {
   category: string
   item: string | null
   contractor: { name: string } | null
+  bank: { name: string } | null
   amount: number
   entry_date: string
   notes: string | null
@@ -36,7 +37,7 @@ export const isOver = (p: ProjectSummary) => p.budget > 0 && p.expenses > p.budg
 /** Per-project totals, computed in the database (see migration 005). */
 export const fetchSummaries = () => supabase.rpc('project_summaries')
 
-export const ENTRY_COLUMNS = 'id,seq,kind,category,item,amount,entry_date,notes,advance_id,contractor:contractors(name)'
+export const ENTRY_COLUMNS = 'id,seq,kind,category,item,amount,entry_date,notes,advance_id,contractor:contractors(name),bank:bank_accounts(name)'
 
 export const fetchEntries = (projectId: string) =>
   supabase

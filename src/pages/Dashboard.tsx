@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
+import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
-type OverBudget = { id: string; name: string; budget: number; spent: number }
+type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
 
 type Summary = {
   total_income: number
@@ -10,11 +11,12 @@ type Summary = {
   contractor_dues: number
   active_projects: number
   net_cash: number
-  over_budget: OverBudget[]
+  over_count: number
+  budget_rows: BudgetRow[]
 }
 
 const nf = new Intl.NumberFormat('ar-EG-u-nu-latn', { maximumFractionDigits: 2 })
-const money = (n: number) => `${nf.format(n)} ج.م`
+const money = (n: number) => nf.format(n)
 
 export default function Dashboard() {
   const [data, setData] = useState<Summary | null>(null)
@@ -49,9 +51,16 @@ export default function Dashboard() {
   return (
     <div className="page-stack">
       <div className="page-head">
-        <h1 className="page-title">لوحة التحكم</h1>
-        <button className="btn btn-small btn-ghost" onClick={refresh} disabled={loading}>
-          {loading ? '...' : 'تحديث'}
+        <div>
+          <nav className="crumbs" aria-label="مسار التنقل">
+            <span>الرئيسية</span>
+            <span aria-hidden="true">‹</span>
+            <span className="crumb-current">لوحة التحكم</span>
+          </nav>
+          <h1 className="page-title">لوحة التحكم</h1>
+        </div>
+        <button className="btn" onClick={refresh} disabled={loading}>
+          {loading ? 'جارٍ التحديث...' : 'تحديث'}
         </button>
       </div>
 
@@ -59,35 +68,54 @@ export default function Dashboard() {
 
       {data && (
         <>
-          <section className="card hero">
-            <span className="muted">صافي النقدية</span>
-            <strong className={data.net_cash < 0 ? 'neg' : 'pos'}>{money(data.net_cash)}</strong>
-            <span className="muted small">الوارد − المصاريف − العهد + مستحقات المقاولين</span>
+          <section className="tiles" aria-label="المؤشرات">
+            <Tile label="صافي النقدية" value={money(data.net_cash)} unit="ج.م" icon={Banknote} tone={data.net_cash < 0 ? 'err' : 'ok'} big />
+            <Tile label="إجمالي الوارد" value={money(data.total_income)} unit="ج.م" icon={TrendingUp} tone="blue" />
+            <Tile label="إجمالي المصاريف" value={money(data.total_expenses)} unit="ج.م" icon={TrendingDown} tone="err" />
+            <Tile label="إجمالي العهد" value={money(data.total_advances)} unit="ج.م" icon={HandCoins} tone="neutral" />
+            <Tile label="مستحقات المقاولين" value={money(data.contractor_dues)} unit="ج.م" icon={HardHat} tone="warn" />
+            <Tile label="المشاريع النشطة" value={nf.format(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
           </section>
 
-          <section className="grid">
-            <Stat label="إجمالي الوارد" value={money(data.total_income)} />
-            <Stat label="إجمالي المصاريف" value={money(data.total_expenses)} />
-            <Stat label="إجمالي العهد" value={money(data.total_advances)} />
-            <Stat label="مستحقات المقاولين" value={money(data.contractor_dues)} />
-            <Stat label="المشاريع النشطة" value={nf.format(data.active_projects)} />
-          </section>
-
-          <section className="card">
-            <h2>تنبيهات</h2>
-            {data.over_budget.length === 0 ? (
-              <p className="muted">مفيش مشاريع تجاوزت الميزانية.</p>
+          <section className="panel">
+            <div className="panel-head">
+              <h2>ميزانية المشاريع</h2>
+              {data.over_count > 0 ? (
+                <span className="chip chip-err">{nf.format(data.over_count)} تنبيه تجاوز</span>
+              ) : (
+                <span className="chip chip-ok">مفيش تجاوزات</span>
+              )}
+            </div>
+            {data.budget_rows.length === 0 ? (
+              <p className="empty">مفيش مشاريع نشطة ليها ميزانية لسه.</p>
             ) : (
-              <ul className="alerts">
-                {data.over_budget.map((p) => (
-                  <li key={p.id}>
-                    <strong>{p.name}</strong>
-                    <span>
-                      تجاوز الميزانية بـ {money(p.spent - p.budget)} (المصروف {money(p.spent)} من {money(p.budget)})
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>المشروع</th>
+                      <th>الميزانية</th>
+                      <th>المصروف</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.budget_rows.map((r) => (
+                      <tr key={r.id}>
+                        <td className="strong">{r.name}</td>
+                        <td className="num">{money(r.budget)}</td>
+                        <td className="num">{money(r.spent)}</td>
+                        <td>
+                          <span className={`chip ${r.over ? 'chip-err' : 'chip-ok'}`}>
+                            <span className="dot" aria-hidden="true" />
+                            {r.over ? 'تجاوز الميزانية' : 'ضمن الميزانية'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </section>
         </>
@@ -96,11 +124,33 @@ export default function Dashboard() {
   )
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Tile({
+  label,
+  value,
+  unit,
+  icon: Icon,
+  tone,
+  big,
+}: {
+  label: string
+  value: string
+  unit: string
+  icon: LucideIcon
+  tone: 'ok' | 'err' | 'blue' | 'warn' | 'neutral'
+  big?: boolean
+}) {
   return (
-    <div className="card stat">
-      <span className="muted small">{label}</span>
-      <strong>{value}</strong>
+    <div className={`tile ${big ? 'tile-big' : ''}`}>
+      <div className="tile-top">
+        <span className="muted small">{label}</span>
+        <span className={`chip-icon tone-${tone}`}>
+          <Icon size={17} aria-hidden="true" />
+        </span>
+      </div>
+      <div className="tile-value">
+        <strong className={big ? `tone-text-${tone}` : ''}>{value}</strong>
+        <span className="muted small">{unit}</span>
+      </div>
     </div>
   )
 }

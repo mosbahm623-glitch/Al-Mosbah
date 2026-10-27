@@ -5,7 +5,7 @@ function subscribe(cb: () => void) {
   return () => window.removeEventListener('hashchange', cb)
 }
 
-const read = () => window.location.hash.replace(/^#\/?/, '') || 'dashboard'
+const read = () => window.location.hash.replace(/^#\/?/, '').split('?')[0] || 'dashboard'
 
 /** Hash routing: works on GitHub Pages with no server rewrites. */
 export function useRoute() {

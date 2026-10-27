@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Bell, LogOut, Menu, Moon, Sun } from 'lucide-react'
+import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
@@ -76,7 +76,23 @@ export default function Layout({ children }: { children: ReactNode }) {
           <span className="brandname">المصباح</span>
         </a>
 
+        <form
+          className="top-search"
+          role="search"
+          onSubmit={(e) => {
+            e.preventDefault()
+            const q = new FormData(e.currentTarget).get('q')?.toString().trim() ?? ''
+            window.location.hash = `#/search${q ? `?q=${encodeURIComponent(q)}` : ''}`
+          }}
+        >
+          <Search size={18} aria-hidden="true" />
+          <input name="q" type="search" placeholder="بحث برقم القيد أو اسم المشروع" aria-label="بحث" />
+        </form>
+
         <div className="top-actions">
+          <a className="top-btn search-link" href="#/search" aria-label="بحث">
+            <Search size={20} />
+          </a>
           <button
             className="top-btn"
             onClick={toggleTheme}

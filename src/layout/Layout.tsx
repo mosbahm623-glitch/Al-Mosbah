@@ -18,7 +18,7 @@ function initialOpen(): boolean {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, can } = useAuth()
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
@@ -124,7 +124,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside id="sidebar" className="sidebar" aria-label="القائمة الرئيسية" inert={!open}>
         <nav className="sidebar-nav">
           {NAV.map((group, i) => {
-            const items = group.items.filter((it) => !it.adminOnly || isAdmin)
+            const items = group.items.filter((it) => (it.adminOnly ? isAdmin : !it.module || can(it.module)))
             if (items.length === 0) return null
             return (
               <div className="nav-group" key={i}>

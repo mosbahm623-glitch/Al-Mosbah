@@ -10,9 +10,9 @@ const KINDS = [
   { value: 'expense', label: 'مصروف' },
 ] as const
 
-type Props = { entries: Entry[]; isAdmin: boolean; onEdit: (e: Entry) => void }
+type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void }
 
-export default function EntryList({ entries, isAdmin, onEdit }: Props) {
+export default function EntryList({ entries, canEdit, onEdit }: Props) {
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
 
@@ -76,7 +76,7 @@ export default function EntryList({ entries, isAdmin, onEdit }: Props) {
                   <th>البنك</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
-                  {isAdmin && <th><span className="sr-only">إجراءات</span></th>}
+                  {canEdit && <th><span className="sr-only">إجراءات</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -99,7 +99,7 @@ export default function EntryList({ entries, isAdmin, onEdit }: Props) {
                       {e.kind === 'income' ? '+' : '−'}
                       {money(e.amount)}
                     </td>
-                    {isAdmin && (
+                    {canEdit && (
                       <td>
                         <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
                           <Pencil size={17} />

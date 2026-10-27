@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { allows, type Level, type Module, type Permissions } from './permissions'
 
 export type Profile = {
   id: string
@@ -13,6 +14,8 @@ type AuthState = {
   loading: boolean
   session: Session | null
   profile: Profile | null
+  /** can the current user open (view) or change (edit) this page? */
+  can: (module: Module, level?: Level) => boolean
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -24,10 +27,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [permissions, setPermissions] = useState<Permissions>({})
 
   const loadProfile = useCallback(async (userId: string | null) => {
     if (!userId) {
       setProfile(null)
+      setPermissions({})
       return
     }
     const { data } = await supabase
@@ -36,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', userId)
       .maybeSingle()
     setProfile((data as Profile | null) ?? null)
+    const { data: rows } = await supabase.from('user_permissions').select('module,level').eq('user_id', userId)
+    setPermissions(Object.fromEntries((rows ?? []).map((r) => [r.module, r.level])) as Permissions)
   }, [])
 
   useEffect(() => {
@@ -62,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       session,
       profile,
+      can: (module, level = 'view') => allows(profile?.role === 'admin', permissions, module, level),
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return error ? translateAuthError(error.message) : null
@@ -71,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshProfile: async () => loadProfile(session?.user.id ?? null),
     }),
-    [loading, session, profile, loadProfile],
+    [loading, session, profile, permissions, loadProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -1,0 +1,89 @@
+import { useState } from 'react'
+import { Pencil, Plus } from 'lucide-react'
+import { useAuth } from '../../auth/AuthProvider'
+import { LEVEL_LABEL, MODULES } from '../../auth/permissions'
+import { fetchUsers, type UserRow } from '../../lib/users'
+import { useAsync } from '../../lib/useAsync'
+import NewUserDialog from './NewUserDialog'
+import UserDialog from './UserDialog'
+
+export default function Users() {
+  const { profile } = useAuth()
+  const users = useAsync<UserRow[]>(fetchUsers)
+  const [adding, setAdding] = useState(false)
+  const [editing, setEditing] = useState<UserRow | null>(null)
+
+  return (
+    <div className="page-stack">
+      <div className="page-head">
+        <div>
+          <nav className="crumbs" aria-label="مسار التنقل">
+            <span>الرئيسية</span>
+            <span aria-hidden="true">‹</span>
+            <span className="crumb-current">المستخدمين</span>
+          </nav>
+          <h1 className="page-title">المستخدمين والصلاحيات</h1>
+        </div>
+        <button className="btn btn-icon" onClick={() => setAdding(true)}>
+          <Plus size={18} aria-hidden="true" />
+          مستخدم جديد
+        </button>
+      </div>
+
+      {users.failed && <p className="msg msg-error">مقدرناش نحمّل المستخدمين، جرّب تاني</p>}
+      {users.loading && !users.data && <p className="muted">جارٍ التحميل...</p>}
+
+      {users.data && (
+        <section className="panel">
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الإيميل</th>
+                  <th>الدور</th>
+                  <th>الحالة</th>
+                  <th>الصفحات</th>
+                  <th><span className="sr-only">إجراءات</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.data.map((u) => (
+                  <tr key={u.id}>
+                    <td className="strong">{u.full_name ?? '—'}</td>
+                    <td className="muted" dir="ltr">{u.email}</td>
+                    <td>{u.role === 'admin' ? 'أدمن' : 'مستخدم'}</td>
+                    <td>
+                      <span className={`chip ${u.is_active ? 'chip-ok' : 'chip-neutral'}`}>
+                        <span className="dot" />
+                        {u.is_active ? 'مفعّل' : 'موقوف'}
+                      </span>
+                    </td>
+                    <td className="muted small">
+                      {u.role === 'admin'
+                        ? 'كل الصفحات'
+                        : u.permissions.length
+                          ? MODULES.flatMap((m) => {
+                              const p = u.permissions.find((x) => x.module === m.id)
+                              return p ? [`${m.label} (${LEVEL_LABEL[p.level]})`] : []
+                            }).join(' · ')
+                          : 'مفيش صلاحيات'}
+                    </td>
+                    <td>
+                      <button className="icon-btn" aria-label={`صلاحيات ${u.full_name ?? ''}`} onClick={() => setEditing(u)}>
+                        <Pencil size={16} aria-hidden="true" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {adding && <NewUserDialog onClose={() => setAdding(false)} onCreated={users.reload} />}
+      {editing && <UserDialog user={editing} isSelf={editing.id === profile?.id} onClose={() => setEditing(null)} onSaved={users.reload} />}
+    </div>
+  )
+}

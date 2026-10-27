@@ -11,8 +11,8 @@ import EntryDialog from './EntryDialog'
 import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {
-  const { profile } = useAuth()
-  const isAdmin = profile?.role === 'admin'
+  const { can } = useAuth()
+  const canEdit = can('projects', 'edit')
   const { project, projects, entries, loading, failed, reload } = useProjectData(id)
   const [dialog, setDialog] = useState<'entry' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
@@ -65,7 +65,7 @@ export default function ProjectDetail({ id }: { id: string }) {
             <FileText size={18} aria-hidden="true" />
             تقرير / تصدير
           </a>
-          {isAdmin && (<>
+          {canEdit && (<>
             <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
               <Pencil size={18} aria-hidden="true" />
               تعديل
@@ -97,7 +97,7 @@ export default function ProjectDetail({ id }: { id: string }) {
         </section>
       )}
 
-      {entries && <EntryList entries={entries} isAdmin={isAdmin} onEdit={setEditing} />}
+      {entries && <EntryList entries={entries} canEdit={canEdit} onEdit={setEditing} />}
 
       {dialog === 'entry' && (
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reload} />

@@ -1,3 +1,4 @@
+import type { Module } from '../auth/permissions'
 import {
   BookOpen,
   Bell,
@@ -10,6 +11,7 @@ import {
   MessageCircle,
   FolderKanban,
   Search,
+  Users,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -18,6 +20,8 @@ export type NavItem = {
   label: string
   icon: LucideIcon
   adminOnly?: boolean
+  /** visible only to users who were granted this page */
+  module?: Module
 }
 
 export type NavGroup = { title?: string; items: NavItem[] }
@@ -25,22 +29,23 @@ export type NavGroup = { title?: string; items: NavItem[] }
 export const NAV: NavGroup[] = [
   {
     items: [
-      { path: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
-      { path: 'projects', label: 'المشاريع', icon: FolderKanban },
-      { path: 'advances', label: 'العهد', icon: HandCoins },
-      { path: 'contractors', label: 'مستحقات المقاولين', icon: HardHat },
+      { path: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, module: 'dashboard' },
+      { path: 'projects', label: 'المشاريع', icon: FolderKanban, module: 'projects' },
+      { path: 'advances', label: 'العهد', icon: HandCoins, module: 'advances' },
+      { path: 'contractors', label: 'مستحقات المقاولين', icon: HardHat, module: 'contractors' },
       { path: 'approvals', label: 'الموافقات', icon: CheckSquare, adminOnly: true },
-      { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart },
+      { path: 'users', label: 'المستخدمين', icon: Users, adminOnly: true },
+      { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart, module: 'reports' },
     ],
   },
   {
     title: 'أدوات',
     items: [
-      { path: 'search', label: 'بحث برقم القيد', icon: Search },
-      { path: 'journal', label: 'Booking Journal', icon: BookOpen },
-      { path: 'my-payments', label: 'دفعاتي', icon: CreditCard },
-      { path: 'notifications', label: 'إشعارات', icon: Bell },
-      { path: 'whatsapp', label: 'إرسال واتساب', icon: MessageCircle },
+      { path: 'search', label: 'بحث برقم القيد', icon: Search, module: 'tools' },
+      { path: 'journal', label: 'Booking Journal', icon: BookOpen, module: 'tools' },
+      { path: 'my-payments', label: 'دفعاتي', icon: CreditCard, module: 'tools' },
+      { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
+      { path: 'whatsapp', label: 'إرسال واتساب', icon: MessageCircle, module: 'tools' },
     ],
   },
 ]

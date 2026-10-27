@@ -21,8 +21,8 @@ const TYPES = [
 ] as const
 
 export default function Projects() {
-  const { profile } = useAuth()
-  const isAdmin = profile?.role === 'admin'
+  const { can } = useAuth()
+  const canEdit = can('projects', 'edit')
   const { data, failed, loading, reload } = useAsync<ProjectSummary[]>(fetchSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')
@@ -53,7 +53,7 @@ export default function Projects() {
           </nav>
           <h1 className="page-title">المشاريع</h1>
         </div>
-        {isAdmin && (
+        {canEdit && (
           <button className="btn btn-icon" onClick={() => setAdding(true)}>
             <Plus size={18} aria-hidden="true" />
             مشروع جديد

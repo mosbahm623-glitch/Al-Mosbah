@@ -35,6 +35,7 @@ export default function ProjectDetail({ id }: { id: string }) {
   const entries = useAsync<Entry[]>(fetchEntries)
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [dialog, setDialog] = useState<'entry' | 'edit' | null>(null)
+  const [editing, setEditing] = useState<Entry | null>(null)
 
   const project = summaries.data?.find((p) => p.id === id)
   const shown = useMemo(() => (entries.data ?? []).filter((e) => kind === 'all' || e.kind === kind), [entries.data, kind])
@@ -130,6 +131,7 @@ export default function ProjectDetail({ id }: { id: string }) {
                   <th>المقاول</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
+                  {isAdmin && <th><span className="sr-only">إجراءات</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -151,6 +153,13 @@ export default function ProjectDetail({ id }: { id: string }) {
                       {e.kind === 'income' ? '+' : '−'}
                       {money(e.amount)}
                     </td>
+                    {isAdmin && (
+                      <td>
+                        <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditing(e)}>
+                          <Pencil size={17} />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -161,6 +170,9 @@ export default function ProjectDetail({ id }: { id: string }) {
 
       {dialog === 'entry' && (
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reloadAll} />
+      )}
+      {editing && (
+        <EntryDialog projectId={id} projectName={project.name} entry={editing} onClose={() => setEditing(null)} onSaved={reloadAll} />
       )}
       {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reloadAll} />}
     </div>

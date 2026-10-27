@@ -4,6 +4,7 @@ import Segmented from '../../components/Segmented'
 import CreatableSelect from '../../components/CreatableSelect'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
+import type { Entry } from './types'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },
@@ -13,9 +14,9 @@ const KINDS = [
 type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 type Contractor = { id: string; name: string }
 
-type Props = { projectId: string; projectName: string; onClose: () => void; onSaved: () => void }
+type Props = { projectId: string; projectName: string; entry?: Entry; onClose: () => void; onSaved: () => void }
 
-export default function EntryDialog({ projectId, projectName, onClose, onSaved }: Props) {
+export default function EntryDialog({ projectId, projectName, entry, onClose, onSaved }: Props) {
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
@@ -24,25 +25,29 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Contractor[]>(fetchContractors)
 
-  const [kind, setKind] = useState<'income' | 'expense'>('expense')
-  const [categoryId, setCategoryId] = useState('')
-  const [itemName, setItemName] = useState('')
-  const [contractorName, setContractorName] = useState('')
-  const [incomeLabel, setIncomeLabel] = useState('')
-  const [amount, setAmount] = useState('')
-  const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'))
-  const [notes, setNotes] = useState('')
+  const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
+  const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')
+  const [itemName, setItemName] = useState(entry?.item ?? '')
+  const [contractorName, setContractorName] = useState(entry?.contractor?.name ?? '')
+  const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
+  const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
+  const [date, setDate] = useState(() => entry?.entry_date ?? new Date().toLocaleDateString('en-CA'))
+  const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const category = categories.data?.find((c) => c.id === categoryId)
-  const categoryOptions = useMemo(() => (categories.data ?? []).map((c) => ({ value: c.id, label: c.name })), [categories.data])
+  const category = categories.data?.find((c) => c.name === categoryName)
+  const categoryOptions = useMemo(() => {
+    const names = (categories.data ?? []).map((c) => c.name)
+    if (categoryName && !names.includes(categoryName)) names.push(categoryName)
+    return names.map((n) => ({ value: n, label: n }))
+  }, [categories.data, categoryName])
 
   async function createCategory(name: string) {
     const { data, error: err } = await supabase.from('expense_categories').insert({ name }).select('id').single()
     if (err || !data) return null
     categories.reload()
-    return data.id as string
+    return name
   }
 
   async function findOrCreateContractor(name: string) {
@@ -74,7 +79,7 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
       // remember the name so it shows up as a suggestion next time; the entry does not depend on it
       await supabase.from('expense_items').insert({ name: itemName.trim(), category_id: category.id })
     }
-    const { error: err } = await supabase.from('entries').insert({
+    const row = {
       project_id: projectId,
       kind,
       category: isExpense ? category!.name : incomeLabel.trim(),
@@ -83,7 +88,10 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
       amount: value,
       entry_date: date,
       notes: notes.trim() || null,
-    })
+    }
+    const { error: err } = entry
+      ? await supabase.from('entries').update(row).eq('id', entry.id)
+      : await supabase.from('entries').insert(row)
     setSaving(false)
     if (err) return setError('القيد ما اتحفظش، جرّب تاني')
     onSaved()
@@ -91,7 +99,7 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
   }
 
   return (
-    <Dialog title="قيد جديد" subtitle={projectName} wide onClose={onClose}>
+    <Dialog title={entry ? `تعديل القيد #${entry.seq}` : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
         <div className="field span-2">
           النوع
@@ -102,12 +110,12 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
           <>
             <CreatableSelect
               label="البند"
-              value={categoryId}
+              value={categoryName}
               options={categoryOptions}
               placeholder="اختار البند"
               required
               onChange={(v) => {
-                setCategoryId(v)
+                setCategoryName(v)
                 setItemName('')
               }}
               onCreate={createCategory}
@@ -118,8 +126,8 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
                 list="item-names"
-                placeholder={categoryId ? 'اكتب اسم المصروف' : 'اختار البند الأول'}
-                disabled={!categoryId}
+                placeholder={categoryName ? 'اكتب اسم المصروف' : 'اختار البند الأول'}
+                disabled={!categoryName}
                 required
               />
               <datalist id="item-names">
@@ -158,7 +166,7 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
         {error && <p className="msg msg-error span-2">{error}</p>}
         <div className="dialog-actions span-2">
           <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ القيد'}
+            {saving ? 'جارٍ الحفظ...' : entry ? 'حفظ التعديل' : 'حفظ القيد'}
           </button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             إلغاء

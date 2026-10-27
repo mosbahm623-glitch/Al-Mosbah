@@ -93,9 +93,9 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
   }
 
   return (
-    <Dialog title="قيد جديد" subtitle={projectName} onClose={onClose}>
+    <Dialog title="قيد جديد" subtitle={projectName} wide onClose={onClose}>
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
-        <div className="field">
+        <div className="field span-2">
           النوع
           <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
         </div>
@@ -134,7 +134,7 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
             />
           </>
         ) : (
-          <label className="field">
+          <label className="field span-2">
             بيان الوارد
             <input value={incomeLabel} onChange={(e) => setIncomeLabel(e.target.value)} placeholder="مثلاً: دفعة عميل" required />
           </label>
@@ -154,8 +154,8 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
-        {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
+        {error && <p className="msg msg-error span-2">{error}</p>}
+        <div className="dialog-actions span-2">
           <button className="btn" disabled={saving}>
             {saving ? 'جارٍ الحفظ...' : 'حفظ القيد'}
           </button>

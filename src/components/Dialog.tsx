@@ -1,10 +1,10 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 
-type Props = { title: string; subtitle?: string; onClose: () => void; children: ReactNode }
+type Props = { title: string; subtitle?: string; wide?: boolean; onClose: () => void; children: ReactNode }
 
 /** Modal built on the native <dialog>: focus trap and Esc come for free. */
-export default function Dialog({ title, subtitle, onClose, children }: Props) {
+export default function Dialog({ title, subtitle, wide, onClose, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export default function Dialog({ title, subtitle, onClose, children }: Props) {
   return (
     <dialog
       ref={ref}
-      className="dialog"
+      className={wide ? 'dialog dialog-wide' : 'dialog'}
       aria-labelledby="dialog-title"
       onClose={onClose}
       onClick={(e) => {

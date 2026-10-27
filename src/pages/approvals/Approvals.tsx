@@ -57,52 +57,49 @@ export default function Approvals() {
       {list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
 
       {rows.length > 0 && (
-        <section className="panel">
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>النوع</th><th>البيان</th><th>المقاول</th><th>البنك</th><th>المبلغ</th><th>اتسجّل بواسطة</th><th><span className="sr-only">إجراءات</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((e) => (
-                  <tr key={e.id}>
-                    <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">{dateText(e.entry_date)}</td>
-                    <td>{e.project?.name}</td>
-                    <td>
-                      <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
-                        <span className="dot" />
-                        {e.kind === 'income' ? 'وارد' : 'مصروف'}
-                      </span>
-                      {e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}
-                    </td>
-                    <td>{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}{e.notes ? <span className="muted small"> — {e.notes}</span> : null}</td>
-                    <td className="muted">{e.contractor?.name}</td>
-                    <td className="muted">{e.bank?.name}</td>
-                    <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>{e.kind === 'income' ? '+' : '−'}{money(e.amount)}</td>
-                    <td className="muted">{e.creator?.full_name ?? '—'}</td>
-                    <td>
-                      <div className="head-actions">
-                        <button className="btn btn-icon" disabled={busy} onClick={() => void act([e.id], 'approved')} aria-label={`موافقة على القيد ${e.seq}`}>
-                          <Check size={16} aria-hidden="true" />
-                          موافقة
-                        </button>
-                        {tab === 'pending' && (
-                          <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void act([e.id], 'rejected')} aria-label={`رفض القيد ${e.seq}`}>
-                            <X size={16} aria-hidden="true" />
-                            رفض
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <div className="appr-list">
+          {rows.map((e) => (
+            <article className="appr-card" key={e.id}>
+              <div className="appr-main">
+                <div className="appr-tags">
+                  <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
+                    <span className="dot" />
+                    {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                  </span>
+                  {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
+                  <span className="muted small">قيد #{e.seq} · {dateText(e.entry_date)}</span>
+                </div>
+                <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
+                <p className="appr-project">{e.project?.name}</p>
+                <dl className="appr-meta">
+                  {e.contractor && <div><dt>المقاول</dt><dd>{e.contractor.name}</dd></div>}
+                  {e.bank && <div><dt>البنك</dt><dd>{e.bank.name}</dd></div>}
+                  {e.notes && <div><dt>ملاحظات</dt><dd>{e.notes}</dd></div>}
+                  <div><dt>سجّله</dt><dd>{e.creator?.full_name ?? '—'}</dd></div>
+                </dl>
+              </div>
+              <div className="appr-side">
+                <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
+                  {e.kind === 'income' ? '+' : '−'}
+                  {money(e.amount)}
+                  <small>ج.م</small>
+                </div>
+                <div className="appr-actions">
+                  <button className="btn btn-icon" disabled={busy} onClick={() => void act([e.id], 'approved')} aria-label={`موافقة على القيد ${e.seq}`}>
+                    <Check size={17} aria-hidden="true" />
+                    موافقة
+                  </button>
+                  {tab === 'pending' && (
+                    <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void act([e.id], 'rejected')} aria-label={`رفض القيد ${e.seq}`}>
+                      <X size={17} aria-hidden="true" />
+                      رفض
+                    </button>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
     </div>
   )

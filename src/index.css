@@ -438,3 +438,24 @@ a.btn { text-decoration: none; }
 .perm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .perm-block { display: grid; gap: 8px; }
 .perm-sub { display: grid; gap: 6px; padding: 8px 12px; border-radius: 8px; background: var(--soft, rgba(0,0,0,0.04)); }
+
+/* approvals: one card per entry */
+.appr-list { display: grid; gap: 12px; }
+.appr-card { display: flex; gap: 20px; justify-content: space-between; align-items: stretch; padding: 16px 20px; background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 12px; }
+.appr-main { display: grid; gap: 6px; min-width: 0; flex: 1; align-content: start; }
+.appr-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.appr-title { margin: 0; font-size: 1.1rem; }
+.appr-project { margin: 0; color: var(--muted); font-weight: 600; }
+.appr-meta { display: flex; flex-wrap: wrap; gap: 6px 24px; margin: 6px 0 0; }
+.appr-meta div { display: flex; gap: 6px; font-size: 0.9rem; }
+.appr-meta dt { color: var(--muted); }
+.appr-meta dt::after { content: ':'; }
+.appr-meta dd { margin: 0; font-weight: 600; }
+.appr-side { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+.appr-amount { font-size: 1.6rem; font-weight: 800; white-space: nowrap; }
+.appr-amount small { font-size: 0.8rem; font-weight: 500; margin-inline-start: 6px; color: var(--muted); }
+.appr-actions { display: flex; gap: 8px; }
+@media (max-width: 640px) {
+  .appr-card { flex-direction: column; }
+  .appr-side { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+}

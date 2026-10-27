@@ -123,6 +123,39 @@ export default function ProjectReport({ id }: { id: string }) {
           </tbody>
         </table>
 
+        {incomes.length > 0 && (
+          <>
+            <h2>الوارد</h2>
+            <table className="paper-table group">
+              <thead>
+                <tr>
+                  <th className="w-seq">رقم</th>
+                  <th className="w-date">التاريخ</th>
+                  <th>البيان</th>
+                  <th>ملاحظات</th>
+                  <th className="w-amount">المبلغ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {incomes.map((e) => (
+                  <tr key={e.id}>
+                    <td className="num">{e.seq}</td>
+                    <td className="num">{dateText(e.entry_date)}</td>
+                    <td>{e.category}</td>
+                    <td>{e.notes}</td>
+                    <td className="num">{money(e.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan={4}>إجمالي الوارد</td>
+                  <td className="num">{money(incomeTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </>
+        )}
         <h2>المصروفات حسب البند</h2>
         {expenseGroups.length === 0 && <p className="muted">مفيش مصروفات.</p>}
         {expenseGroups.map((g) => (
@@ -173,39 +206,6 @@ export default function ProjectReport({ id }: { id: string }) {
           </table>
         )}
 
-        {incomes.length > 0 && (
-          <>
-            <h2>الوارد</h2>
-            <table className="paper-table group">
-              <thead>
-                <tr>
-                  <th className="w-seq">رقم</th>
-                  <th className="w-date">التاريخ</th>
-                  <th>البيان</th>
-                  <th>ملاحظات</th>
-                  <th className="w-amount">المبلغ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {incomes.map((e) => (
-                  <tr key={e.id}>
-                    <td className="num">{e.seq}</td>
-                    <td className="num">{dateText(e.entry_date)}</td>
-                    <td>{e.category}</td>
-                    <td>{e.notes}</td>
-                    <td className="num">{money(e.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={4}>إجمالي الوارد</td>
-                  <td className="num">{money(incomeTotal)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </>
-        )}
         <footer className="paper-foot">المصباح · {project.name} · {today}</footer>
       </article>
     </div>

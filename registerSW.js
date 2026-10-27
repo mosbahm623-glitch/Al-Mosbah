@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/Al-Mosbah/sw.js', { scope: '/Al-Mosbah/' })})}

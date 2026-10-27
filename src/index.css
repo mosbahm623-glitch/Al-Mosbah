@@ -1,9 +1,13 @@
 :root {
   --bg: #f7f6f2;
+  --surface: #ffffff;
   --fg: #1c1b18;
+  --muted: #6b675e;
+  --line: #e4e1d6;
+  --accent: #b7791f;
+  --accent-fg: #ffffff;
   --ok: #1f7a4d;
   --err: #b3261e;
-  --muted: #6b675e;
   font-family: 'Segoe UI', Tahoma, 'Noto Naskh Arabic', system-ui, sans-serif;
   color: var(--fg);
   background: var(--bg);
@@ -12,27 +16,107 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #17160f;
+    --surface: #211f16;
     --fg: #f1efe6;
+    --muted: #a8a496;
+    --line: #34311f;
+    --accent: #f5c542;
+    --accent-fg: #1c1b18;
     --ok: #5ccf94;
     --err: #ff8a80;
-    --muted: #a8a496;
   }
 }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; min-height: 100dvh; background: var(--bg); }
+h1, h2, p { margin: 0; }
+h2 { font-size: 1.05rem; margin-bottom: 0.6rem; }
 
-.page {
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+.pos { color: var(--ok); }
+.neg { color: var(--err); }
+
+.center {
   min-height: 100dvh;
   display: grid;
   place-content: center;
-  gap: 0.75rem;
-  padding: max(1.5rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
-  text-align: center;
+  padding: 1.25rem;
 }
 
-.page h1 { margin: 0; font-size: clamp(2rem, 8vw, 2.5rem); }
-.status { margin: 0; color: var(--muted); }
-.status-ok { color: var(--ok); }
-.status-error { color: var(--err); }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.auth {
+  width: min(100%, 22rem);
+  display: grid;
+  gap: 0.85rem;
+  text-align: center;
+}
+.auth h1 { font-size: 2rem; }
+.auth label { display: grid; gap: 0.35rem; text-align: start; font-size: 0.9rem; }
+
+input {
+  font: inherit;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+}
+input:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  cursor: pointer;
+  min-height: 44px;
+}
+.btn:disabled { opacity: 0.6; cursor: default; }
+.btn-link { background: none; color: var(--muted); font-weight: 400; }
+.btn-ghost { background: none; border: 1px solid var(--line); color: var(--fg); }
+.btn-small { padding: 0.4rem 0.8rem; min-height: 38px; font-size: 0.9rem; }
+
+.msg { padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.9rem; text-align: start; }
+.msg-error { background: color-mix(in srgb, var(--err) 14%, transparent); color: var(--err); }
+.msg-ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+
+.shell {
+  max-width: 60rem;
+  margin: 0 auto;
+  display: grid;
+  gap: 0.9rem;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+}
+
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
+.topbar h1 { font-size: 1.4rem; }
+.topbar-actions { display: flex; gap: 0.5rem; }
+
+.hero { display: grid; gap: 0.3rem; text-align: center; padding: 1.25rem 1rem; }
+.hero strong { font-size: clamp(1.7rem, 8vw, 2.4rem); }
+
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.stat { display: grid; gap: 0.35rem; }
+.stat strong { font-size: 1.05rem; overflow-wrap: anywhere; }
+.stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+@media (min-width: 720px) {
+  .grid { grid-template-columns: repeat(3, 1fr); }
+  .stat:last-child:nth-child(odd) { grid-column: auto; }
+}
+
+.alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.alerts li { display: grid; gap: 0.15rem; padding: 0.6rem 0.8rem; border-radius: 10px; background: color-mix(in srgb, var(--err) 12%, transparent); }
+.alerts li span { font-size: 0.9rem; color: var(--err); }

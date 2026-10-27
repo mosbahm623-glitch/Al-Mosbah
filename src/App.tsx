@@ -1,25 +1,26 @@
-import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { AuthProvider, useAuth } from './auth/AuthProvider'
+import AuthScreen from './pages/AuthScreen'
+import Dashboard from './pages/Dashboard'
+import Pending from './pages/Pending'
 
-type Status = 'checking' | 'ok' | 'error'
+function Gate() {
+  const { loading, session, profile } = useAuth()
+  if (loading) {
+    return (
+      <main className="center">
+        <p className="muted">جارٍ التحميل...</p>
+      </main>
+    )
+  }
+  if (!session) return <AuthScreen />
+  if (!profile?.is_active) return <Pending />
+  return <Dashboard />
+}
 
 export default function App() {
-  const [status, setStatus] = useState<Status>('checking')
-
-  useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(({ error }) => setStatus(error ? 'error' : 'ok'))
-      .catch(() => setStatus('error'))
-  }, [])
-
-  const label =
-    status === 'checking' ? 'جارٍ فحص الاتصال...' : status === 'ok' ? 'متصل بقاعدة البيانات' : 'فشل الاتصال بقاعدة البيانات'
-
   return (
-    <main className="page">
-      <h1>المصباح</h1>
-      <p className={`status status-${status}`}>{label}</p>
-    </main>
+    <AuthProvider>
+      <Gate />
+    </AuthProvider>
   )
 }

@@ -4,12 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/Al-Mosbah/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#17160f" />
+    <meta name="theme-color" content="#312D2A" />
     <link rel="apple-touch-icon" href="/Al-Mosbah/pwa-192.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>المصباح</title>
-    <script type="module" crossorigin src="/Al-Mosbah/assets/index-DXKKrD4q.js"></script>
-    <link rel="stylesheet" crossorigin href="/Al-Mosbah/assets/index-khN-nzrS.css">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('mosbah-theme')
+          if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          document.documentElement.dataset.theme = t
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/index-Bdrp5X0r.js"></script>
+    <link rel="stylesheet" crossorigin href="/Al-Mosbah/assets/index-DRPBWM9H.css">
   <link rel="manifest" href="/Al-Mosbah/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/Al-Mosbah/registerSW.js"></script></head>
   <body>
     <div id="root"></div>

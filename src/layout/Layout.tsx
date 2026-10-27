@@ -129,18 +129,21 @@ export default function Layout({ children }: { children: ReactNode }) {
             return (
               <div className="nav-group" key={i}>
                 {group.title && <span className="nav-title">{group.title}</span>}
-                {items.map(({ path, label, icon: Icon }) => (
+                {items.map(({ path, label, icon: Icon }) => {
+                  const active = route === path || route.startsWith(`${path}/`)
+                  return (
                   <a
                     key={path}
                     href={`#/${path}`}
-                    className={`nav-link ${route === path ? 'nav-active' : ''}`}
-                    aria-current={route === path ? 'page' : undefined}
+                    className={`nav-link ${active ? 'nav-active' : ''}`}
+                    aria-current={active ? 'page' : undefined}
                     onClick={onNavigate}
                   >
                     <Icon size={19} aria-hidden="true" />
                     <span>{label}</span>
                   </a>
-                ))}
+                  )
+                })}
               </div>
             )
           })}

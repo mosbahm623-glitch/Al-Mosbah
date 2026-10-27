@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
 import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { money } from '../lib/format'
+import { useAsync } from '../lib/useAsync'
 
 type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
 
@@ -15,38 +16,11 @@ type Summary = {
   budget_rows: BudgetRow[]
 }
 
-const nf = new Intl.NumberFormat('ar-EG-u-nu-latn', { maximumFractionDigits: 2 })
-const money = (n: number) => nf.format(n)
+const fetchSummary = () => supabase.rpc('dashboard_summary')
 
 export default function Dashboard() {
-  const [data, setData] = useState<Summary | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const apply = useCallback((res: unknown, err: unknown) => {
-    if (err) {
-      setError('مقدرناش نحمّل الأرقام، جرّب تاني')
-    } else {
-      setError(null)
-      setData(res as Summary)
-    }
-    setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    let active = true
-    supabase.rpc('dashboard_summary').then(({ data: res, error: err }) => {
-      if (active) apply(res, err)
-    })
-    return () => {
-      active = false
-    }
-  }, [apply])
-
-  function refresh() {
-    setLoading(true)
-    supabase.rpc('dashboard_summary').then(({ data: res, error: err }) => apply(res, err))
-  }
+  const { data, failed, loading, reload } = useAsync<Summary>(fetchSummary)
+  const error = failed ? 'مقدرناش نحمّل الأرقام، جرّب تاني' : null
 
   return (
     <div className="page-stack">
@@ -59,7 +33,7 @@ export default function Dashboard() {
           </nav>
           <h1 className="page-title">لوحة التحكم</h1>
         </div>
-        <button className="btn" onClick={refresh} disabled={loading}>
+        <button className="btn" onClick={reload} disabled={loading}>
           {loading ? 'جارٍ التحديث...' : 'تحديث'}
         </button>
       </div>
@@ -74,14 +48,14 @@ export default function Dashboard() {
             <Tile label="إجمالي المصاريف" value={money(data.total_expenses)} unit="ج.م" icon={TrendingDown} tone="err" />
             <Tile label="إجمالي العهد" value={money(data.total_advances)} unit="ج.م" icon={HandCoins} tone="neutral" />
             <Tile label="مستحقات المقاولين" value={money(data.contractor_dues)} unit="ج.م" icon={HardHat} tone="warn" />
-            <Tile label="المشاريع النشطة" value={nf.format(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
+            <Tile label="المشاريع النشطة" value={money(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
           </section>
 
           <section className="panel">
             <div className="panel-head">
               <h2>ميزانية المشاريع</h2>
               {data.over_count > 0 ? (
-                <span className="chip chip-err">{nf.format(data.over_count)} تنبيه تجاوز</span>
+                <span className="chip chip-err">{money(data.over_count)} تنبيه تجاوز</span>
               ) : (
                 <span className="chip chip-ok">مفيش تجاوزات</span>
               )}

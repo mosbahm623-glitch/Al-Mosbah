@@ -3,6 +3,8 @@ import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
+import Projects from './pages/projects/Projects'
+import ProjectDetail from './pages/projects/ProjectDetail'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -13,6 +15,9 @@ function Content() {
   const item = ALL_ITEMS.find((i) => i.path === route)
 
   if (route === 'dashboard') return <Dashboard />
+  if (route === 'projects') return <Projects />
+  const detail = /^projects\/([0-9a-f-]{36})$/.exec(route)
+  if (detail) return <ProjectDetail id={detail[1]} />
   if (!item || (item.adminOnly && profile?.role !== 'admin')) {
     return <ComingSoon title="الصفحة مش موجودة" />
   }

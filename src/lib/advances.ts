@@ -6,8 +6,6 @@ export type AdvanceSummary = {
   holder_name: string
   status: 'open' | 'closed'
   notes: string | null
-  project_id: string
-  project_name: string
   given: number
   spent: number
   returned: number
@@ -40,7 +38,7 @@ export const fetchReturns = (advanceId: string) =>
 export const fetchAdvanceEntries = (advanceId: string) =>
   supabase
     .from('entries')
-    .select(ENTRY_COLUMNS)
+    .select(`${ENTRY_COLUMNS},project_id,project:projects(name)`)
     .eq('advance_id', advanceId)
     .order('seq', { ascending: false })
     .returns<Entry[]>()

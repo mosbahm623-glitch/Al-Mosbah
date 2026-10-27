@@ -11,7 +11,6 @@ export type ProjectSummary = {
   /** includes custody installments (minus returns), not the entries paid from a custody */
   expenses: number
   /** expense entries not paid from a custody */
-  direct_expenses: number
 }
 
 export type Entry = {
@@ -26,6 +25,9 @@ export type Entry = {
   notes: string | null
   /** set when the entry was paid from a custody */
   advance_id: string | null
+  /** only loaded where entries of several projects are listed (custody page) */
+  project?: { name: string } | null
+  project_id?: string
 }
 
 export const percentOf = (p: ProjectSummary) => (p.budget > 0 ? Math.round((p.expenses / p.budget) * 100) : 0)

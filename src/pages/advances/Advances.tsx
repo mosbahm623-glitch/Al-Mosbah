@@ -4,7 +4,6 @@ import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import { advanceBalance, fetchAdvanceSummaries, type AdvanceSummary } from '../../lib/advances'
 import { money } from '../../lib/format'
-import { fetchSummaries, type ProjectSummary } from '../../lib/projects'
 import { useAsync } from '../../lib/useAsync'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
@@ -19,7 +18,6 @@ export default function Advances() {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
-  const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')
   const [adding, setAdding] = useState(false)
@@ -29,7 +27,7 @@ export default function Advances() {
     return (advances.data ?? []).filter(
       (a) =>
         (status === 'all' || a.status === status) &&
-        (!term || a.holder_name.toLowerCase().includes(term) || a.project_name.toLowerCase().includes(term)),
+        (!term || a.holder_name.toLowerCase().includes(term)),
     )
   }, [advances.data, q, status])
 
@@ -47,7 +45,7 @@ export default function Advances() {
           <h1 className="page-title">العهد</h1>
         </div>
         {isAdmin && (
-          <button className="btn btn-icon" onClick={() => setAdding(true)} disabled={!projects.data?.length}>
+          <button className="btn btn-icon" onClick={() => setAdding(true)}>
             <Plus size={18} aria-hidden="true" />
             عهدة جديدة
           </button>
@@ -64,7 +62,7 @@ export default function Advances() {
       <div className="toolbar">
         <label className="search-field">
           <Search size={18} aria-hidden="true" />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المستلم أو المشروع" aria-label="بحث في العهد" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المستلم" aria-label="بحث في العهد" />
         </label>
         <Segmented label="حالة العهدة" value={status} options={STATUS} onChange={setStatus} />
         <span className="toolbar-note muted small">{rows.length} عهدة</span>
@@ -81,7 +79,6 @@ export default function Advances() {
               <thead>
                 <tr>
                   <th>المستلم</th>
-                  <th>المشروع</th>
                   <th>المستلم</th>
                   <th>المصروف</th>
                   <th>المرتجع</th>
@@ -95,7 +92,6 @@ export default function Advances() {
                   return (
                     <tr key={a.id}>
                       <td className="strong"><a className="row-link" href={`#/advances/${a.id}`}>{a.holder_name}</a></td>
-                      <td>{a.project_name}</td>
                       <td className="num">{money(a.given)}</td>
                       <td className="num">{money(a.spent)}</td>
                       <td className="num">{money(a.returned)}</td>
@@ -110,7 +106,7 @@ export default function Advances() {
         </section>
       )}
 
-      {adding && projects.data && <AdvanceDialog projects={projects.data} onClose={() => setAdding(false)} onSaved={advances.reload} />}
+      {adding && <AdvanceDialog onClose={() => setAdding(false)} onSaved={advances.reload} />}
     </div>
   )
 }

@@ -22,7 +22,6 @@ export default function ProjectReport({ id }: { id: string }) {
         inc.push(e)
         continue
       }
-      if (e.advance_id) continue // counted through the custody net below
       const g = map.get(e.category) ?? { name: e.category, rows: [], total: 0 }
       g.rows.push(e)
       g.total += e.amount
@@ -37,7 +36,6 @@ export default function ProjectReport({ id }: { id: string }) {
 
   const data = entries
   const balance = project.income - project.expenses
-  const custodyNet = project.expenses - project.direct_expenses
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
   const cols = withContractor ? 6 : 5
 
@@ -183,21 +181,9 @@ export default function ProjectReport({ id }: { id: string }) {
             </tfoot>
           </table>
         ))}
-        {(expenseGroups.length > 0 || custodyNet !== 0) && (
+        {expenseGroups.length > 0 && (
           <table className="paper-table grand">
             <tbody>
-              {custodyNet !== 0 && (
-                <>
-                  <tr>
-                    <td>مصروفات مباشرة</td>
-                    <td className="num">{money(project.direct_expenses)}</td>
-                  </tr>
-                  <tr>
-                    <td>صافي العهد (دفعات − مرتجع)</td>
-                    <td className="num">{money(custodyNet)}</td>
-                  </tr>
-                </>
-              )}
               <tr>
                 <td>إجمالي المصروفات</td>
                 <td className="num">{money(project.expenses)}</td>

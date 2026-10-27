@@ -23,10 +23,7 @@ const sheetName = (name: string, used: Set<string>) => {
 const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`)
 
 /** Builds the workbook in the browser and downloads it. exceljs is loaded only when this runs. */
-export async function exportProjectExcel({ project, entries: allEntries, withContractor }: Options) {
-  // entries paid from a custody are counted through the custody itself (installments − returns)
-  const entries = allEntries.filter((e) => !e.advance_id)
-  const custodyNet = project.expenses - project.direct_expenses
+export async function exportProjectExcel({ project, entries, withContractor }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'المصباح'
@@ -97,7 +94,6 @@ export async function exportProjectExcel({ project, entries: allEntries, withCon
   all.mergeCells(totalRow.number, 1, totalRow.number, amountCol - 1)
   const L = all.getColumn(amountCol).letter
   const net = incomeTotal - expenseTotal
-  const grandNet = incomeTotal - expenseTotal - custodyNet
   totalRow.getCell(amountCol).value = { formula: `SUMIF(C2:C${last},"وارد",${L}2:${L}${last})-SUMIF(C2:C${last},"مصروف",${L}2:${L}${last})`, result: net }
   totalRow.getCell(amountCol).numFmt = MONEY
   totalRow.eachCell((c) => {
@@ -169,12 +165,6 @@ export async function exportProjectExcel({ project, entries: allEntries, withCon
     ['إجمالي الوارد', { formula: `SUMIF('كل القيود'!C:C,"وارد",'كل القيود'!${L}:${L})`, result: incomeTotal }],
     ['إجمالي المصروف', { formula: `SUMIF('كل القيود'!C:C,"مصروف",'كل القيود'!${L}:${L})`, result: expenseTotal }],
   ]
-  if (custodyNet !== 0) {
-    info[info.length - 1][0] = 'مصروف مباشر'
-    info.push(['صافي العهد (دفعات − مرتجع)', custodyNet])
-    info.push(['إجمالي المصروف', { formula: `B${3 + info.length - 2}+B${3 + info.length - 1}`, result: expenseTotal + custodyNet }])
-  }
-  const grandExpense = expenseTotal + custodyNet
   info.forEach(([k, v]) => {
     const r = sum.addRow([k, v])
     r.getCell(1).font = { bold: true }
@@ -185,9 +175,9 @@ export async function exportProjectExcel({ project, entries: allEntries, withCon
   })
   const first = 3
   const rowOf = (label: string) => first + info.findIndex(([k]) => k === label)
-  const bal = sum.addRow(['الرصيد (وارد − مصروف)', { formula: `B${rowOf('إجمالي الوارد')}-B${rowOf('إجمالي المصروف')}`, result: grandNet }])
+  const bal = sum.addRow(['الرصيد (وارد − مصروف)', { formula: `B${rowOf('إجمالي الوارد')}-B${rowOf('إجمالي المصروف')}`, result: net }])
   bal.getCell(2).numFmt = MONEY
-  const pct = sum.addRow(['نسبة استهلاك الميزانية', project.budget > 0 ? { formula: `B${rowOf('إجمالي المصروف')}/B${rowOf('الميزانية')}`, result: grandExpense / project.budget } : '—'])
+  const pct = sum.addRow(['نسبة استهلاك الميزانية', project.budget > 0 ? { formula: `B${rowOf('إجمالي المصروف')}/B${rowOf('الميزانية')}`, result: expenseTotal / project.budget } : '—'])
   if (project.budget > 0) pct.getCell(2).numFmt = '0%'
   for (const r of [bal, pct]) {
     r.font = { bold: true }

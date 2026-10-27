@@ -2,14 +2,12 @@ import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import { supabase } from '../../lib/supabase'
 import type { AdvanceSummary } from '../../lib/advances'
-import type { ProjectSummary } from '../../lib/projects'
 
-type Props = { advance?: AdvanceSummary; projects: ProjectSummary[]; onClose: () => void; onSaved: () => void }
+type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
 
 /** Create a custody (with an optional first installment) or edit its holder / project / notes. */
-export default function AdvanceDialog({ advance, projects, onClose, onSaved }: Props) {
+export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
   const [holder, setHolder] = useState(advance?.holder_name ?? '')
-  const [projectId, setProjectId] = useState(advance?.project_id ?? '')
   const [notes, setNotes] = useState(advance?.notes ?? '')
   const [first, setFirst] = useState('')
   const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'))
@@ -20,11 +18,10 @@ export default function AdvanceDialog({ advance, projects, onClose, onSaved }: P
     e.preventDefault()
     const amount = Number(first || 0)
     if (!holder.trim()) return setError('اكتب اسم المستلم')
-    if (!projectId) return setError('اختار المشروع')
     if (!Number.isFinite(amount) || amount < 0) return setError('المبلغ لازم يكون رقم صحيح')
     setSaving(true)
     setError(null)
-    const row = { holder_name: holder.trim(), project_id: projectId, notes: notes.trim() || null }
+    const row = { holder_name: holder.trim(), notes: notes.trim() || null }
     if (advance) {
       const { error: err } = await supabase.from('advances').update(row).eq('id', advance.id)
       setSaving(false)
@@ -57,17 +54,6 @@ export default function AdvanceDialog({ advance, projects, onClose, onSaved }: P
         <label className="field">
           اسم المستلم (المهندس)
           <input value={holder} onChange={(e) => setHolder(e.target.value)} required autoFocus />
-        </label>
-        <label className="field">
-          المشروع
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} required>
-            <option value="">اختار المشروع</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
         </label>
         {!advance && (
           <div className="field-row">

@@ -3,7 +3,7 @@ import { dateText, money } from '../format'
 import { isOver, percentOf, type ProjectSummary } from '../projects'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
-  id: '1', name: 'p', budget: 1000, status: 'active', type: 'finishing', income: 0, expenses: 0, direct_expenses: 0, ...over,
+  id: '1', name: 'p', budget: 1000, status: 'active', type: 'finishing', income: 0, expenses: 0, ...over,
 })
 
 describe('budget usage', () => {

@@ -121,10 +121,11 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   return (
     <Dialog title={entry ? `تعديل القيد #${entry.seq}` : fromAdvance ? 'مصروف من العهدة' : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
-        {entry && !fromAdvance && projects && projects.length > 1 && (
+        {projects && (fromAdvance ? projects.length > 0 : entry && projects.length > 1) && (
           <label className="field span-2">
             المشروع
-            <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)}>
+            <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)} required={fromAdvance}>
+              {fromAdvance && <option value="">اختار المشروع</option>}
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}

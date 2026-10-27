@@ -62,10 +62,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
             <h1 className="page-title">{advance.holder_name}</h1>
             <AdvanceChip status={advance.status} />
           </div>
-          <p className="muted small">
-            مشروع <a className="row-link" href={`#/projects/${advance.project_id}`}>{advance.project_name}</a>
-            {advance.notes ? ` · ${advance.notes}` : ''}
-          </p>
+          {advance.notes && <p className="muted small">{advance.notes}</p>}
         </div>
         {isAdmin && (
           <div className="head-actions">
@@ -137,13 +134,14 @@ export default function AdvanceDetail({ id }: { id: string }) {
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>رقم القيد</th><th>التاريخ</th><th>البند</th><th>اسم المصروف</th><th>المقاول</th><th>ملاحظات</th><th>المبلغ</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr>
+                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>اسم المصروف</th><th>المقاول</th><th>ملاحظات</th><th>المبلغ</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr>
               </thead>
               <tbody>
                 {entries.map((e) => (
                   <tr key={e.id}>
                     <td className="strong num">#{e.seq}</td>
                     <td className="num muted">{dateText(e.entry_date)}</td>
+                    <td>{e.project?.name}</td>
                     <td>{e.category}</td>
                     <td className="strong">{e.item}</td>
                     <td className="muted">{e.contractor?.name}</td>
@@ -222,13 +220,13 @@ export default function AdvanceDetail({ id }: { id: string }) {
           onSaved={reload}
         />
       )}
-      {spending && (
-        <EntryDialog projectId={advance.project_id} projectName={advance.project_name} advanceId={id} onClose={() => setSpending(false)} onSaved={reload} />
+      {spending && projects.data && (
+        <EntryDialog projectId="" projectName={advance.holder_name} projects={projects.data} advanceId={id} onClose={() => setSpending(false)} onSaved={reload} />
       )}
-      {editingEntry && (
-        <EntryDialog projectId={advance.project_id} projectName={advance.project_name} entry={editingEntry} onClose={() => setEditingEntry(null)} onSaved={reload} />
+      {editingEntry && projects.data && (
+        <EntryDialog projectId={editingEntry.project_id ?? ''} projectName={advance.holder_name} projects={projects.data} entry={editingEntry} onClose={() => setEditingEntry(null)} onSaved={reload} />
       )}
-      {editing && projects.data && <AdvanceDialog advance={advance} projects={projects.data} onClose={() => setEditing(false)} onSaved={reload} />}
+      {editing && <AdvanceDialog advance={advance} onClose={() => setEditing(false)} onSaved={reload} />}
     </div>
   )
 }

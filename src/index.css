@@ -436,3 +436,5 @@ a.btn { text-decoration: none; }
 /* user permissions dialog */
 .perm-list { display: grid; gap: 10px; }
 .perm-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.perm-block { display: grid; gap: 8px; }
+.perm-sub { display: grid; gap: 6px; padding: 8px 12px; border-radius: 8px; background: var(--soft, rgba(0,0,0,0.04)); }

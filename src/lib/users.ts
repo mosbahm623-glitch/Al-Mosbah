@@ -8,20 +8,29 @@ export type UserRow = {
   role: 'admin' | 'user'
   is_active: boolean
   permissions: { module: Module; level: Level }[]
+  /** custodies this user may see (matters only when he has the العهد page) */
+  advanceIds: string[]
 }
 
-type Profile = Omit<UserRow, 'permissions'>
+type Profile = Omit<UserRow, 'permissions' | 'advanceIds'>
+export type AdvanceOption = { id: string; holder_name: string }
+
+export const fetchAdvanceOptions = () =>
+  supabase.from('advances').select('id,holder_name').order('holder_name').returns<AdvanceOption[]>()
 
 /** Every account with its page permissions (admins only; other users cannot read this). */
 export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unknown }> {
-  const [profiles, perms] = await Promise.all([
+  const [profiles, perms, access] = await Promise.all([
     supabase.from('profiles').select('id,full_name,email,role,is_active').order('created_at').returns<Profile[]>(),
     supabase.from('user_permissions').select('user_id,module,level').returns<{ user_id: string; module: Module; level: Level }[]>(),
+    supabase.from('user_advance_access').select('user_id,advance_id').returns<{ user_id: string; advance_id: string }[]>(),
   ])
-  if (profiles.error || perms.error || !profiles.data) return { data: null, error: profiles.error ?? perms.error }
+  if (profiles.error || perms.error || access.error || !profiles.data) return { data: null, error: profiles.error ?? perms.error ?? access.error }
   const byUser = new Map<string, UserRow['permissions']>()
   for (const p of perms.data ?? []) byUser.set(p.user_id, [...(byUser.get(p.user_id) ?? []), { module: p.module, level: p.level }])
-  return { data: profiles.data.map((u) => ({ ...u, permissions: byUser.get(u.id) ?? [] })), error: null }
+  const advByUser = new Map<string, string[]>()
+  for (const a of access.data ?? []) advByUser.set(a.user_id, [...(advByUser.get(a.user_id) ?? []), a.advance_id])
+  return { data: profiles.data.map((u) => ({ ...u, permissions: byUser.get(u.id) ?? [], advanceIds: advByUser.get(u.id) ?? [] })), error: null }
 }
 
 const CREATE_ERRORS: Record<string, string> = {

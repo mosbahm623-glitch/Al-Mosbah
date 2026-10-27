@@ -3,7 +3,7 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
 import { supabase } from '../../lib/supabase'
-import type { UserRow } from '../../lib/users'
+import type { AdvanceOption, UserRow } from '../../lib/users'
 
 type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))
@@ -12,15 +12,16 @@ const ROLES = [
   { value: 'admin', label: 'أدمن' },
 ] as const
 
-type Props = { user: UserRow; isSelf: boolean; onClose: () => void; onSaved: () => void }
+type Props = { user: UserRow; advances: AdvanceOption[]; isSelf: boolean; onClose: () => void; onSaved: () => void }
 
 /** Role, status and one level (none / view / edit) per page. */
-export default function UserDialog({ user, isSelf, onClose, onSaved }: Props) {
+export default function UserDialog({ user, advances, isSelf, onClose, onSaved }: Props) {
   const [role, setRole] = useState<'admin' | 'user'>(user.role)
   const [active, setActive] = useState(user.is_active)
   const [levels, setLevels] = useState<Record<Module, Choice>>(
     () => Object.fromEntries(MODULES.map((m) => [m.id, user.permissions.find((p) => p.module === m.id)?.level ?? 'none'])) as Record<Module, Choice>,
   )
+  const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -38,7 +39,11 @@ export default function UserDialog({ user, isSelf, onClose, onSaved }: Props) {
     const rows = MODULES.flatMap((m) => (levels[m.id] === 'none' ? [] : [{ user_id: user.id, module: m.id, level: levels[m.id] as Level }]))
     const cleared = await supabase.from('user_permissions').delete().eq('user_id', user.id)
     const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
+    const wanted = levels.advances === 'none' || role === 'admin' ? [] : advanceIds
+    const clearedAccess = await supabase.from('user_advance_access').delete().eq('user_id', user.id)
+    const savedAccess = wanted.length ? await supabase.from('user_advance_access').insert(wanted.map((advance_id) => ({ user_id: user.id, advance_id }))) : { error: null }
     setSaving(false)
+    if (clearedAccess.error || savedAccess.error) return setError('العهد المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
     if (cleared.error || saved.error) return setError('الصلاحيات ما اتحفظتش، افتح المستخدم تاني وراجعها')
     onSaved()
     onClose()
@@ -62,9 +67,27 @@ export default function UserDialog({ user, isSelf, onClose, onSaved }: Props) {
         ) : (
           <div className="perm-list">
             {MODULES.map((m) => (
-              <div className="perm-row" key={m.id}>
-                <span className="strong">{m.label}</span>
-                <Segmented label={m.label} value={levels[m.id]} options={CHOICES} onChange={(v) => setLevels((s) => ({ ...s, [m.id]: v }))} />
+              <div key={m.id} className="perm-block">
+                <div className="perm-row">
+                  <span className="strong">{m.label}</span>
+                  <Segmented label={m.label} value={levels[m.id]} options={CHOICES} onChange={(v) => setLevels((s) => ({ ...s, [m.id]: v }))} />
+                </div>
+                {m.id === 'advances' && levels.advances !== 'none' && (
+                  <div className="perm-sub">
+                    <span className="muted small">يشوف العهد دي بس:</span>
+                    {advances.length === 0 && <span className="muted small">مفيش عهد لسه.</span>}
+                    {advances.map((a) => (
+                      <label className="check" key={a.id}>
+                        <input
+                          type="checkbox"
+                          checked={advanceIds.includes(a.id)}
+                          onChange={(e) => setAdvanceIds((ids) => (e.target.checked ? [...ids, a.id] : ids.filter((x) => x !== a.id)))}
+                        />
+                        {a.holder_name}
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             <p className="muted small">مشاهدة = يشوف بس · تعديل = يشوف ويضيف ويعدّل ويحذف في الصفحة دي.</p>

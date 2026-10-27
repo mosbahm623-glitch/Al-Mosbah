@@ -18,6 +18,7 @@ type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn
 export default function AdvanceDetail({ id }: { id: string }) {
   const { can, profile } = useAuth()
   const canEdit = can('advances', 'edit')
+  const isAdmin = profile?.role === 'admin'
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
   const [money_, setMoney] = useState<Money | null>(null)
@@ -69,7 +70,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
             <FileText size={18} aria-hidden="true" />
             كشف / طباعة
           </a>
-          {canEdit && (<>
+          {isAdmin && (<>
             <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
               <Pencil size={18} aria-hidden="true" />
               تعديل
@@ -91,7 +92,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
       <section className="panel">
         <div className="panel-head">
           <h2 className="section-title">الدفعات</h2>
-          {canEdit && (
+          {isAdmin && (
             <button className="btn btn-icon" onClick={() => setMoney({ kind: 'installment' })}>
               <Plus size={18} aria-hidden="true" />
               دفعة جديدة
@@ -101,13 +102,13 @@ export default function AdvanceDetail({ id }: { id: string }) {
         {installments?.length ? (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>التاريخ</th><th>المبلغ</th>{canEdit && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
+              <thead><tr><th>التاريخ</th><th>المبلغ</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
               <tbody>
                 {installments.map((i) => (
                   <tr key={i.id}>
                     <td className="num muted">{dateText(i.paid_on)}</td>
                     <td className="num strong">{money(i.amount)}</td>
-                    {canEdit && (
+                    {isAdmin && (
                       <td>
                         <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => setMoney({ kind: 'installment', row: i })}>
                           <Pencil size={16} aria-hidden="true" />
@@ -157,7 +158,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td className="num strong tone-text-err">−{money(e.amount)}</td>
                     {canEdit && (
                       <td>
-                        {(profile?.role === 'admin' || e.status !== 'approved') && (
+                        {(isAdmin || e.status !== 'approved') && (
                           <button className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditingEntry(e)}>
                             <Pencil size={16} aria-hidden="true" />
                           </button>
@@ -177,7 +178,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
       <section className="panel">
         <div className="panel-head">
           <h2 className="section-title">رد العهدة</h2>
-          {canEdit && (
+          {isAdmin && (
             <button className="btn btn-ghost btn-icon" onClick={() => setMoney({ kind: 'return' })}>
               <Undo2 size={18} aria-hidden="true" />
               رد عهدة
@@ -187,14 +188,14 @@ export default function AdvanceDetail({ id }: { id: string }) {
         {returns?.length ? (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th>{canEdit && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
+              <thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
               <tbody>
                 {returns.map((r) => (
                   <tr key={r.id}>
                     <td className="num muted">{dateText(r.returned_on)}</td>
                     <td className="num strong">{money(r.amount)}</td>
                     <td className="muted">{r.notes}</td>
-                    {canEdit && (
+                    {isAdmin && (
                       <td>
                         <button className="icon-btn" aria-label="تعديل المرتجع" onClick={() => setMoney({ kind: 'return', row: r })}>
                           <Pencil size={16} aria-hidden="true" />

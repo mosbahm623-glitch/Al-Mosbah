@@ -15,8 +15,8 @@ const STATUS = [
 ] as const
 
 export default function Advances() {
-  const { can } = useAuth()
-  const canEdit = can('advances', 'edit')
+  const { profile } = useAuth()
+  const isAdmin = profile?.role === 'admin'
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')
@@ -44,7 +44,7 @@ export default function Advances() {
           </nav>
           <h1 className="page-title">العهد</h1>
         </div>
-        {canEdit && (
+        {isAdmin && (
           <button className="btn btn-icon" onClick={() => setAdding(true)}>
             <Plus size={18} aria-hidden="true" />
             عهدة جديدة

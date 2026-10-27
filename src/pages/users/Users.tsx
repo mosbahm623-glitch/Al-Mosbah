@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES } from '../../auth/permissions'
-import { fetchUsers, type UserRow } from '../../lib/users'
+import { fetchAdvanceOptions, fetchUsers, type AdvanceOption, type UserRow } from '../../lib/users'
 import { useAsync } from '../../lib/useAsync'
 import NewUserDialog from './NewUserDialog'
 import UserDialog from './UserDialog'
@@ -10,6 +10,7 @@ import UserDialog from './UserDialog'
 export default function Users() {
   const { profile } = useAuth()
   const users = useAsync<UserRow[]>(fetchUsers)
+  const advances = useAsync<AdvanceOption[]>(fetchAdvanceOptions)
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<UserRow | null>(null)
 
@@ -65,7 +66,7 @@ export default function Users() {
                         : u.permissions.length
                           ? MODULES.flatMap((m) => {
                               const p = u.permissions.find((x) => x.module === m.id)
-                              return p ? [`${m.label} (${LEVEL_LABEL[p.level]})`] : []
+                              return p ? [m.id === 'advances' ? `${m.label} (${LEVEL_LABEL[p.level]} · ${u.advanceIds.length} عهدة)` : `${m.label} (${LEVEL_LABEL[p.level]})`] : []
                             }).join(' · ')
                           : 'مفيش صلاحيات'}
                     </td>
@@ -83,7 +84,7 @@ export default function Users() {
       )}
 
       {adding && <NewUserDialog onClose={() => setAdding(false)} onCreated={users.reload} />}
-      {editing && <UserDialog user={editing} isSelf={editing.id === profile?.id} onClose={() => setEditing(null)} onSaved={users.reload} />}
+      {editing && advances.data && <UserDialog user={editing} advances={advances.data} isSelf={editing.id === profile?.id} onClose={() => setEditing(null)} onSaved={users.reload} />}
     </div>
   )
 }

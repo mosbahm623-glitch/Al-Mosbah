@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Pencil, Plus } from 'lucide-react'
+import { FileText, Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Progress from '../../components/Progress'
 import { supabase } from '../../lib/supabase'
@@ -81,6 +81,10 @@ export default function ProjectDetail({ id }: { id: string }) {
               </select>
             </label>
           )}
+          <a className="btn btn-ghost btn-icon" href={`#/projects/${id}/report`}>
+            <FileText size={18} aria-hidden="true" />
+            تقرير / تصدير
+          </a>
           {isAdmin && (<>
             <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
               <Pencil size={18} aria-hidden="true" />

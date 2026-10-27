@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
 import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
+import ProjectReport from './pages/projects/ProjectReport'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -16,6 +17,8 @@ function Content() {
 
   if (route === 'dashboard') return <Dashboard />
   if (route === 'projects') return <Projects />
+  const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
+  if (report) return <ProjectReport id={report[1]} />
   const detail = /^projects\/([0-9a-f-]{36})$/.exec(route)
   if (detail) return <ProjectDetail id={detail[1]} />
   if (!item || (item.adminOnly && profile?.role !== 'admin')) {

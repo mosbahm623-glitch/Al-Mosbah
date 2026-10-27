@@ -76,8 +76,20 @@ export default function ProjectDetail({ id }: { id: string }) {
             <StatusChip p={project} />
           </div>
         </div>
-        {isAdmin && (
-          <div className="head-actions">
+        <div className="head-actions">
+          {(summaries.data?.length ?? 0) > 1 && (
+            <label className="switcher">
+              <span className="sr-only">تبديل المشروع</span>
+              <select value={id} onChange={(e) => { window.location.hash = `#/projects/${e.target.value}` }}>
+                {summaries.data?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {isAdmin && (<>
             <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
               <Pencil size={18} aria-hidden="true" />
               تعديل
@@ -86,8 +98,8 @@ export default function ProjectDetail({ id }: { id: string }) {
               <Plus size={18} aria-hidden="true" />
               قيد جديد
             </button>
-          </div>
-        )}
+          </>)}
+        </div>
       </div>
 
       <section className="stats">
@@ -172,7 +184,7 @@ export default function ProjectDetail({ id }: { id: string }) {
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reloadAll} />
       )}
       {editing && (
-        <EntryDialog projectId={id} projectName={project.name} entry={editing} onClose={() => setEditing(null)} onSaved={reloadAll} />
+        <EntryDialog projectId={id} projectName={project.name} projects={summaries.data ?? undefined} entry={editing} onClose={() => setEditing(null)} onSaved={reloadAll} />
       )}
       {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reloadAll} />}
     </div>

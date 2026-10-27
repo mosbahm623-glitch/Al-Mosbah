@@ -365,3 +365,13 @@ select:disabled { opacity: 0.6; }
   .dialog-wide .span-2 { grid-column: 1 / -1; }
 }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.btn-danger { background: var(--err-bg); color: var(--err); margin-inline-start: auto; }
+.switcher select { min-width: 12rem; background: var(--surface); }
+@media (max-width: 719px) {
+  .head-actions { width: 100%; }
+  .switcher { flex: 1 1 100%; }
+  .switcher select { min-width: 0; }
+  .page-head > div:first-child { min-width: 0; }
+}
+.page-stack > * { min-width: 0; }
+.table-wrap { position: relative; }

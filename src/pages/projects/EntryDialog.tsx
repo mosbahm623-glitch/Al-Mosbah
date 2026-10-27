@@ -4,7 +4,7 @@ import Segmented from '../../components/Segmented'
 import CreatableSelect from '../../components/CreatableSelect'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
-import type { Entry } from './types'
+import type { Entry, ProjectSummary } from './types'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },
@@ -14,9 +14,9 @@ const KINDS = [
 type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 type Contractor = { id: string; name: string }
 
-type Props = { projectId: string; projectName: string; entry?: Entry; onClose: () => void; onSaved: () => void }
+type Props = { projectId: string; projectName: string; projects?: ProjectSummary[]; entry?: Entry; onClose: () => void; onSaved: () => void }
 
-export default function EntryDialog({ projectId, projectName, entry, onClose, onSaved }: Props) {
+export default function EntryDialog({ projectId, projectName, projects, entry, onClose, onSaved }: Props) {
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
@@ -35,6 +35,8 @@ export default function EntryDialog({ projectId, projectName, entry, onClose, on
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [targetProject, setTargetProject] = useState(projectId)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const category = categories.data?.find((c) => c.name === categoryName)
   const categoryOptions = useMemo(() => {
@@ -55,6 +57,17 @@ export default function EntryDialog({ projectId, projectName, entry, onClose, on
     if (existing) return existing.id
     const { data, error: err } = await supabase.from('contractors').insert({ name }).select('id').single()
     return err || !data ? null : (data.id as string)
+  }
+
+  async function remove() {
+    if (!entry) return
+    if (!confirmDelete) return setConfirmDelete(true)
+    setSaving(true)
+    const { error: err } = await supabase.from('entries').delete().eq('id', entry.id)
+    setSaving(false)
+    if (err) return setError('القيد ما اتحذفش، جرّب تاني')
+    onSaved()
+    onClose()
   }
 
   async function submit(e: FormEvent) {
@@ -80,7 +93,7 @@ export default function EntryDialog({ projectId, projectName, entry, onClose, on
       await supabase.from('expense_items').insert({ name: itemName.trim(), category_id: category.id })
     }
     const row = {
-      project_id: projectId,
+      project_id: targetProject,
       kind,
       category: isExpense ? category!.name : incomeLabel.trim(),
       item: isExpense ? itemName.trim() : null,
@@ -101,6 +114,18 @@ export default function EntryDialog({ projectId, projectName, entry, onClose, on
   return (
     <Dialog title={entry ? `تعديل القيد #${entry.seq}` : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
+        {entry && projects && projects.length > 1 && (
+          <label className="field span-2">
+            المشروع
+            <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)}>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div className="field span-2">
           النوع
           <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
@@ -171,6 +196,11 @@ export default function EntryDialog({ projectId, projectName, entry, onClose, on
           <button type="button" className="btn btn-ghost" onClick={onClose}>
             إلغاء
           </button>
+          {entry && (
+            <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving}>
+              {confirmDelete ? 'تأكيد الحذف نهائياً' : 'حذف القيد'}
+            </button>
+          )}
         </div>
       </form>
     </Dialog>

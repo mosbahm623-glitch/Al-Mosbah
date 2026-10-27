@@ -14,9 +14,15 @@ const KINDS = [
 type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 type Contractor = { id: string; name: string }
 
-type Props = { projectId: string; projectName: string; projects?: ProjectSummary[]; entry?: Entry; onClose: () => void; onSaved: () => void }
+type Props = {
+  projectId: string
+  projectName: string
+  projects?: ProjectSummary[]
+  /** new entries are paid from this custody (counted through the custody, not as project expense) */
+  advanceId?: string
+  entry?: Entry; onClose: () => void; onSaved: () => void }
 
-export default function EntryDialog({ projectId, projectName, projects, entry, onClose, onSaved }: Props) {
+export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, onClose, onSaved }: Props) {
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
@@ -37,6 +43,7 @@ export default function EntryDialog({ projectId, projectName, projects, entry, o
   const [saving, setSaving] = useState(false)
   const [targetProject, setTargetProject] = useState(projectId)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const fromAdvance = Boolean(advanceId ?? entry?.advance_id)
 
   const category = categories.data?.find((c) => c.name === categoryName)
   const categoryOptions = useMemo(() => {
@@ -104,7 +111,7 @@ export default function EntryDialog({ projectId, projectName, projects, entry, o
     }
     const { error: err } = entry
       ? await supabase.from('entries').update(row).eq('id', entry.id)
-      : await supabase.from('entries').insert(row)
+      : await supabase.from('entries').insert({ ...row, advance_id: advanceId ?? null })
     setSaving(false)
     if (err) return setError('القيد ما اتحفظش، جرّب تاني')
     onSaved()
@@ -112,9 +119,9 @@ export default function EntryDialog({ projectId, projectName, projects, entry, o
   }
 
   return (
-    <Dialog title={entry ? `تعديل القيد #${entry.seq}` : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
+    <Dialog title={entry ? `تعديل القيد #${entry.seq}` : fromAdvance ? 'مصروف من العهدة' : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
-        {entry && projects && projects.length > 1 && (
+        {entry && !fromAdvance && projects && projects.length > 1 && (
           <label className="field span-2">
             المشروع
             <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)}>
@@ -126,10 +133,12 @@ export default function EntryDialog({ projectId, projectName, projects, entry, o
             </select>
           </label>
         )}
-        <div className="field span-2">
-          النوع
-          <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
-        </div>
+        {!fromAdvance && (
+          <div className="field span-2">
+            النوع
+            <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
+          </div>
+        )}
 
         {kind === 'expense' ? (
           <>

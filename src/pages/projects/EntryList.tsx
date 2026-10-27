@@ -90,7 +90,7 @@ export default function EntryList({ entries, isAdmin, onEdit }: Props) {
                       </span>
                     </td>
                     <td>{e.category}</td>
-                    <td className="strong">{e.item}</td>
+                    <td className="strong">{e.item}{e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}</td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.notes}</td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>

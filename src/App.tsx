@@ -6,6 +6,8 @@ import Pending from './pages/Pending'
 import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
 import ProjectReport from './pages/projects/ProjectReport'
+import Advances from './pages/advances/Advances'
+import AdvanceDetail from './pages/advances/AdvanceDetail'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -21,6 +23,9 @@ function Content() {
   if (report) return <ProjectReport id={report[1]} />
   const detail = /^projects\/([0-9a-f-]{36})$/.exec(route)
   if (detail) return <ProjectDetail id={detail[1]} />
+  if (route === 'advances') return <Advances />
+  const advance = /^advances\/([0-9a-f-]{36})$/.exec(route)
+  if (advance) return <AdvanceDetail id={advance[1]} />
   if (!item || (item.adminOnly && profile?.role !== 'admin')) {
     return <ComingSoon title="الصفحة مش موجودة" />
   }

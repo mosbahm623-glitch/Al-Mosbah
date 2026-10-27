@@ -8,7 +8,10 @@ export type ProjectSummary = {
   status: 'active' | 'closed'
   type: ProjectType
   income: number
+  /** includes custody installments (minus returns), not the entries paid from a custody */
   expenses: number
+  /** expense entries not paid from a custody */
+  direct_expenses: number
 }
 
 export type Entry = {
@@ -21,6 +24,8 @@ export type Entry = {
   amount: number
   entry_date: string
   notes: string | null
+  /** set when the entry was paid from a custody */
+  advance_id: string | null
 }
 
 export const percentOf = (p: ProjectSummary) => (p.budget > 0 ? Math.round((p.expenses / p.budget) * 100) : 0)
@@ -29,10 +34,12 @@ export const isOver = (p: ProjectSummary) => p.budget > 0 && p.expenses > p.budg
 /** Per-project totals, computed in the database (see migration 005). */
 export const fetchSummaries = () => supabase.rpc('project_summaries')
 
+export const ENTRY_COLUMNS = 'id,seq,kind,category,item,amount,entry_date,notes,advance_id,contractor:contractors(name)'
+
 export const fetchEntries = (projectId: string) =>
   supabase
     .from('entries')
-    .select('id,seq,kind,category,item,amount,entry_date,notes,contractor:contractors(name)')
+    .select(ENTRY_COLUMNS)
     .eq('project_id', projectId)
     .order('seq', { ascending: false })
     .returns<Entry[]>()

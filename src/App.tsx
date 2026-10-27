@@ -11,6 +11,8 @@ import AdvanceDetail from './pages/advances/AdvanceDetail'
 import AdvanceReport from './pages/advances/AdvanceReport'
 import NoAccess from './pages/NoAccess'
 import Users from './pages/users/Users'
+import Banks from './pages/banks/Banks'
+import BankDetail from './pages/banks/BankDetail'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -31,6 +33,9 @@ function Content() {
   if (report) return <ProjectReport id={report[1]} />
   const detail = /^projects\/([0-9a-f-]{36})$/.exec(route)
   if (detail) return <ProjectDetail id={detail[1]} />
+  if (route === 'banks') return <Banks />
+  const bank = /^banks\/([0-9a-f-]{36})$/.exec(route)
+  if (bank) return <BankDetail id={bank[1]} />
   if (route === 'advances') return <Advances />
   const advanceReport = /^advances\/([0-9a-f-]{36})\/report$/.exec(route)
   if (advanceReport) return <AdvanceReport id={advanceReport[1]} />

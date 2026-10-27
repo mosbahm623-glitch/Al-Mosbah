@@ -3,6 +3,7 @@ export const MODULES = [
   { id: 'dashboard', label: 'لوحة التحكم' },
   { id: 'projects', label: 'المشاريع' },
   { id: 'advances', label: 'العهد' },
+  { id: 'banks', label: 'البنوك' },
   { id: 'contractors', label: 'مستحقات المقاولين' },
   { id: 'reports', label: 'التقارير والتصدير' },
   { id: 'tools', label: 'الأدوات' },

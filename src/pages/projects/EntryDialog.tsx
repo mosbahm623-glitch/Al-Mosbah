@@ -107,7 +107,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
       }
     }
     let bankId: string | null = null
-    if (isExpense && !fromAdvance && bankName.trim()) {
+    if (!fromAdvance && bankName.trim()) {
       bankId = await findOrCreateBank(bankName.trim())
       if (!bankId) {
         setSaving(false)
@@ -196,20 +196,25 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
                 {contractors.data?.map((c) => <option key={c.id} value={c.name} />)}
               </datalist>
             </label>
-            {!fromAdvance && (
-              <label className="field">
-                البنك / الحساب
-                <input value={bankName} onChange={(e) => setBankName(e.target.value)} list="bank-names" placeholder="مدفوع من أنهي بنك (اختياري)" />
-                <datalist id="bank-names">
-                  {banks.data?.map((b) => <option key={b.id} value={b.name} />)}
-                </datalist>
-              </label>
-            )}
           </>
         ) : (
           <label className="field span-2">
             بيان الوارد
             <input value={incomeLabel} onChange={(e) => setIncomeLabel(e.target.value)} placeholder="مثلاً: دفعة عميل" required />
+          </label>
+        )}
+        {!fromAdvance && (
+          <label className="field">
+            البنك / الحساب
+            <input
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              list="bank-names"
+              placeholder={kind === 'income' ? 'اتودّع في أنهي بنك (اختياري)' : 'مدفوع من أنهي بنك (اختياري)'}
+            />
+            <datalist id="bank-names">
+              {banks.data?.map((b) => <option key={b.id} value={b.name} />)}
+            </datalist>
           </label>
         )}
 

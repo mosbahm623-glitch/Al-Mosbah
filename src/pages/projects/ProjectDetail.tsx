@@ -1,22 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import Segmented from '../../components/Segmented'
 import Progress from '../../components/Progress'
 import { supabase } from '../../lib/supabase'
-import { dateText, money, TYPE_LABEL } from '../../lib/format'
+import { money, TYPE_LABEL } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
 import { isOver, percentOf, type Entry, type ProjectSummary } from './types'
 import StatusChip from './StatusChip'
 import { fetchSummaries } from './data'
 import ProjectDialog from './ProjectDialog'
 import EntryDialog from './EntryDialog'
-
-const KINDS = [
-  { value: 'all', label: 'الكل' },
-  { value: 'income', label: 'وارد' },
-  { value: 'expense', label: 'مصروف' },
-] as const
+import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {
   const { profile } = useAuth()
@@ -33,12 +27,10 @@ export default function ProjectDetail({ id }: { id: string }) {
   )
   const summaries = useAsync<ProjectSummary[]>(fetchSummaries)
   const entries = useAsync<Entry[]>(fetchEntries)
-  const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [dialog, setDialog] = useState<'entry' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
 
   const project = summaries.data?.find((p) => p.id === id)
-  const shown = useMemo(() => (entries.data ?? []).filter((e) => kind === 'all' || e.kind === kind), [entries.data, kind])
 
   function reloadAll() {
     summaries.reload()
@@ -121,64 +113,8 @@ export default function ProjectDetail({ id }: { id: string }) {
         </section>
       )}
 
-      <div className="toolbar">
-        <h2 className="section-title">القيود</h2>
-        <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
-        <span className="toolbar-note muted small">{shown.length} قيد</span>
-      </div>
-
       {entries.failed && <p className="msg msg-error">مقدرناش نحمّل القيود، جرّب تاني</p>}
-      {entries.data && shown.length === 0 && <div className="card empty">مفيش قيود.</div>}
-      {shown.length > 0 && (
-        <section className="panel">
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>رقم القيد</th>
-                  <th>التاريخ</th>
-                  <th>النوع</th>
-                  <th>البند</th>
-                  <th>اسم المصروف</th>
-                  <th>المقاول</th>
-                  <th>ملاحظات</th>
-                  <th>المبلغ</th>
-                  {isAdmin && <th><span className="sr-only">إجراءات</span></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((e) => (
-                  <tr key={e.id}>
-                    <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">{dateText(e.entry_date)}</td>
-                    <td>
-                      <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
-                        <span className="dot" />
-                        {e.kind === 'income' ? 'وارد' : 'مصروف'}
-                      </span>
-                    </td>
-                    <td>{e.category}</td>
-                    <td>{e.item}</td>
-                    <td>{e.contractor?.name}</td>
-                    <td className="muted">{e.notes}</td>
-                    <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-                      {e.kind === 'income' ? '+' : '−'}
-                      {money(e.amount)}
-                    </td>
-                    {isAdmin && (
-                      <td>
-                        <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditing(e)}>
-                          <Pencil size={17} />
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      {entries.data && <EntryList entries={entries.data} isAdmin={isAdmin} onEdit={setEditing} />}
 
       {dialog === 'entry' && (
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reloadAll} />

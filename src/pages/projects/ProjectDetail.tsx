@@ -25,9 +25,10 @@ export default function ProjectDetail({ id }: { id: string }) {
     () =>
       supabase
         .from('entries')
-        .select('id,seq,kind,category,amount,entry_date,notes')
+        .select('id,seq,kind,category,item,amount,entry_date,notes,contractor:contractors(name)')
         .eq('project_id', id)
-        .order('seq', { ascending: false }),
+        .order('seq', { ascending: false })
+        .returns<Entry[]>(),
     [id],
   )
   const summaries = useAsync<ProjectSummary[]>(fetchSummaries)
@@ -37,7 +38,6 @@ export default function ProjectDetail({ id }: { id: string }) {
 
   const project = summaries.data?.find((p) => p.id === id)
   const shown = useMemo(() => (entries.data ?? []).filter((e) => kind === 'all' || e.kind === kind), [entries.data, kind])
-  const categories = useMemo(() => [...new Set((entries.data ?? []).map((e) => e.category))], [entries.data])
 
   function reloadAll() {
     summaries.reload()
@@ -125,7 +125,9 @@ export default function ProjectDetail({ id }: { id: string }) {
                   <th>رقم القيد</th>
                   <th>التاريخ</th>
                   <th>النوع</th>
-                  <th>التصنيف</th>
+                  <th>البند</th>
+                  <th>اسم المصروف</th>
+                  <th>المقاول</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
                 </tr>
@@ -142,6 +144,8 @@ export default function ProjectDetail({ id }: { id: string }) {
                       </span>
                     </td>
                     <td>{e.category}</td>
+                    <td>{e.item}</td>
+                    <td>{e.contractor?.name}</td>
                     <td className="muted">{e.notes}</td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}
@@ -156,7 +160,7 @@ export default function ProjectDetail({ id }: { id: string }) {
       )}
 
       {dialog === 'entry' && (
-        <EntryDialog projectId={id} projectName={project.name} categories={categories} onClose={() => setDialog(null)} onSaved={reloadAll} />
+        <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reloadAll} />
       )}
       {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reloadAll} />}
     </div>

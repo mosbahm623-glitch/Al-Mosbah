@@ -15,6 +15,8 @@ export type Entry = {
   seq: number
   kind: 'income' | 'expense'
   category: string
+  item: string | null
+  contractor: { name: string } | null
   amount: number
   entry_date: string
   notes: string | null

@@ -350,3 +350,9 @@ input:focus-visible, .btn:focus-visible, .top-btn:focus-visible, .nav-link:focus
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .dialog-actions { display: flex; gap: 0.6rem; }
 .table td.num { white-space: nowrap; }
+.field label { display: grid; gap: 0.4rem; font: inherit; }
+select { font: inherit; min-height: 44px; padding: 0 0.7rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); width: 100%; }
+select:disabled { opacity: 0.6; }
+.add-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.add-row input { flex: 1 1 10rem; }
+.add-row .btn { padding-inline: 1rem; }

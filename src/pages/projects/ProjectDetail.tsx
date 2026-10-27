@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import PageHead from '../../components/PageHead'
+import Stats from '../../components/Stats'
 import { FileText, Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Progress from '../../components/Progress'
@@ -33,57 +35,57 @@ export default function ProjectDetail({ id }: { id: string }) {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <a href="#/projects">المشاريع</a>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">{project.name}</span>
-          </nav>
-          <div className="title-row">
-            <h1 className="page-title">{project.name}</h1>
+      <PageHead
+        title={project.name}
+        parent={{ label: 'المشاريع', href: '#/projects' }}
+        chips={
+          <>
             <span className="chip chip-neutral">{TYPE_LABEL[project.type]}</span>
             <StatusChip p={project} />
-          </div>
-        </div>
-        <div className="head-actions">
-          {(projects?.length ?? 0) > 1 && (
-            <label className="switcher">
-              <span className="sr-only">تبديل المشروع</span>
-              <select value={id} onChange={(e) => { window.location.hash = `#/projects/${e.target.value}` }}>
-                {projects?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <a className="btn btn-ghost btn-icon" href={`#/projects/${id}/report`}>
-            <FileText size={18} aria-hidden="true" />
-            تقرير / تصدير
-          </a>
-          {canEdit && (<>
-            <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
-              <Pencil size={18} aria-hidden="true" />
-              تعديل
-            </button>
-            <button className="btn btn-icon" onClick={() => setDialog('entry')}>
-              <Plus size={18} aria-hidden="true" />
-              قيد جديد
-            </button>
-          </>)}
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <>
+            {(projects?.length ?? 0) > 1 && (
+              <label className="switcher">
+                <span className="sr-only">تبديل المشروع</span>
+                <select value={id} onChange={(e) => { window.location.hash = `#/projects/${e.target.value}` }}>
+                  {projects?.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <a className="btn btn-ghost btn-icon" href={`#/projects/${id}/report`}>
+              <FileText size={18} aria-hidden="true" />
+              تقرير / تصدير
+            </a>
+            {canEdit && (
+              <>
+                <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
+                  <Pencil size={18} aria-hidden="true" />
+                  تعديل
+                </button>
+                <button className="btn btn-icon" onClick={() => setDialog('entry')}>
+                  <Plus size={18} aria-hidden="true" />
+                  قيد جديد
+                </button>
+              </>
+            )}
+          </>
+        }
+      />
 
-      <section className="stats">
-        <div className="stat"><span className="muted small">الميزانية</span><strong>{money(project.budget)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الوارد</span><strong className="tone-text-ok">{money(project.income)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المصروف</span><strong className="tone-text-err">{money(project.expenses)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الرصيد</span><strong className={balance >= 0 ? 'tone-text-ok' : 'tone-text-err'}>{money(balance)}<small>ج.م</small></strong></div>
-      </section>
+      <Stats
+        items={[
+          { label: 'الميزانية', value: project.budget },
+          { label: 'الوارد', value: project.income, tone: 'ok' },
+          { label: 'المصروف', value: project.expenses, tone: 'err' },
+          { label: 'الرصيد', value: balance, tone: balance >= 0 ? 'ok' : 'err' },
+        ]}
+      />
 
       {project.budget > 0 && (
         <section className="panel usage-panel">

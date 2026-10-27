@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PageHead from '../../components/PageHead'
 import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES } from '../../auth/permissions'
@@ -16,20 +17,16 @@ export default function Users() {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">المستخدمين</span>
-          </nav>
-          <h1 className="page-title">المستخدمين والصلاحيات</h1>
-        </div>
-        <button className="btn btn-icon" onClick={() => setAdding(true)}>
-          <Plus size={18} aria-hidden="true" />
-          مستخدم جديد
-        </button>
-      </div>
+      <PageHead
+        title="المستخدمين والصلاحيات"
+        crumb="المستخدمين"
+        actions={
+          <button className="btn btn-icon" onClick={() => setAdding(true)}>
+            <Plus size={18} aria-hidden="true" />
+            مستخدم جديد
+          </button>
+        }
+      />
 
       {users.failed && <p className="msg msg-error">مقدرناش نحمّل المستخدمين، جرّب تاني</p>}
       {users.loading && !users.data && <p className="muted">جارٍ التحميل...</p>}

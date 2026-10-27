@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import PageHead from '../../components/PageHead'
+import Stats from '../../components/Stats'
 import { Plus, Search } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
@@ -35,29 +37,26 @@ export default function Advances() {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">العهد</span>
-          </nav>
-          <h1 className="page-title">العهد</h1>
-        </div>
-        {isAdmin && (
-          <button className="btn btn-icon" onClick={() => setAdding(true)}>
-            <Plus size={18} aria-hidden="true" />
-            عهدة جديدة
-          </button>
-        )}
-      </div>
+      <PageHead
+        title="العهد"
+        actions={
+          isAdmin && (
+            <button className="btn btn-icon" onClick={() => setAdding(true)}>
+              <Plus size={18} aria-hidden="true" />
+              عهدة جديدة
+            </button>
+          )
+        }
+      />
 
-      <section className="stats">
-        <div className="stat"><span className="muted small">المستلم</span><strong>{money(total((a) => a.given))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المصروف</span><strong className="tone-text-err">{money(total((a) => a.spent))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المرتجع</span><strong>{money(total((a) => a.returned))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الرصيد مع المستلمين</span><strong className="tone-text-ok">{money(total(advanceBalance))}<small>ج.م</small></strong></div>
-      </section>
+      <Stats
+        items={[
+          { label: 'المستلم', value: total((a) => a.given) },
+          { label: 'المصروف', value: total((a) => a.spent), tone: 'err' },
+          { label: 'المرتجع', value: total((a) => a.returned) },
+          { label: 'الرصيد مع المستلمين', value: total(advanceBalance), tone: 'ok' },
+        ]}
+      />
 
       <div className="toolbar">
         <label className="search-field">

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import PageHead from '../../components/PageHead'
 import { Plus, Search } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
@@ -44,22 +45,17 @@ export default function Projects() {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">المشاريع</span>
-          </nav>
-          <h1 className="page-title">المشاريع</h1>
-        </div>
-        {canEdit && (
-          <button className="btn btn-icon" onClick={() => setAdding(true)}>
-            <Plus size={18} aria-hidden="true" />
-            مشروع جديد
-          </button>
-        )}
-      </div>
+      <PageHead
+        title="المشاريع"
+        actions={
+          canEdit && (
+            <button className="btn btn-icon" onClick={() => setAdding(true)}>
+              <Plus size={18} aria-hidden="true" />
+              مشروع جديد
+            </button>
+          )
+        }
+      />
 
       <div className="toolbar">
         <label className="search-field">

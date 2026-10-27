@@ -1,5 +1,5 @@
 import type { Entry, ProjectSummary } from './projects'
-import { TYPE_LABEL } from './format'
+import { TYPE_LABEL, todayISO, todayText } from './format'
 
 type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
 
@@ -164,7 +164,7 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   const info: [string, string | number | { formula: string; result: number }][] = [
     ['نوع المشروع', TYPE_LABEL[project.type]],
     ['الحالة', project.status === 'active' ? 'نشط' : 'مقفول'],
-    ['تاريخ التقرير', new Date().toLocaleDateString('en-GB').replaceAll('/', '-')],
+    ['تاريخ التقرير', todayText()],
     ['الميزانية', project.budget],
     ['إجمالي الوارد', { formula: `SUMIF('كل القيود'!C:C,"وارد",'كل القيود'!${L}:${L})`, result: incomeTotal }],
     ['إجمالي المصروف', { formula: `SUMIF('كل القيود'!C:C,"مصروف",'كل القيود'!${L}:${L})`, result: expenseTotal }],
@@ -226,7 +226,7 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `المصباح - ${project.name} - ${new Date().toLocaleDateString('en-CA')}.xlsx`
+  a.download = `المصباح - ${project.name} - ${todayISO()}.xlsx`
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }

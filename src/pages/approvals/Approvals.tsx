@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import PageHead from '../../components/PageHead'
 import { Check, X } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import { decide, fetchByStatus, notifyApprovalsChanged, type PendingEntry } from '../../lib/approvals'
@@ -29,22 +30,18 @@ export default function Approvals() {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">الموافقات</span>
-          </nav>
-          <h1 className="page-title">الموافقات</h1>
-        </div>
-        {tab === 'pending' && rows.length > 1 && (
-          <button className="btn btn-icon" disabled={busy} onClick={() => void act(rows.map((r) => r.id), 'approved')}>
-            <Check size={18} aria-hidden="true" />
-            موافقة على الكل ({rows.length})
-          </button>
-        )}
-      </div>
+      <PageHead
+        title="الموافقات"
+        actions={
+          tab === 'pending' &&
+          rows.length > 1 && (
+            <button className="btn btn-icon" disabled={busy} onClick={() => void act(rows.map((r) => r.id), 'approved')}>
+              <Check size={18} aria-hidden="true" />
+              موافقة على الكل ({rows.length})
+            </button>
+          )
+        }
+      />
 
       <div className="toolbar">
         <Segmented label="الحالة" value={tab} options={TABS} onChange={setTab} />

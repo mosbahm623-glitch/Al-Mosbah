@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import PageHead from '../../components/PageHead'
+import Stats from '../../components/Stats'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { bankBalance, fetchBankSummaries, type BankSummary } from '../../lib/banks'
@@ -16,29 +18,26 @@ export default function Banks() {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">البنوك</span>
-          </nav>
-          <h1 className="page-title">البنوك</h1>
-        </div>
-        {canEdit && (
-          <button className="btn btn-icon" onClick={() => setAdding(true)}>
-            <Plus size={18} aria-hidden="true" />
-            بنك جديد
-          </button>
-        )}
-      </div>
+      <PageHead
+        title="البنوك"
+        actions={
+          canEdit && (
+            <button className="btn btn-icon" onClick={() => setAdding(true)}>
+              <Plus size={18} aria-hidden="true" />
+              بنك جديد
+            </button>
+          )
+        }
+      />
 
-      <section className="stats">
-        <div className="stat"><span className="muted small">الرصيد الافتتاحي</span><strong>{money(total((b) => b.opening_balance))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الوارد</span><strong className="tone-text-ok">{money(total((b) => b.income))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المصروف</span><strong className="tone-text-err">{money(total((b) => b.expenses))}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الرصيد الحالي</span><strong className={total(bankBalance) >= 0 ? 'tone-text-ok' : 'tone-text-err'}>{money(total(bankBalance))}<small>ج.م</small></strong></div>
-      </section>
+      <Stats
+        items={[
+          { label: 'الرصيد الافتتاحي', value: total((b) => b.opening_balance) },
+          { label: 'الوارد', value: total((b) => b.income), tone: 'ok' },
+          { label: 'المصروف', value: total((b) => b.expenses), tone: 'err' },
+          { label: 'الرصيد الحالي', value: total(bankBalance), tone: total(bankBalance) >= 0 ? 'ok' : 'err' },
+        ]}
+      />
 
       {banks.failed && <p className="msg msg-error">مقدرناش نحمّل البنوك، جرّب تاني</p>}
       {banks.loading && !banks.data && <p className="muted">جارٍ التحميل...</p>}

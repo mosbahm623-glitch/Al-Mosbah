@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import PageHead from '../../components/PageHead'
+import Stats from '../../components/Stats'
 import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, type AdvanceReturn, type Installment } from '../../lib/advances'
@@ -50,44 +52,40 @@ export default function AdvanceDetail({ id }: { id: string }) {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <a href="#/advances">العهد</a>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">{advance.holder_name}</span>
-          </nav>
-          <div className="title-row">
-            <h1 className="page-title">{advance.holder_name}</h1>
-            <AdvanceChip status={advance.status} />
-          </div>
-          {advance.notes && <p className="muted small">{advance.notes}</p>}
-        </div>
-        <div className="head-actions">
-          <a className="btn btn-ghost btn-icon" href={`#/advances/${id}/report`}>
-            <FileText size={18} aria-hidden="true" />
-            كشف / طباعة
-          </a>
-          {isAdmin && (<>
-            <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
-              <Pencil size={18} aria-hidden="true" />
-              تعديل
-            </button>
-            <button className="btn btn-ghost" onClick={() => void toggleStatus()}>
-              {advance.status === 'open' ? 'قفل العهدة' : 'إعادة فتح'}
-            </button>
-          </>)}
-        </div>
-      </div>
+      <PageHead
+        title={advance.holder_name}
+        parent={{ label: 'العهد', href: '#/advances' }}
+        chips={<AdvanceChip status={advance.status} />}
+        note={advance.notes}
+        actions={
+          <>
+            <a className="btn btn-ghost btn-icon" href={`#/advances/${id}/report`}>
+              <FileText size={18} aria-hidden="true" />
+              كشف / طباعة
+            </a>
+            {isAdmin && (
+              <>
+                <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
+                  <Pencil size={18} aria-hidden="true" />
+                  تعديل
+                </button>
+                <button className="btn btn-ghost" onClick={() => void toggleStatus()}>
+                  {advance.status === 'open' ? 'قفل العهدة' : 'إعادة فتح'}
+                </button>
+              </>
+            )}
+          </>
+        }
+      />
 
-      <section className="stats">
-        <div className="stat"><span className="muted small">المستلم</span><strong>{money(advance.given)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المصروف</span><strong className="tone-text-err">{money(advance.spent)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المرتجع</span><strong>{money(advance.returned)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الرصيد</span><strong className={balance >= 0 ? 'tone-text-ok' : 'tone-text-err'}>{money(balance)}<small>ج.م</small></strong></div>
-      </section>
+      <Stats
+        items={[
+          { label: 'المستلم', value: advance.given },
+          { label: 'المصروف', value: advance.spent, tone: 'err' },
+          { label: 'المرتجع', value: advance.returned },
+          { label: 'الرصيد', value: balance, tone: balance >= 0 ? 'ok' : 'err' },
+        ]}
+      />
 
       <section className="panel">
         <div className="panel-head">

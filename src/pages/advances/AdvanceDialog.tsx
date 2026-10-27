@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import { supabase } from '../../lib/supabase'
 import type { AdvanceSummary } from '../../lib/advances'
@@ -10,7 +11,7 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
   const [holder, setHolder] = useState(advance?.holder_name ?? '')
   const [notes, setNotes] = useState(advance?.notes ?? '')
   const [first, setFirst] = useState('')
-  const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'))
+  const [date, setDate] = useState(() => todayISO())
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 

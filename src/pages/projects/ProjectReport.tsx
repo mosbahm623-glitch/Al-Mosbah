@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
-import { dateText, money, TYPE_LABEL } from '../../lib/format'
+import { dateText, money, todayText, TYPE_LABEL } from '../../lib/format'
 import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
@@ -16,7 +16,7 @@ export default function ProjectReport({ id }: { id: string }) {
   const [withNotes, setWithNotes] = useState(true)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [today] = useState(() => new Date().toLocaleDateString('en-GB').replaceAll('/', '-'))
+  const [today] = useState(() => todayText())
 
   const { expenseGroups, incomes } = useMemo(() => {
     const map = new Map<string, Group>()

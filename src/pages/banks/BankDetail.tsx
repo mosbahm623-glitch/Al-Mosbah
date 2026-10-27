@@ -1,4 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
+import PageHead from '../../components/PageHead'
+import Stats from '../../components/Stats'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { bankBalance, byProject, fetchBankMovements, fetchBankSummaries, type BankMovement, type BankSummary } from '../../lib/banks'
@@ -45,33 +47,27 @@ export default function BankDetail({ id }: { id: string }) {
 
   return (
     <div className="page-stack">
-      <div className="page-head">
-        <div>
-          <nav className="crumbs" aria-label="مسار التنقل">
-            <span>الرئيسية</span>
-            <span aria-hidden="true">‹</span>
-            <a href="#/banks">البنوك</a>
-            <span aria-hidden="true">‹</span>
-            <span className="crumb-current">{bank.name}</span>
-          </nav>
-          <h1 className="page-title">{bank.name}</h1>
-        </div>
-        {canEdit && (
-          <div className="head-actions">
+      <PageHead
+        title={bank.name}
+        parent={{ label: 'البنوك', href: '#/banks' }}
+        actions={
+          canEdit && (
             <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
               <Pencil size={18} aria-hidden="true" />
               تعديل
             </button>
-          </div>
-        )}
-      </div>
+          )
+        }
+      />
 
-      <section className="stats">
-        <div className="stat"><span className="muted small">الرصيد الافتتاحي</span><strong>{money(bank.opening_balance)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الوارد</span><strong className="tone-text-ok">{money(bank.income)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">المصروف</span><strong className="tone-text-err">{money(bank.expenses)}<small>ج.م</small></strong></div>
-        <div className="stat"><span className="muted small">الرصيد الحالي</span><strong className={balance >= 0 ? 'tone-text-ok' : 'tone-text-err'}>{money(balance)}<small>ج.م</small></strong></div>
-      </section>
+      <Stats
+        items={[
+          { label: 'الرصيد الافتتاحي', value: bank.opening_balance },
+          { label: 'الوارد', value: bank.income, tone: 'ok' },
+          { label: 'المصروف', value: bank.expenses, tone: 'err' },
+          { label: 'الرصيد الحالي', value: balance, tone: balance >= 0 ? 'ok' : 'err' },
+        ]}
+      />
 
       <section className="panel">
         <div className="panel-head"><h2 className="section-title">حسب المشروع</h2></div>

@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
+import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import CreatableSelect from '../../components/CreatableSelect'
@@ -43,7 +44,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
   const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
   const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
-  const [date, setDate] = useState(() => entry?.entry_date ?? new Date().toLocaleDateString('en-CA'))
+  const [date, setDate] = useState(() => entry?.entry_date ?? todayISO())
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)

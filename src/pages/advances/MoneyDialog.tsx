@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import { supabase } from '../../lib/supabase'
 
@@ -22,7 +23,7 @@ const CONFIG = {
 export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onSaved }: Props) {
   const cfg = CONFIG[kind]
   const [amount, setAmount] = useState(row ? String(row.amount) : '')
-  const [date, setDate] = useState(() => row?.date ?? new Date().toLocaleDateString('en-CA'))
+  const [date, setDate] = useState(() => row?.date ?? todayISO())
   const [notes, setNotes] = useState(row?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)

@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { ArrowRight, Printer } from 'lucide-react'
 import { advanceBalance } from '../../lib/advances'
-import { dateText, money } from '../../lib/format'
+import { dateText, money, todayText } from '../../lib/format'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 
 /** Printable statement of one custody: what the holder received, spent (per project) and returned. */
 export default function AdvanceReport({ id }: { id: string }) {
   const { advance, installments, returns, entries, loading, failed } = useAdvanceData(id)
-  const [today] = useState(() => new Date().toLocaleDateString('en-GB').replaceAll('/', '-'))
+  const [today] = useState(() => todayText())
 
   if (loading) return <p className="muted">جارٍ التحميل...</p>
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الكشف، جرّب تاني</p>

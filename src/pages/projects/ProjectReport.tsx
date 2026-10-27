@@ -1,37 +1,23 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 import { dateText, money, TYPE_LABEL } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
+import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
-import { fetchSummaries } from './data'
-import { isOver, percentOf, type Entry, type ProjectSummary } from './types'
+import { isOver, percentOf, type Entry } from '../../lib/projects'
 
 type Group = { name: string; rows: Entry[]; total: number }
 
 export default function ProjectReport({ id }: { id: string }) {
-  const fetchEntries = useCallback(
-    () =>
-      supabase
-        .from('entries')
-        .select('id,seq,kind,category,item,amount,entry_date,notes,contractor:contractors(name)')
-        .eq('project_id', id)
-        .order('seq')
-        .returns<Entry[]>(),
-    [id],
-  )
-  const summaries = useAsync<ProjectSummary[]>(fetchSummaries)
-  const entries = useAsync<Entry[]>(fetchEntries)
+  const { project, entries, loading, failed: loadFailed } = useProjectData(id)
   const [withContractor, setWithContractor] = useState(true)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [today] = useState(() => new Date().toLocaleDateString('en-GB').replaceAll('/', '-'))
 
-  const project = summaries.data?.find((p) => p.id === id)
   const { expenseGroups, incomes } = useMemo(() => {
     const map = new Map<string, Group>()
     const inc: Entry[] = []
-    for (const e of entries.data ?? []) {
+    for (const e of [...(entries ?? [])].sort((a, b) => a.seq - b.seq)) {
       if (e.kind === 'income') {
         inc.push(e)
         continue
@@ -42,13 +28,13 @@ export default function ProjectReport({ id }: { id: string }) {
       map.set(e.category, g)
     }
     return { expenseGroups: [...map.values()].sort((a, b) => b.total - a.total), incomes: inc }
-  }, [entries.data])
+  }, [entries])
 
-  if ((summaries.loading && !summaries.data) || (entries.loading && !entries.data)) return <p className="muted">جارٍ التحميل...</p>
-  if (summaries.failed || entries.failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
-  if (!project || !entries.data) return <p className="msg msg-error">المشروع مش موجود</p>
+  if (loading) return <p className="muted">جارٍ التحميل...</p>
+  if (loadFailed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
+  if (!project || !entries) return <p className="msg msg-error">المشروع مش موجود</p>
 
-  const data = entries.data
+  const data = entries
   const balance = project.income - project.expenses
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
   const cols = withContractor ? 6 : 5

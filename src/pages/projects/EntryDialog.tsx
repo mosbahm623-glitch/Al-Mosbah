@@ -4,7 +4,7 @@ import Segmented from '../../components/Segmented'
 import CreatableSelect from '../../components/CreatableSelect'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
-import type { Entry, ProjectSummary } from './types'
+import type { Entry, ProjectSummary } from '../../lib/projects'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },

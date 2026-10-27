@@ -5,10 +5,9 @@ import Segmented from '../../components/Segmented'
 import Progress from '../../components/Progress'
 import { money, TYPE_LABEL } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
-import { isOver, percentOf, type ProjectSummary } from './types'
+import { fetchSummaries, isOver, percentOf, type ProjectSummary } from '../../lib/projects'
 import ProjectDialog from './ProjectDialog'
 import StatusChip from './StatusChip'
-import { fetchSummaries } from './data'
 
 const STATUS = [
   { value: 'all', label: 'الكل' },

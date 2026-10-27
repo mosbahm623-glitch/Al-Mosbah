@@ -1,4 +1,4 @@
-import type { Entry, ProjectSummary } from '../pages/projects/types'
+import type { Entry, ProjectSummary } from './projects'
 import { TYPE_LABEL } from './format'
 
 type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean }
@@ -7,6 +7,7 @@ const INK = 'FF161513'
 const HEAD_FILL = 'FF312D2A'
 const SOFT_FILL = 'FFF3EFEB'
 const MONEY = '#,##0.00'
+const solid = (argb: string) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } }) as const
 const thin = { style: 'thin', color: { argb: 'FFDEDAD6' } } as const
 const border = { top: thin, left: thin, bottom: thin, right: thin }
 
@@ -38,7 +39,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
     row.height = 24
     row.eachCell((c) => {
       c.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEAD_FILL } }
+      c.fill = solid(HEAD_FILL)
       c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
       c.border = border
     })
@@ -97,7 +98,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
   totalRow.getCell(amountCol).numFmt = MONEY
   totalRow.eachCell((c) => {
     c.font = { bold: true, color: { argb: INK } }
-    c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SOFT_FILL } }
+    c.fill = solid(SOFT_FILL)
     c.border = border
   })
   all.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: amountCol } }
@@ -140,7 +141,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
     t.getCell(amt).numFmt = MONEY
     t.eachCell((c) => {
       c.font = { bold: true }
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SOFT_FILL } }
+      c.fill = solid(SOFT_FILL)
       c.border = border
     })
     setup(ws, 1)
@@ -153,7 +154,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
   const title = sum.getCell('A1')
   title.value = `المصباح — تقرير مشروع: ${project.name}`
   title.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }
-  title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEAD_FILL } }
+  title.fill = solid(HEAD_FILL)
   title.alignment = { horizontal: 'center', vertical: 'middle' }
   sum.getRow(1).height = 34
   const info: [string, string | number | { formula: string; result: number }][] = [
@@ -182,7 +183,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
     r.font = { bold: true }
     r.eachCell((c) => {
       c.border = border
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SOFT_FILL } }
+      c.fill = solid(SOFT_FILL)
     })
   }
   sum.addRow([])
@@ -209,7 +210,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
     t.getCell(2).numFmt = MONEY
     t.eachCell((c) => {
       c.font = { bold: true }
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SOFT_FILL } }
+      c.fill = solid(SOFT_FILL)
       c.border = border
     })
   }

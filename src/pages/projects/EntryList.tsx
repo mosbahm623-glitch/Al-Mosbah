@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import { dateText, money } from '../../lib/format'
-import type { Entry } from './types'
+import type { Entry } from '../../lib/projects'
 
 const KINDS = [
   { value: 'all', label: 'الكل' },

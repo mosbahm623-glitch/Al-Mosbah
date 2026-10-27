@@ -1,13 +1,11 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { FileText, Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Progress from '../../components/Progress'
-import { supabase } from '../../lib/supabase'
 import { money, TYPE_LABEL } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
-import { isOver, percentOf, type Entry, type ProjectSummary } from './types'
+import { useProjectData } from '../../lib/useProjectData'
+import { isOver, percentOf, type Entry } from '../../lib/projects'
 import StatusChip from './StatusChip'
-import { fetchSummaries } from './data'
 import ProjectDialog from './ProjectDialog'
 import EntryDialog from './EntryDialog'
 import EntryList from './EntryList'
@@ -15,30 +13,12 @@ import EntryList from './EntryList'
 export default function ProjectDetail({ id }: { id: string }) {
   const { profile } = useAuth()
   const isAdmin = profile?.role === 'admin'
-  const fetchEntries = useCallback(
-    () =>
-      supabase
-        .from('entries')
-        .select('id,seq,kind,category,item,amount,entry_date,notes,contractor:contractors(name)')
-        .eq('project_id', id)
-        .order('seq', { ascending: false })
-        .returns<Entry[]>(),
-    [id],
-  )
-  const summaries = useAsync<ProjectSummary[]>(fetchSummaries)
-  const entries = useAsync<Entry[]>(fetchEntries)
+  const { project, projects, entries, loading, failed, reload } = useProjectData(id)
   const [dialog, setDialog] = useState<'entry' | 'edit' | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
 
-  const project = summaries.data?.find((p) => p.id === id)
-
-  function reloadAll() {
-    summaries.reload()
-    entries.reload()
-  }
-
-  if (summaries.loading && !summaries.data) return <p className="muted">جارٍ التحميل...</p>
-  if (summaries.failed) return <p className="msg msg-error">مقدرناش نحمّل المشروع، جرّب تاني</p>
+  if (loading) return <p className="muted">جارٍ التحميل...</p>
+  if (failed) return <p className="msg msg-error">مقدرناش نحمّل المشروع، جرّب تاني</p>
   if (!project) {
     return (
       <div className="page-stack">
@@ -69,11 +49,11 @@ export default function ProjectDetail({ id }: { id: string }) {
           </div>
         </div>
         <div className="head-actions">
-          {(summaries.data?.length ?? 0) > 1 && (
+          {(projects?.length ?? 0) > 1 && (
             <label className="switcher">
               <span className="sr-only">تبديل المشروع</span>
               <select value={id} onChange={(e) => { window.location.hash = `#/projects/${e.target.value}` }}>
-                {summaries.data?.map((p) => (
+                {projects?.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
@@ -117,16 +97,15 @@ export default function ProjectDetail({ id }: { id: string }) {
         </section>
       )}
 
-      {entries.failed && <p className="msg msg-error">مقدرناش نحمّل القيود، جرّب تاني</p>}
-      {entries.data && <EntryList entries={entries.data} isAdmin={isAdmin} onEdit={setEditing} />}
+      {entries && <EntryList entries={entries} isAdmin={isAdmin} onEdit={setEditing} />}
 
       {dialog === 'entry' && (
-        <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reloadAll} />
+        <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reload} />
       )}
       {editing && (
-        <EntryDialog projectId={id} projectName={project.name} projects={summaries.data ?? undefined} entry={editing} onClose={() => setEditing(null)} onSaved={reloadAll} />
+        <EntryDialog projectId={id} projectName={project.name} projects={projects} entry={editing} onClose={() => setEditing(null)} onSaved={reload} />
       )}
-      {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reloadAll} />}
+      {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reload} />}
     </div>
   )
 }

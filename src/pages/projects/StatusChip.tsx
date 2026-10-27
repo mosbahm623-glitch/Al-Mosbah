@@ -1,4 +1,4 @@
-import { isOver, type ProjectSummary } from './types'
+import { isOver, type ProjectSummary } from '../../lib/projects'
 
 export default function StatusChip({ p }: { p: ProjectSummary }) {
   if (isOver(p)) return <span className="chip chip-err"><span className="dot" />تجاوز الميزانية</span>

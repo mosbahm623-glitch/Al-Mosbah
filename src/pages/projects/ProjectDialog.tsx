@@ -3,7 +3,7 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { supabase } from '../../lib/supabase'
 import { TYPE_LABEL, type ProjectType } from '../../lib/format'
-import type { ProjectSummary } from './types'
+import type { ProjectSummary } from '../../lib/projects'
 
 const TYPES = (Object.keys(TYPE_LABEL) as ProjectType[]).map((value) => ({ value, label: TYPE_LABEL[value] }))
 const STATUSES = [

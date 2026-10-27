@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Plus, Undo2 } from 'lucide-react'
+import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, type AdvanceReturn, type Installment } from '../../lib/advances'
 import { dateText, money } from '../../lib/format'
@@ -64,8 +64,12 @@ export default function AdvanceDetail({ id }: { id: string }) {
           </div>
           {advance.notes && <p className="muted small">{advance.notes}</p>}
         </div>
-        {isAdmin && (
-          <div className="head-actions">
+        <div className="head-actions">
+          <a className="btn btn-ghost btn-icon" href={`#/advances/${id}/report`}>
+            <FileText size={18} aria-hidden="true" />
+            كشف / طباعة
+          </a>
+          {isAdmin && (<>
             <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
               <Pencil size={18} aria-hidden="true" />
               تعديل
@@ -73,8 +77,8 @@ export default function AdvanceDetail({ id }: { id: string }) {
             <button className="btn btn-ghost" onClick={() => void toggleStatus()}>
               {advance.status === 'open' ? 'قفل العهدة' : 'إعادة فتح'}
             </button>
-          </div>
-        )}
+          </>)}
+        </div>
       </div>
 
       <section className="stats">

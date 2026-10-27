@@ -95,6 +95,7 @@ export function useAuth() {
 
 function translateAuthError(message: string): string {
   const m = message.toLowerCase()
+  if (m.includes('email address') && m.includes('invalid')) return 'الإيميل ده مش مقبول، استخدم إيميل حقيقي بيستقبل رسائل (Gmail مثلاً)'
   if (m.includes('invalid login')) return 'الإيميل أو كلمة السر غلط'
   if (m.includes('email not confirmed')) return 'لازم تأكد الإيميل الأول من الرسالة اللي وصلتك'
   if (m.includes('already registered')) return 'الإيميل ده مسجّل قبل كده'

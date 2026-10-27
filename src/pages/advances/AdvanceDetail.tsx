@@ -139,7 +139,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>اسم المصروف</th><th>المقاول</th><th>ملاحظات</th><th>المبلغ</th>{canEdit && <th><span className="sr-only">إجراءات</span></th>}</tr>
+                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>اسم المصروف</th><th>المقاول</th><th>ملاحظات</th><th>سجّله</th><th>المبلغ</th>{canEdit && <th><span className="sr-only">إجراءات</span></th>}</tr>
               </thead>
               <tbody>
                 {entries.map((e) => (
@@ -155,6 +155,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.notes}</td>
+                    <td className="muted">{e.creator?.full_name}</td>
                     <td className="num strong tone-text-err">−{money(e.amount)}</td>
                     {canEdit && (
                       <td>

@@ -76,6 +76,7 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                   <th>اسم المصروف</th>
                   <th>المقاول</th>
                   <th>البنك</th>
+                  <th>سجّله</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
                   {canEdit && <th><span className="sr-only">إجراءات</span></th>}
@@ -100,6 +101,7 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.bank?.name}</td>
+                    <td className="muted">{e.creator?.full_name}</td>
                     <td className="muted">{e.notes}</td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}

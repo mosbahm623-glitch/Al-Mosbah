@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-أوامر: `npm run build` (فحص الأنواع + بناء) · `npm run lint` · `npm run preview`.
+أوامر: `npm test` (اختبارات الحساب والتنسيق) · `npm run build` (فحص الأنواع + بناء) · `npm run lint` · `npm run preview`.
 
 ## هيكل الكود
 

@@ -14,6 +14,7 @@ import Users from './pages/users/Users'
 import Banks from './pages/banks/Banks'
 import BankDetail from './pages/banks/BankDetail'
 import Approvals from './pages/approvals/Approvals'
+import Reports from './pages/reports/Reports'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -30,6 +31,7 @@ function Content() {
   if (route === 'users') return <Users />
   if (route === 'approvals') return <Approvals />
   if (route === 'dashboard') return <Dashboard />
+  if (route === 'reports') return <Reports />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
   if (report) return <ProjectReport id={report[1]} />

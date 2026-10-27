@@ -1,15 +1,8 @@
 import type { Entry, ProjectSummary } from './projects'
 import { TYPE_LABEL, todayISO, todayText } from './format'
+import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
 type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
-
-const INK = 'FF161513'
-const HEAD_FILL = 'FF312D2A'
-const SOFT_FILL = 'FFF3EFEB'
-const MONEY = '#,##0.00'
-const solid = (argb: string) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } }) as const
-const thin = { style: 'thin', color: { argb: 'FFDEDAD6' } } as const
-const border = { top: thin, left: thin, bottom: thin, right: thin }
 
 const sheetName = (name: string, used: Set<string>) => {
   const base = name.replace(/[\\/*?:[\]]/g, ' ').trim().slice(0, 28) || 'بند'
@@ -18,9 +11,6 @@ const sheetName = (name: string, used: Set<string>) => {
   used.add(out)
   return out
 }
-
-// UTC midnight, so Excel shows the same calendar day in any time zone
-const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`)
 
 /** Builds the workbook in the browser and downloads it. exceljs is loaded only when this runs. */
 export async function exportProjectExcel({ project, entries, withContractor, withBank: bankWanted, withNotes }: Options) {
@@ -36,15 +26,6 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
   const used = new Set<string>(['ملخص', 'كل القيود'])
 
-  const header = (row: import('exceljs').Row) => {
-    row.height = 24
-    row.eachCell((c) => {
-      c.font = { bold: true, color: { argb: 'FFFFFFFF' } }
-      c.fill = solid(HEAD_FILL)
-      c.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true }
-      c.border = border
-    })
-  }
   const setup = (ws: import('exceljs').Worksheet, headerRow: number) => {
     ws.views = [{ rightToLeft: true, state: 'frozen', ySplit: headerRow }]
     ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `${headerRow}:${headerRow}` }
@@ -221,12 +202,5 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   sum.views = [{ rightToLeft: true }]
   sum.pageSetup = { orientation: 'portrait', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
 
-  const buffer = await wb.xlsx.writeBuffer()
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `المصباح - ${project.name} - ${todayISO()}.xlsx`
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 5000)
+  await downloadWorkbook(wb, `المصباح - ${project.name} - ${todayISO()}.xlsx`)
 }

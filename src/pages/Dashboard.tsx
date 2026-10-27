@@ -9,6 +9,7 @@ type Summary = {
   total_income: number
   total_expenses: number
   total_advances: number
+  advances_balance: number
   contractor_dues: number
   active_projects: number
   net_cash: number
@@ -46,7 +47,7 @@ export default function Dashboard() {
             <Tile label="صافي النقدية" value={money(data.net_cash)} unit="ج.م" icon={Banknote} tone={data.net_cash < 0 ? 'err' : 'ok'} big />
             <Tile label="إجمالي الوارد" value={money(data.total_income)} unit="ج.م" icon={TrendingUp} tone="blue" />
             <Tile label="إجمالي المصاريف" value={money(data.total_expenses)} unit="ج.م" icon={TrendingDown} tone="err" />
-            <Tile label="إجمالي العهد" value={money(data.total_advances)} unit="ج.م" icon={HandCoins} tone="neutral" />
+            <Tile label="العهد المتبقية" value={money(data.advances_balance)} unit="ج.م" icon={HandCoins} tone="neutral" />
             <Tile label="مستحقات المقاولين" value={money(data.contractor_dues)} unit="ج.م" icon={HardHat} tone="warn" />
             <Tile label="المشاريع النشطة" value={money(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
           </section>

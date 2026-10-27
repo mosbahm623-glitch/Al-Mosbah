@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/Al-Mosbah/',
   plugins: [
     react(),
     VitePWA({
@@ -14,8 +15,8 @@ export default defineConfig({
         short_name: 'المصباح',
         lang: 'ar',
         dir: 'rtl',
-        start_url: '/',
-        scope: '/',
+        start_url: '/Al-Mosbah/',
+        scope: '/Al-Mosbah/',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#17160f',

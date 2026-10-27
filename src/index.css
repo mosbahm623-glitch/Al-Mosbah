@@ -249,6 +249,8 @@ input:focus-visible, .btn:focus-visible, .top-btn:focus-visible, .nav-link:focus
 .chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.15rem 0.7rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; white-space: nowrap; }
 .chip-err { background: var(--err-bg); color: var(--err); }
 .chip-ok { background: var(--ok-bg); color: var(--ok); }
+.chip-warn { background: var(--warn-bg); color: var(--warn); }
+.nav-badge { margin-inline-start: auto; min-width: 20px; padding: 0 6px; border-radius: 999px; background: #d64545; color: #fff; font-size: 0.75rem; font-weight: 700; line-height: 20px; text-align: center; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
 /* ===== Desktop: sidebar docked, content shifts ===== */

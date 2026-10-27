@@ -14,7 +14,7 @@ export default function AdvanceReport({ id }: { id: string }) {
   if (!advance) return <p className="msg msg-error">العهدة مش موجودة</p>
 
   const balance = advanceBalance(advance)
-  const spent = [...(entries ?? [])].sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
+  const spent = [...(entries ?? [])].filter((e) => e.status === 'approved').sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
   const given = [...(installments ?? [])].sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
 

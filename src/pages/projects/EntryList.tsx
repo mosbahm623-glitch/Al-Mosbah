@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Pencil } from 'lucide-react'
+import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import { dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
@@ -13,13 +14,14 @@ const KINDS = [
 type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void }
 
 export default function EntryList({ entries, canEdit, onEdit }: Props) {
+  const isAdmin = useAuth().profile?.role === 'admin'
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
 
   // chips: total spent per بند (expenses only), biggest first
   const chips = useMemo(() => {
     const totals = new Map<string, number>()
-    for (const e of entries) if (e.kind === 'expense') totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
+    for (const e of entries) if (e.kind === 'expense' && e.status === 'approved') totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
   }, [entries])
   const expenseTotal = chips.reduce((s, [, v]) => s + v, 0)
@@ -91,7 +93,11 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                       </span>
                     </td>
                     <td>{e.category}</td>
-                    <td className="strong">{e.item}{e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}</td>
+                    <td className="strong">{e.item}
+                      {e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}
+                      {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
+                      {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
+                    </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.bank?.name}</td>
                     <td className="muted">{e.notes}</td>
@@ -101,9 +107,11 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                     </td>
                     {canEdit && (
                       <td>
-                        <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
-                          <Pencil size={17} />
-                        </button>
+                        {(isAdmin || e.status !== 'approved') && (
+                          <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
+                            <Pencil size={17} />
+                          </button>
+                        )}
                       </td>
                     )}
                   </tr>

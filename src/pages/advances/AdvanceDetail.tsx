@@ -16,7 +16,7 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can } = useAuth()
+  const { can, profile } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
@@ -147,15 +147,21 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td className="num muted">{dateText(e.entry_date)}</td>
                     <td>{e.project?.name}</td>
                     <td>{e.category}</td>
-                    <td className="strong">{e.item}</td>
+                    <td className="strong">
+                      {e.item}
+                      {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
+                      {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
+                    </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.notes}</td>
                     <td className="num strong tone-text-err">−{money(e.amount)}</td>
                     {canEdit && (
                       <td>
-                        <button className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditingEntry(e)}>
-                          <Pencil size={16} aria-hidden="true" />
-                        </button>
+                        {(profile?.role === 'admin' || e.status !== 'approved') && (
+                          <button className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditingEntry(e)}>
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                        )}
                       </td>
                     )}
                   </tr>

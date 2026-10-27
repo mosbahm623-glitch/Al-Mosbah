@@ -3,6 +3,7 @@ import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
+import { usePendingCount } from './usePendingCount'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -19,6 +20,7 @@ function initialOpen(): boolean {
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut, can } = useAuth()
+  const pending = usePendingCount(profile?.role === 'admin')
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
@@ -141,6 +143,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   >
                     <Icon size={19} aria-hidden="true" />
                     <span>{label}</span>
+                    {path === 'approvals' && pending > 0 && <span className="nav-badge" aria-label={`${pending} قيد مستني الموافقة`}>{pending}</span>}
                   </a>
                   )
                 })}

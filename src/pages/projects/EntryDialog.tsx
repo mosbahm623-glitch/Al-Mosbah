@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useAuth } from '../../auth/AuthProvider'
 import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import CreatableSelect from '../../components/CreatableSelect'
@@ -24,6 +25,7 @@ type Props = {
   entry?: Entry; onClose: () => void; onSaved: () => void }
 
 export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, onClose, onSaved }: Props) {
+  const isAdmin = useAuth().profile?.role === 'admin'
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
@@ -232,6 +234,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
         {error && <p className="msg msg-error span-2">{error}</p>}
         <div className="dialog-actions span-2">
           <button className="btn" disabled={saving}>

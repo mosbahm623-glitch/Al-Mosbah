@@ -8,7 +8,9 @@ import { isOver, percentOf, type Entry } from '../../lib/projects'
 type Group = { name: string; rows: Entry[]; total: number }
 
 export default function ProjectReport({ id }: { id: string }) {
-  const { project, entries, loading, failed: loadFailed } = useProjectData(id)
+  const { project, entries: allEntries, loading, failed: loadFailed } = useProjectData(id)
+  // only approved entries count in the report
+  const entries = useMemo(() => allEntries?.filter((e) => e.status === 'approved'), [allEntries])
   const [withContractor, setWithContractor] = useState(true)
   const [bankWanted, setBankWanted] = useState(true)
   const [withNotes, setWithNotes] = useState(true)

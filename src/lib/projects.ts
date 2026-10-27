@@ -26,6 +26,8 @@ export type Entry = {
   notes: string | null
   /** set when the entry was paid from a custody */
   advance_id: string | null
+  /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
+  status: 'pending' | 'approved' | 'rejected'
   /** only loaded where entries of several projects are listed (custody page) */
   project?: { name: string } | null
   project_id?: string
@@ -37,7 +39,7 @@ export const isOver = (p: ProjectSummary) => p.budget > 0 && p.expenses > p.budg
 /** Per-project totals, computed in the database (see migration 005). */
 export const fetchSummaries = () => supabase.rpc('project_summaries')
 
-export const ENTRY_COLUMNS = 'id,seq,kind,category,item,amount,entry_date,notes,advance_id,contractor:contractors(name),bank:bank_accounts(name)'
+export const ENTRY_COLUMNS = 'id,seq,kind,category,item,amount,entry_date,notes,advance_id,status,contractor:contractors(name),bank:bank_accounts(name)'
 
 export const fetchEntries = (projectId: string) =>
   supabase

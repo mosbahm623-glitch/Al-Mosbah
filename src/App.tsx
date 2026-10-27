@@ -13,6 +13,7 @@ import NoAccess from './pages/NoAccess'
 import Users from './pages/users/Users'
 import Banks from './pages/banks/Banks'
 import BankDetail from './pages/banks/BankDetail'
+import Approvals from './pages/approvals/Approvals'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -27,6 +28,7 @@ function Content() {
   if (sectionItem?.adminOnly && profile?.role !== 'admin') return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />
+  if (route === 'approvals') return <Approvals />
   if (route === 'dashboard') return <Dashboard />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)

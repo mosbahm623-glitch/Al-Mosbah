@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../auth/AuthProvider'
 
 type OverBudget = { id: string; name: string; budget: number; spent: number }
 
@@ -18,7 +17,6 @@ const nf = new Intl.NumberFormat('ar-EG-u-nu-latn', { maximumFractionDigits: 2 }
 const money = (n: number) => `${nf.format(n)} ج.م`
 
 export default function Dashboard() {
-  const { profile, signOut } = useAuth()
   const [data, setData] = useState<Summary | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,21 +47,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="shell">
-      <header className="topbar">
-        <div>
-          <h1>لوحة التحكم</h1>
-          <p className="muted small">{profile?.full_name ?? ''}</p>
-        </div>
-        <div className="topbar-actions">
-          <button className="btn btn-small" onClick={refresh} disabled={loading}>
-            {loading ? '...' : 'تحديث'}
-          </button>
-          <button className="btn btn-small btn-ghost" onClick={() => void signOut()}>
-            خروج
-          </button>
-        </div>
-      </header>
+    <div className="page-stack">
+      <div className="page-head">
+        <h1 className="page-title">لوحة التحكم</h1>
+        <button className="btn btn-small btn-ghost" onClick={refresh} disabled={loading}>
+          {loading ? '...' : 'تحديث'}
+        </button>
+      </div>
 
       {error && <p className="msg msg-error">{error}</p>}
 

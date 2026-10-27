@@ -10,6 +10,8 @@ type Group = { name: string; rows: Entry[]; total: number }
 export default function ProjectReport({ id }: { id: string }) {
   const { project, entries, loading, failed: loadFailed } = useProjectData(id)
   const [withContractor, setWithContractor] = useState(true)
+  const [bankWanted, setBankWanted] = useState(true)
+  const [withNotes, setWithNotes] = useState(true)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [today] = useState(() => new Date().toLocaleDateString('en-GB').replaceAll('/', '-'))
@@ -37,15 +39,16 @@ export default function ProjectReport({ id }: { id: string }) {
   const data = entries
   const balance = project.income - project.expenses
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
-  const withBank = entries.some((e) => e.bank)
-  const cols = 5 + (withContractor ? 1 : 0) + (withBank ? 1 : 0)
+  const hasBank = entries.some((e) => e.bank)
+  const withBank = bankWanted && hasBank
+  const cols = 4 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
 
   async function excel() {
     if (!project) return
     setBusy(true)
     setFailed(false)
     try {
-      await exportProjectExcel({ project, entries: data, withContractor })
+      await exportProjectExcel({ project, entries: data, withContractor, withBank, withNotes })
     } catch {
       setFailed(true)
     }
@@ -61,7 +64,17 @@ export default function ProjectReport({ id }: { id: string }) {
         </a>
         <label className="check">
           <input type="checkbox" checked={withContractor} onChange={(e) => setWithContractor(e.target.checked)} />
-          إظهار عمود المقاول
+          المقاول
+        </label>
+        {hasBank && (
+          <label className="check">
+            <input type="checkbox" checked={bankWanted} onChange={(e) => setBankWanted(e.target.checked)} />
+            البنك
+          </label>
+        )}
+        <label className="check">
+          <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
+          الملاحظات
         </label>
         <div className="head-actions">
           <button className="btn btn-icon" onClick={() => window.print()}>
@@ -119,7 +132,7 @@ export default function ProjectReport({ id }: { id: string }) {
                   <th className="w-seq">رقم</th>
                   <th className="w-date">التاريخ</th>
                   <th>البيان</th>
-                  <th>ملاحظات</th>
+                  {withNotes && <th>ملاحظات</th>}
                   <th className="w-amount">المبلغ</th>
                 </tr>
               </thead>
@@ -129,14 +142,14 @@ export default function ProjectReport({ id }: { id: string }) {
                     <td className="num">{e.seq}</td>
                     <td className="num">{dateText(e.entry_date)}</td>
                     <td>{e.category}</td>
-                    <td>{e.notes}</td>
+                    {withNotes && <td>{e.notes}</td>}
                     <td className="num">{money(e.amount)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan={4}>إجمالي الوارد</td>
+                  <td colSpan={withNotes ? 4 : 3}>إجمالي الوارد</td>
                   <td className="num">{money(incomeTotal)}</td>
                 </tr>
               </tfoot>
@@ -159,7 +172,7 @@ export default function ProjectReport({ id }: { id: string }) {
                 <th>اسم المصروف</th>
                 {withContractor && <th>المقاول</th>}
                 {withBank && <th>البنك</th>}
-                <th>ملاحظات</th>
+                {withNotes && <th>ملاحظات</th>}
                 <th className="w-amount">المبلغ</th>
               </tr>
             </thead>
@@ -171,7 +184,7 @@ export default function ProjectReport({ id }: { id: string }) {
                   <td>{e.item}</td>
                   {withContractor && <td>{e.contractor?.name}</td>}
                   {withBank && <td>{e.bank?.name}</td>}
-                  <td>{e.notes}</td>
+                  {withNotes && <td>{e.notes}</td>}
                   <td className="num">{money(e.amount)}</td>
                 </tr>
               ))}

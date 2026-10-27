@@ -1,7 +1,7 @@
 import type { Entry, ProjectSummary } from './projects'
 import { TYPE_LABEL } from './format'
 
-type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean }
+type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
 
 const INK = 'FF161513'
 const HEAD_FILL = 'FF312D2A'
@@ -23,13 +23,13 @@ const sheetName = (name: string, used: Set<string>) => {
 const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`)
 
 /** Builds the workbook in the browser and downloads it. exceljs is loaded only when this runs. */
-export async function exportProjectExcel({ project, entries, withContractor }: Options) {
+export async function exportProjectExcel({ project, entries, withContractor, withBank: bankWanted, withNotes }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'المصباح'
   wb.created = new Date()
 
-  const withBank = entries.some((e) => e.bank)
+  const withBank = bankWanted && entries.some((e) => e.bank)
   const expenses = entries.filter((e) => e.kind === 'expense')
   const incomes = entries.filter((e) => e.kind === 'income')
   const expenseTotal = expenses.reduce((s, e) => s + e.amount, 0)
@@ -64,7 +64,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
     { h: 'اسم المصروف', w: 30 },
     ...(withContractor ? [{ h: 'المقاول', w: 22 }] : []),
     ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
-    { h: 'ملاحظات', w: 30 },
+    ...(withNotes ? [{ h: 'ملاحظات', w: 30 }] : []),
     { h: 'المبلغ', w: 16 },
   ]
   const amountCol = cols.length
@@ -80,7 +80,7 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
       e.item ?? '',
       ...(withContractor ? [e.contractor?.name ?? ''] : []),
       ...(withBank ? [e.bank?.name ?? ''] : []),
-      e.notes ?? '',
+      ...(withNotes ? [e.notes ?? ''] : []),
       e.amount,
     ])
     r.getCell(2).numFmt = 'dd-mm-yyyy'
@@ -120,14 +120,14 @@ export async function exportProjectExcel({ project, entries, withContractor }: O
       { h: 'اسم المصروف', w: 32 },
       ...(withContractor ? [{ h: 'المقاول', w: 24 }] : []),
       ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
-      { h: 'ملاحظات', w: 32 },
+      ...(withNotes ? [{ h: 'ملاحظات', w: 32 }] : []),
       { h: 'المبلغ', w: 16 },
     ]
     ws.columns = c2.map((c) => ({ width: c.w }))
     header(ws.addRow(c2.map((c) => c.h)))
     const amt = c2.length
     for (const e of [...rows].sort((a, b) => a.seq - b.seq)) {
-      const r = ws.addRow([e.seq, toDate(e.entry_date), e.item ?? '', ...(withContractor ? [e.contractor?.name ?? ''] : []), ...(withBank ? [e.bank?.name ?? ''] : []), e.notes ?? '', e.amount])
+      const r = ws.addRow([e.seq, toDate(e.entry_date), e.item ?? '', ...(withContractor ? [e.contractor?.name ?? ''] : []), ...(withBank ? [e.bank?.name ?? ''] : []), ...(withNotes ? [e.notes ?? ''] : []), e.amount])
       r.getCell(2).numFmt = 'dd-mm-yyyy'
       r.getCell(amt).numFmt = MONEY
       r.eachCell((c) => {

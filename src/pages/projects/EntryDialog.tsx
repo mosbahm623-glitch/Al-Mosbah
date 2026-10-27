@@ -26,8 +26,8 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
 
   const [kind, setKind] = useState<'income' | 'expense'>('expense')
   const [categoryId, setCategoryId] = useState('')
-  const [itemId, setItemId] = useState('')
-  const [contractorId, setContractorId] = useState('')
+  const [itemName, setItemName] = useState('')
+  const [contractorName, setContractorName] = useState('')
   const [incomeLabel, setIncomeLabel] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(() => new Date().toLocaleDateString('en-CA'))
@@ -36,10 +36,7 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
   const [saving, setSaving] = useState(false)
 
   const category = categories.data?.find((c) => c.id === categoryId)
-  const item = category?.expense_items.find((i) => i.id === itemId)
   const categoryOptions = useMemo(() => (categories.data ?? []).map((c) => ({ value: c.id, label: c.name })), [categories.data])
-  const itemOptions = useMemo(() => (category?.expense_items ?? []).map((i) => ({ value: i.id, label: i.name })), [category])
-  const contractorOptions = useMemo(() => (contractors.data ?? []).map((c) => ({ value: c.id, label: c.name })), [contractors.data])
 
   async function createCategory(name: string) {
     const { data, error: err } = await supabase.from('expense_categories').insert({ name }).select('id').single()
@@ -48,22 +45,11 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
     return data.id as string
   }
 
-  async function createItem(name: string) {
-    const { data, error: err } = await supabase
-      .from('expense_items')
-      .insert({ name, category_id: categoryId })
-      .select('id')
-      .single()
-    if (err || !data) return null
-    categories.reload()
-    return data.id as string
-  }
-
-  async function createContractor(name: string) {
+  async function findOrCreateContractor(name: string) {
+    const existing = contractors.data?.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
+    if (existing) return existing.id
     const { data, error: err } = await supabase.from('contractors').insert({ name }).select('id').single()
-    if (err || !data) return null
-    contractors.reload()
-    return data.id as string
+    return err || !data ? null : (data.id as string)
   }
 
   async function submit(e: FormEvent) {
@@ -71,17 +57,29 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
     const value = Number(amount)
     const isExpense = kind === 'expense'
     if (isExpense && !category) return setError('اختار البند')
-    if (isExpense && !item) return setError('اختار اسم المصروف')
+    if (isExpense && !itemName.trim()) return setError('اكتب اسم المصروف')
     if (!isExpense && !incomeLabel.trim()) return setError('اكتب بيان الوارد')
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     setSaving(true)
     setError(null)
+    let contractorId: string | null = null
+    if (isExpense && contractorName.trim()) {
+      contractorId = await findOrCreateContractor(contractorName.trim())
+      if (!contractorId) {
+        setSaving(false)
+        return setError('ما قدرناش نحفظ اسم المقاول، جرّب تاني')
+      }
+    }
+    if (isExpense && category && !category.expense_items.some((i) => i.name === itemName.trim())) {
+      // remember the name so it shows up as a suggestion next time; the entry does not depend on it
+      await supabase.from('expense_items').insert({ name: itemName.trim(), category_id: category.id })
+    }
     const { error: err } = await supabase.from('entries').insert({
       project_id: projectId,
       kind,
       category: isExpense ? category!.name : incomeLabel.trim(),
-      item: isExpense ? item!.name : null,
-      contractor_id: isExpense && contractorId ? contractorId : null,
+      item: isExpense ? itemName.trim() : null,
+      contractor_id: contractorId,
       amount: value,
       entry_date: date,
       notes: notes.trim() || null,
@@ -110,28 +108,31 @@ export default function EntryDialog({ projectId, projectName, onClose, onSaved }
               required
               onChange={(v) => {
                 setCategoryId(v)
-                setItemId('')
+                setItemName('')
               }}
               onCreate={createCategory}
             />
-            <CreatableSelect
-              label="اسم المصروف"
-              value={itemId}
-              options={itemOptions}
-              placeholder={categoryId ? 'اختار اسم المصروف' : 'اختار البند الأول'}
-              disabled={!categoryId}
-              required
-              onChange={setItemId}
-              onCreate={createItem}
-            />
-            <CreatableSelect
-              label="اسم المقاول"
-              value={contractorId}
-              options={contractorOptions}
-              placeholder="من غير مقاول"
-              onChange={setContractorId}
-              onCreate={createContractor}
-            />
+            <label className="field">
+              اسم المصروف
+              <input
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                list="item-names"
+                placeholder={categoryId ? 'اكتب اسم المصروف' : 'اختار البند الأول'}
+                disabled={!categoryId}
+                required
+              />
+              <datalist id="item-names">
+                {category?.expense_items.map((i) => <option key={i.id} value={i.name} />)}
+              </datalist>
+            </label>
+            <label className="field">
+              اسم المقاول
+              <input value={contractorName} onChange={(e) => setContractorName(e.target.value)} list="contractor-names" placeholder="اكتب اسم المقاول (اختياري)" />
+              <datalist id="contractor-names">
+                {contractors.data?.map((c) => <option key={c.id} value={c.name} />)}
+              </datalist>
+            </label>
           </>
         ) : (
           <label className="field span-2">

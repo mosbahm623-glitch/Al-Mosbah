@@ -47,7 +47,7 @@ export default function Dashboard() {
             <Tile label="صافي النقدية" value={money(data.net_cash)} unit="ج.م" icon={Banknote} tone={data.net_cash < 0 ? 'err' : 'ok'} big />
             <Tile label="إجمالي الوارد" value={money(data.total_income)} unit="ج.م" icon={TrendingUp} tone="blue" />
             <Tile label="إجمالي المصاريف" value={money(data.total_expenses)} unit="ج.م" icon={TrendingDown} tone="err" />
-            <Tile label="العهد المتبقية" value={money(data.advances_balance)} unit="ج.م" icon={HandCoins} tone="neutral" />
+            <Tile label="العهد المتبقية" value={money(data.advances_balance)} unit="ج.م" icon={HandCoins} tone="neutral" sub={`من إجمالي ${money(data.total_advances)} ج.م`} />
             <Tile label="مستحقات المقاولين" value={money(data.contractor_dues)} unit="ج.م" icon={HardHat} tone="warn" />
             <Tile label="المشاريع النشطة" value={money(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
           </section>
@@ -106,6 +106,7 @@ function Tile({
   icon: Icon,
   tone,
   big,
+  sub,
 }: {
   label: string
   value: string
@@ -113,6 +114,7 @@ function Tile({
   icon: LucideIcon
   tone: 'ok' | 'err' | 'blue' | 'warn' | 'neutral'
   big?: boolean
+  sub?: string
 }) {
   return (
     <div className={`tile ${big ? 'tile-big' : ''}`}>
@@ -126,6 +128,7 @@ function Tile({
         <strong className={big ? `tone-text-${tone}` : ''}>{value}</strong>
         <span className="muted small">{unit}</span>
       </div>
+      {sub && <div className="muted small">{sub}</div>}
     </div>
   )
 }

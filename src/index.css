@@ -376,26 +376,12 @@ select:disabled { opacity: 0.6; }
 .page-stack > * { min-width: 0; }
 .table-wrap { position: relative; }
 
-/* ===== Entries grouped by بند ===== */
-.cat-cards { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-.cat-card { font: inherit; text-align: start; display: grid; gap: 0.4rem; min-width: 9.5rem; flex: 1 1 9.5rem; max-width: 14rem; padding: 0.7rem 0.9rem; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
-.cat-card:hover { background: var(--hover); }
-.cat-card-on { border-color: var(--accent-text); outline: 1px solid var(--accent-text); }
-.cat-card:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
-.cat-card-top { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.85rem; }
-.groups { display: grid; gap: 0.75rem; }
-.group-head { font: inherit; width: 100%; display: flex; align-items: center; gap: 0.75rem; min-height: 52px; padding: 0.5rem 1.1rem; border: 0; background: var(--surface-2); color: var(--fg); cursor: pointer; text-align: start; }
-.group-head:hover { background: var(--hover); }
-.group-name { font-size: 1rem; }
-.group-total { margin-inline-start: auto; }
-.rows { list-style: none; margin: 0; padding: 0; }
-.row { display: flex; align-items: center; gap: 0.9rem; padding: 0.6rem 1.1rem; border-top: 1px solid var(--line-2); }
-.row-seq { width: 3rem; flex: none; font-size: 0.85rem; }
-.row-main { flex: 1; min-width: 0; display: grid; gap: 0.1rem; }
-.row-amount { white-space: nowrap; }
+/* ===== Entries: category chips + table ===== */
+.chips-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.cat-chip { font: inherit; font-size: 0.85rem; min-height: 40px; padding: 0 1rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--fg); cursor: pointer; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cat-chip:hover { background: var(--hover); }
+.cat-chip-on { background: var(--fg); color: var(--bg); border-color: var(--fg); font-weight: 600; }
+.cat-chip:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
 @media (max-width: 719px) {
-  .cat-cards { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.25rem; }
-  .cat-card { flex: 0 0 9.5rem; }
-  .row { gap: 0.6rem; padding-inline: 0.8rem; }
-  .row-seq { width: 2.4rem; }
+  .chips-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.25rem; }
 }

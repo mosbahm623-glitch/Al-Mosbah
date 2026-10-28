@@ -1,6 +1,5 @@
 import { todayText } from './format'
-import type { Kpi } from '../components/PaperExtras'
-import type { Section } from '../components/TableReport'
+import type { Kpi, Section } from './tableTypes'
 import { HEAD_FILL, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
 type Options = { title: string; sheet: string; filename: string; meta: { label: string; value: string }[]; kpis?: Kpi[]; sections: Section[] }

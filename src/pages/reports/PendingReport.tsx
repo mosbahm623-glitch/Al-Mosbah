@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import { money, todayISO } from '../../lib/format'
+import { toCents } from '../../lib/money'
 import { fetchPaged } from '../../lib/paged'
 import { ENTRY_COLUMNS, type Entry } from '../../lib/projects'
 import { supabase } from '../../lib/supabase'
@@ -24,7 +25,7 @@ export default function PendingReport({ status, creatorId, creatorName }: { stat
 
   const view = useMemo(() => {
     const rows = data ?? []
-    const sum = (s: Entry['status']) => rows.filter((e) => e.status === s).reduce((t, e) => t + Math.round(e.amount * 100), 0) / 100
+    const sum = (s: Entry['status']) => rows.filter((e) => e.status === s).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const count = (st: Entry['status']) => rows.filter((e) => e.status === st).length
     return { rows, pending: count('pending'), approved: count('approved'), rejected: count('rejected'), pendingTotal: sum('pending'), approvedTotal: sum('approved') }
   }, [data])

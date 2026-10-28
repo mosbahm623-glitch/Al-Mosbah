@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import TableReport, { type Cell, type Col } from '../../components/TableReport'
+import TableReport from '../../components/TableReport'
+import type { Cell, Col } from '../../lib/tableTypes'
 import { money, periodText, todayISO } from '../../lib/format'
 import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement } from '../../lib/movements'
 import { useAsync } from '../../lib/useAsync'
-import type { ReportColumns } from '../projects/ProjectReport'
+import type { ReportColumns } from '../../lib/reportColumns'
 
 type Props = { from: string; to: string; projectId: string; projectName: string } & ReportColumns
 

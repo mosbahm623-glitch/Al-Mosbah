@@ -38,9 +38,6 @@ export async function decide(items: { id: string; rev: number }[], status: 'appr
   return { failed, done, skipped: items.length - done - results.filter((r) => r.error).length }
 }
 
-export const APPROVALS_CHANGED = 'approvals-changed'
-export const notifyApprovalsChanged = () => window.dispatchEvent(new Event(APPROVALS_CHANGED))
-
 export async function countPending() {
   const { count } = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending')
   return count ?? 0

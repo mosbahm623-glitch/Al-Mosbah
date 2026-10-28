@@ -5,6 +5,7 @@ import { fetchPaged } from '../../lib/paged'
 import { categoryTotals } from '../../lib/reportBuilders'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
+import { sumMoney } from '../../lib/money'
 
 type Row = { id: string; category: string; amount: number; project: { type: ProjectType } | null }
 
@@ -26,7 +27,7 @@ export default function CategoryReport({ from, to, type }: { from: string; to: s
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>
 
-  const total = rows.reduce((s, r) => s + Math.round(r.total * 100), 0) / 100
+  const total = sumMoney(rows.map((r) => r.total))
   const count = rows.reduce((s, r) => s + r.count, 0)
 
   return (

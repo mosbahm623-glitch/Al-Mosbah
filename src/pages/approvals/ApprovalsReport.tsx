@@ -1,9 +1,11 @@
 import { useCallback, useMemo } from 'react'
-import TableReport, { type Cell } from '../../components/TableReport'
+import TableReport from '../../components/TableReport'
+import type { Cell } from '../../lib/tableTypes'
 import { dateText, money } from '../../lib/format'
 import { fetchPaged } from '../../lib/paged'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
+import { toCents } from '../../lib/money'
 
 type Decided = {
   id: string; seq: number; kind: 'income' | 'expense'; category: string; item: string | null; amount: number
@@ -15,7 +17,6 @@ type Decided = {
 const COLUMNS =
   'id,seq,kind,category,item,amount,entry_date,status,decided_at,project:projects(name),contractor:contractors(name),creator:profiles!entries_created_by_profile_fkey(full_name),decider:profiles!entries_decided_by_fkey(full_name)'
 
-const cents = (n: number) => Math.round(n * 100)
 const timeText = (iso: string) => {
   const d = new Date(iso)
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
@@ -46,7 +47,7 @@ export default function ApprovalsReport({ day }: { day: string }) {
 
   const view = useMemo(() => {
     const rows = data ?? []
-    const sum = (f: (e: Decided) => boolean) => rows.filter(f).reduce((t, e) => t + cents(e.amount), 0) / 100
+    const sum = (f: (e: Decided) => boolean) => rows.filter(f).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const ok = (e: Decided) => e.status === 'approved'
     return {
       rows,

@@ -1,5 +1,4 @@
-export type Tone = 'blue' | 'ok' | 'err' | 'warn' | 'neutral'
-export type Kpi = { label: string; value: string; tone?: Tone; neg?: boolean }
+import type { Kpi } from '../lib/tableTypes'
 
 /** Summary cards at the top of a printed report. */
 export function Kpis({ items }: { items: Kpi[] }) {

@@ -6,6 +6,7 @@ import Segmented from './Segmented'
 import CreatableSelect from './CreatableSelect'
 import { supabase } from '../lib/supabase'
 import { useAsync } from '../lib/useAsync'
+import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
 const KINDS = [
@@ -14,8 +15,6 @@ const KINDS = [
 ] as const
 
 type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
-type Contractor = { id: string; name: string }
-type Bank = { id: string; name: string }
 
 type Props = {
   projectId: string
@@ -33,11 +32,9 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
   )
-  const fetchContractors = useCallback(() => supabase.from('contractors').select('id,name').order('name'), [])
   const categories = useAsync<Category[]>(fetchCategories)
-  const contractors = useAsync<Contractor[]>(fetchContractors)
-  const fetchBanks = useCallback(() => supabase.from('bank_accounts').select('id,name').order('name'), [])
-  const banks = useAsync<Bank[]>(fetchBanks)
+  const contractors = useAsync<Named[]>(fetchContractorNames)
+  const banks = useAsync<Named[]>(fetchBankNames)
 
   const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
   const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')

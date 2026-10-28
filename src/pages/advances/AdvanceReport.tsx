@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { ArrowRight, Printer } from 'lucide-react'
 import { advanceBalance } from '../../lib/advances'
-import { dateText, money, todayText } from '../../lib/format'
+import { money, todayText } from '../../lib/format'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { Kpis, Signatures } from '../../components/PaperExtras'
-import DataGrid, { type GridSection } from '../../components/DataGrid'
+import DataGrid from '../../components/DataGrid'
+import PrintTables from '../../components/PrintTables'
+import type { Section } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
 /** Printable statement of one custody: what the holder received, spent (per project) and returned. */
@@ -24,7 +26,7 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
   const given = [...(installments ?? [])].sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
 
-  const gridSections: GridSection[] = [
+  const gridSections: Section[] = [
     {
       heading: 'الدفعات المستلمة',
       cols: [{ h: 'التاريخ', kind: 'date' }, { h: 'المبلغ', kind: 'money' }],
@@ -95,78 +97,13 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
           <p className="grid-total">المتبقي مع المستلم (المستلم − المصروف − المرتجع): <b className={balance < 0 ? 'neg' : ''}>{money(balance)}</b></p>
         </div>
 
+        <PrintTables sections={gridSections} />
         <div className="print-only">
-        <h2>الدفعات المستلمة</h2>
-        {given.length === 0 ? (
-          <p className="muted">مفيش دفعات.</p>
-        ) : (
-          <table className="paper-table group">
-            <thead><tr><th className="w-date">التاريخ</th><th className="w-amount">المبلغ</th></tr></thead>
+          <table className="paper-table grand">
             <tbody>
-              {given.map((i) => (
-                <tr key={i.id}><td className="num">{dateText(i.paid_on)}</td><td className="num">{money(i.amount)}</td></tr>
-              ))}
+              <tr><td>المتبقي مع المستلم (المستلم − المصروف − المرتجع)</td><td className="num">{money(balance)}</td></tr>
             </tbody>
-            <tfoot><tr><td>إجمالي المستلم</td><td className="num">{money(advance.given)}</td></tr></tfoot>
           </table>
-        )}
-
-        <h2>المصروفات</h2>
-        {spent.length === 0 ? (
-          <p className="muted">مفيش مصروفات.</p>
-        ) : (
-          <table className="paper-table group">
-            <thead>
-              <tr>
-                <th className="w-seq">رقم</th>
-                <th className="w-date">التاريخ</th>
-                <th>المشروع</th>
-                <th>البند</th>
-                <th>البيان</th>
-                {withContractor && <th>المقاول</th>}
-                {withNotes && <th>ملاحظات</th>}
-                <th className="w-amount">المبلغ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {spent.map((e) => (
-                <tr key={e.id}>
-                  <td className="num">{e.seq}</td>
-                  <td className="num">{dateText(e.entry_date)}</td>
-                  <td>{e.project?.name}</td>
-                  <td>{e.category}</td>
-                  <td>{e.item}</td>
-                  {withContractor && <td>{e.contractor?.name}</td>}
-                  {withNotes && <td>{e.notes}</td>}
-                  <td className="num">{money(e.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot><tr><td colSpan={6 + (withContractor ? 1 : 0) + (withNotes ? 1 : 0) - 1}>إجمالي المصروف</td><td className="num">{money(advance.spent)}</td></tr></tfoot>
-          </table>
-        )}
-
-        {back.length > 0 && (
-          <>
-            <h2>المرتجع</h2>
-            <table className="paper-table group">
-              <thead><tr><th className="w-date">التاريخ</th><th>ملاحظات</th><th className="w-amount">المبلغ</th></tr></thead>
-              <tbody>
-                {back.map((r) => (
-                  <tr key={r.id}><td className="num">{dateText(r.returned_on)}</td><td>{r.notes}</td><td className="num">{money(r.amount)}</td></tr>
-                ))}
-              </tbody>
-              <tfoot><tr><td colSpan={2}>إجمالي المرتجع</td><td className="num">{money(advance.returned)}</td></tr></tfoot>
-            </table>
-          </>
-        )}
-
-        <table className="paper-table grand">
-          <tbody>
-            <tr><td>المتبقي مع المستلم (المستلم − المصروف − المرتجع)</td><td className="num">{money(balance)}</td></tr>
-          </tbody>
-        </table>
-
         </div>
 
         <Signatures />

@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaged } from './paged'
+import { toCents } from './money'
 
 export type MovementKind = 'income' | 'expense' | 'installment' | 'return' | 'due' | 'payment'
 
@@ -47,7 +48,7 @@ type TxnRow = {
   contractor: { name: string } | null; project: { name: string } | null
 }
 
-export const fromEntry = (e: EntryRow): Movement => ({
+const fromEntry = (e: EntryRow): Movement => ({
   key: `e-${e.id}`,
   kind: e.kind,
   date: e.entry_date,
@@ -64,19 +65,19 @@ export const fromEntry = (e: EntryRow): Movement => ({
   status: e.status,
 })
 
-export const fromInstallment = (r: InstallmentRow): Movement => ({
+const fromInstallment = (r: InstallmentRow): Movement => ({
   key: `i-${r.id}`, kind: 'installment', date: r.paid_on, at: r.created_at, amount: r.amount,
   category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: null,
   seq: null, fromAdvance: false, status: 'approved',
 })
 
-export const fromReturn = (r: ReturnRow): Movement => ({
+const fromReturn = (r: ReturnRow): Movement => ({
   key: `r-${r.id}`, kind: 'return', date: r.returned_on, at: r.created_at, amount: r.amount,
   category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: r.notes,
   seq: null, fromAdvance: false, status: 'approved',
 })
 
-export const fromTxn = (t: TxnRow): Movement => ({
+const fromTxn = (t: TxnRow): Movement => ({
   key: `t-${t.id}`, kind: t.kind, date: t.txn_date, at: t.created_at, amount: t.amount,
   category: null, title: t.contractor?.name ?? 'مقاول', project: t.project?.name ?? null, party: t.contractor?.name ?? null, detail: null, notes: t.notes,
   seq: null, fromAdvance: false, status: 'approved',
@@ -142,14 +143,13 @@ export type DayTotals = Record<MovementKind, number> & {
   count: number
 }
 
-const cents = (n: number) => Math.round(n * 100)
 
 export function totalsOfDay(rows: Movement[]): DayTotals {
   const sums: Record<MovementKind, number> = { income: 0, expense: 0, installment: 0, return: 0, due: 0, payment: 0 }
   let cashExpense = 0
   for (const m of rows) {
-    sums[m.kind] += cents(m.amount)
-    if (m.kind === 'expense' && !m.fromAdvance) cashExpense += cents(m.amount)
+    sums[m.kind] += toCents(m.amount)
+    if (m.kind === 'expense' && !m.fromAdvance) cashExpense += toCents(m.amount)
   }
   return {
     income: sums.income / 100,

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { DATA_CHANGED } from './live'
+import { DATA_CHANGED } from './events'
 
 type Result<T> = PromiseLike<{ data: T | null; error: unknown }>
 

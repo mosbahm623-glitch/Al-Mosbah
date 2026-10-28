@@ -2,9 +2,10 @@ import { useCallback, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import { Check, X } from 'lucide-react'
 import Segmented from '../../components/Segmented'
-import { decide, fetchByStatus, notifyApprovalsChanged, type PendingEntry } from '../../lib/approvals'
+import { decide, fetchByStatus, type PendingEntry } from '../../lib/approvals'
+import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money, todayISO } from '../../lib/format'
-import ApprovalsReport from '../reports/ApprovalsReport'
+import ApprovalsReport from './ApprovalsReport'
 import { useAsync } from '../../lib/useAsync'
 
 const TABS = [

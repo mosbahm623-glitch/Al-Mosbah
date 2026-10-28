@@ -1,11 +1,12 @@
 import { useCallback, useMemo } from 'react'
-import TableReport, { type Cell } from '../../components/TableReport'
+import TableReport from '../../components/TableReport'
+import type { Cell } from '../../lib/tableTypes'
 import { fetchBankMovements, type BankMovement } from '../../lib/banks'
 import { money, periodText, todayISO } from '../../lib/format'
 import { runLedger } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
+import { toCents } from '../../lib/money'
 
-const cents = (n: number) => Math.round(n * 100)
 
 /** One bank account: balance before the period, every movement with its running balance, and the closing balance. */
 export default function BankStatement({ id, name, opening, from, to }: { id: string; name: string; opening: number; from: string; to: string }) {
@@ -15,7 +16,7 @@ export default function BankStatement({ id, name, opening, from, to }: { id: str
   const view = useMemo(() => {
     if (!data) return null
     const ledger = runLedger(opening, data.map((m) => ({ ...m, date: m.entry_date, delta: m.kind === 'income' ? m.amount : -m.amount })), from, to)
-    const sum = (kind: 'income' | 'expense') => ledger.rows.filter((r) => r.kind === kind).reduce((s, r) => s + cents(r.amount), 0) / 100
+    const sum = (kind: 'income' | 'expense') => ledger.rows.filter((r) => r.kind === kind).reduce((s, r) => s + toCents(r.amount), 0) / 100
     return { ledger, income: sum('income'), expense: sum('expense') }
   }, [data, opening, from, to])
 

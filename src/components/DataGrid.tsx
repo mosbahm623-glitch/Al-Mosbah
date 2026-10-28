@@ -1,25 +1,15 @@
 import { useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search } from 'lucide-react'
-import { dateText, money } from '../lib/format'
+import { toCents } from '../lib/money'
+import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/tableFormat'
+import type { Section } from '../lib/tableTypes'
 
-export type Cell = string | number | null
-export type Col = { h: string; kind?: 'text' | 'money' | 'date' | 'int' }
-export type GridSection = { heading?: string; cols: Col[]; rows: Cell[][]; footer?: Cell[]; empty?: string }
-
-const show = (kind: Col['kind'], v: Cell) => {
-  if (v === null || v === '') return ''
-  if (kind === 'money' && typeof v === 'number') return money(v)
-  if (kind === 'date' && typeof v === 'string') return dateText(v)
-  return String(v)
-}
-const numeric = (c: Col) => c.kind === 'money' || c.kind === 'int' || c.kind === 'date'
-const cents = (n: number) => Math.round(n * 100)
 const MIN_ROWS_FOR_TOOLS = 6
 
 type Sort = { col: number; dir: 'asc' | 'desc' } | null
 
 /** On-screen data table: click a heading to sort, type to filter, totals stay in view. Print and Excel use their own layouts. */
-export default function DataGrid({ section }: { section: GridSection }) {
+export default function DataGrid({ section }: { section: Section }) {
   const { heading, cols, rows, footer, empty } = section
   const [sort, setSort] = useState<Sort>(null)
   const [q, setQ] = useState('')
@@ -27,7 +17,7 @@ export default function DataGrid({ section }: { section: GridSection }) {
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     let out = rows.map((r, i) => ({ r, i }))
-    if (needle) out = out.filter(({ r }) => r.some((v, ci) => show(cols[ci]?.kind, v).toLowerCase().includes(needle)))
+    if (needle) out = out.filter(({ r }) => r.some((v, ci) => showCell(cols[ci]?.kind, v).toLowerCase().includes(needle)))
     if (sort) {
       const { col, dir } = sort
       const k = dir === 'asc' ? 1 : -1
@@ -50,9 +40,8 @@ export default function DataGrid({ section }: { section: GridSection }) {
   const filtered = shown.length !== rows.length
   const tools = rows.length >= MIN_ROWS_FOR_TOOLS
   // the footer's own figures are the totals; while filtering, the shown rows get their own sums in the same columns
-  const shownSums = filtered && footer ? footer.map((v, ci) => (ci > 0 && typeof v === 'number' ? shown.reduce((t, r) => t + cents(Number(r[ci]) || 0), 0) / 100 : null)) : null
-  const lead = footer ? footer.findIndex((v, j) => j > 0 && v !== null && v !== '') : -1
-  const span = footer ? (lead === -1 ? cols.length : Math.max(1, lead)) : 1
+  const shownSums = filtered && footer ? footer.map((v, ci) => (ci > 0 && typeof v === 'number' ? shown.reduce((t, r) => t + toCents(Number(r[ci]) || 0), 0) / 100 : null)) : null
+  const span = footer ? footerSpan(footer, cols.length) : 1
 
   return (
     <section className="grid-block">
@@ -78,7 +67,7 @@ export default function DataGrid({ section }: { section: GridSection }) {
                 {cols.map((c, ci) => {
                   const on = sort?.col === ci
                   return (
-                    <th key={c.h} className={numeric(c) ? 'num' : ''} aria-sort={on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                    <th key={c.h} className={isNumericCol(c) ? 'num' : ''} aria-sort={on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
                       <button type="button" onClick={() => toggle(ci)} title="ترتيب">
                         {c.h}
                         {on ? sort.dir === 'asc' ? <ArrowUp size={13} aria-hidden="true" /> : <ArrowDown size={13} aria-hidden="true" /> : <ChevronsUpDown size={13} className="dim" aria-hidden="true" />}
@@ -97,8 +86,8 @@ export default function DataGrid({ section }: { section: GridSection }) {
               {shown.map((r, ri) => (
                 <tr key={ri}>
                   {r.map((v, ci) => (
-                    <td key={ci} className={`${numeric(cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && cols[ci].kind === 'money' ? 'neg' : ''}`}>
-                      {show(cols[ci].kind, v)}
+                    <td key={ci} className={`${isNumericCol(cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && cols[ci].kind === 'money' ? 'neg' : ''}`}>
+                      {pillOf(cols[ci], v) ? <span className={`tag tag-${pillOf(cols[ci], v)}`}>{showCell(cols[ci].kind, v)}</span> : showCell(cols[ci].kind, v)}
                     </td>
                   ))}
                 </tr>
@@ -110,14 +99,14 @@ export default function DataGrid({ section }: { section: GridSection }) {
                   <tr className="grid-sub">
                     <td colSpan={span}>إجمالي المعروض ({shown.length})</td>
                     {shownSums.slice(span).map((v, k) => (
-                      <td key={k} className={numeric(cols[span + k]) ? 'num' : ''}>{v === null ? '' : show(cols[span + k].kind, v)}</td>
+                      <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>{v === null ? '' : showCell(cols[span + k].kind, v)}</td>
                     ))}
                   </tr>
                 )}
                 <tr>
                   <td colSpan={span}>{footer[0]}</td>
                   {footer.slice(span).map((v, k) => (
-                    <td key={k} className={numeric(cols[span + k]) ? 'num' : ''}>{show(cols[span + k].kind, v)}</td>
+                    <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>{showCell(cols[span + k].kind, v)}</td>
                   ))}
                 </tr>
               </tfoot>

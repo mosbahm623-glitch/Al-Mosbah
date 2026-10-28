@@ -1,6 +1,6 @@
 import { isOver, percentOf, type ProjectSummary } from './projects'
+import { toCents } from './money'
 
-const cents = (n: number) => Math.round(n * 100)
 
 export type CategoryRow = { category: string; count: number; total: number; share: number }
 
@@ -10,7 +10,7 @@ export function categoryTotals(rows: { category: string; amount: number }[]): Ca
   for (const r of rows) {
     const c = map.get(r.category) ?? { count: 0, total: 0 }
     c.count++
-    c.total += cents(r.amount)
+    c.total += toCents(r.amount)
     map.set(r.category, c)
   }
   const grand = [...map.values()].reduce((s, c) => s + c.total, 0)
@@ -26,7 +26,7 @@ export const NEAR_LIMIT = 80
 export function budgetRows(projects: ProjectSummary[], mode: BudgetMode) {
   return projects
     .filter((p) => p.budget > 0)
-    .map((p) => ({ p, percent: percentOf(p), over: isOver(p), remaining: (cents(p.budget) - cents(p.expenses)) / 100 }))
+    .map((p) => ({ p, percent: percentOf(p), over: isOver(p), remaining: (toCents(p.budget) - toCents(p.expenses)) / 100 }))
     .filter((r) => (mode === 'all' ? true : mode === 'over' ? r.over : !r.over && r.percent >= NEAR_LIMIT))
     .sort((a, b) => b.percent - a.percent || a.p.name.localeCompare(b.p.name, 'ar'))
 }
@@ -37,13 +37,13 @@ export function budgetRows(projects: ProjectSummary[], mode: BudgetMode) {
  * Rows must come oldest first.
  */
 export function runLedger<T extends { date: string; delta: number }>(opening: number, rows: T[], from: string, to: string) {
-  let run = cents(opening)
-  for (const r of rows) if (from && r.date < from) run += cents(r.delta)
+  let run = toCents(opening)
+  for (const r of rows) if (from && r.date < from) run += toCents(r.delta)
   const start = run
   const inside: (T & { run: number })[] = []
   for (const r of rows) {
     if ((from && r.date < from) || (to && r.date > to)) continue
-    run += cents(r.delta)
+    run += toCents(r.delta)
     inside.push({ ...r, run: run / 100 })
   }
   return { opening: start / 100, rows: inside, closing: run / 100 }

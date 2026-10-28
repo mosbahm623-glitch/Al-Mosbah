@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import { TYPE_LABEL, todayISO, type ProjectType } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
-import { supabase } from '../../lib/supabase'
 import { fetchSummaries, type ProjectSummary } from '../../lib/projects'
 import { fetchAdvanceSummaries, type AdvanceSummary } from '../../lib/advances'
 import { fetchBankSummaries, type BankSummary } from '../../lib/banks'
@@ -13,11 +12,12 @@ import Journal from './Journal'
 import PeriodReport from './PeriodReport'
 import CategoryReport from './CategoryReport'
 import BudgetReport from './BudgetReport'
-import ApprovalsReport from './ApprovalsReport'
+import ApprovalsReport from '../approvals/ApprovalsReport'
 import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
+import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
 
 type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'contractors' | 'bank' | 'pending' | 'approvals'
 
@@ -55,9 +55,6 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
   },
 ]
 
-type Named = { id: string; name: string }
-const fetchPeople = () => supabase.from('profiles').select('id,full_name').order('full_name').returns<{ id: string; full_name: string | null }[]>()
-const fetchContractors = () => supabase.from('contractors').select('id,name').order('name').returns<Named[]>()
 
 const hasPeriod = (t: ReportType) => t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
 const hasColumns = (t: ReportType) => t === 'journal' || t === 'project' || t === 'advance' || t === 'period'
@@ -66,7 +63,7 @@ export default function Reports() {
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const banks = useAsync<BankSummary[]>(fetchBankSummaries)
-  const contractors = useAsync<Named[]>(fetchContractors)
+  const contractors = useAsync<Named[]>(fetchContractorNames)
   const people = useAsync<{ id: string; full_name: string | null }[]>(fetchPeople)
 
   const [type, setType] = useState<ReportType>('journal')

@@ -2,14 +2,19 @@ import { useCallback, useMemo, useState } from 'react'
 import { FileSpreadsheet, Printer } from 'lucide-react'
 import { dateText, money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
-import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement, type MovementKind } from '../../lib/movements'
+import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement } from '../../lib/movements'
 import { exportJournalExcel } from '../../lib/exportJournalExcel'
 import { Kpis, Signatures } from '../../components/PaperExtras'
 import DataGrid from '../../components/DataGrid'
+import PrintTables from '../../components/PrintTables'
+import type { Section, Tone } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
-import type { ReportColumns } from '../projects/ProjectReport'
+import type { ReportColumns } from '../../lib/reportColumns'
 
-const TAG: Record<MovementKind, string> = { income: 'ok', expense: 'err', installment: 'warn', return: 'blue', due: 'blue', payment: 'blue' }
+const PILL: Record<string, Tone> = {
+  [KIND_LABEL.income]: 'ok', [KIND_LABEL.expense]: 'err', [KIND_LABEL.installment]: 'warn',
+  [KIND_LABEL.return]: 'blue', [KIND_LABEL.due]: 'blue', [KIND_LABEL.payment]: 'blue',
+}
 
 /** One day's journal: every approved movement of that day, with totals per kind. Shown inside the reports page. */
 export default function Journal({ day, withContractor, withBank: bankWanted, withNotes }: { day: string } & ReportColumns) {
@@ -38,6 +43,21 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
       setExportFailed(true)
     }
     setBusy(false)
+  }
+
+  const section: Section = {
+    cols: [
+      { h: 'رقم', kind: 'int' }, { h: 'النوع', pill: (v) => PILL[String(v).split(' (')[0]] }, { h: 'البند' }, { h: 'البيان' }, { h: 'المشروع' },
+      ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
+      ...(withBank ? [{ h: 'البنك' }] : []),
+      ...(withNotes ? [{ h: 'ملاحظات' }] : []),
+      { h: 'المبلغ', kind: 'money' as const },
+    ],
+    rows: rows.map((m) => [
+      m.seq, KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : ''), m.category, m.title, m.project,
+      ...(withContractor ? [m.party] : []), ...(withBank ? [m.detail] : []), ...(withNotes ? [m.notes] : []), m.amount,
+    ]),
+    footer: [`عدد الحركات: ${t.count}`, ...Array(span).fill(null)],
   }
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل اليومية، جرّب تاني</p>
@@ -86,62 +106,9 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
               ]}
             />
             <div className="screen-only">
-              <DataGrid
-                section={{
-                  cols: [
-                    { h: 'رقم', kind: 'int' }, { h: 'النوع' }, { h: 'البند' }, { h: 'البيان' }, { h: 'المشروع' },
-                    ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
-                    ...(withBank ? [{ h: 'البنك' }] : []),
-                    ...(withNotes ? [{ h: 'ملاحظات' }] : []),
-                    { h: 'المبلغ', kind: 'money' as const },
-                  ],
-                  rows: rows.map((m) => [
-                    m.seq, KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : ''), m.category, m.title, m.project,
-                    ...(withContractor ? [m.party] : []), ...(withBank ? [m.detail] : []), ...(withNotes ? [m.notes] : []), m.amount,
-                  ]),
-                  footer: [`عدد الحركات: ${t.count}`, ...Array(span).fill(null)],
-                }}
-              />
+              <DataGrid section={section} />
             </div>
-            <table className="paper-table group ledger print-only">
-              <thead>
-                <tr>
-                  <th className="w-seq">رقم</th>
-                  <th>النوع</th>
-                  <th>البند</th>
-                  <th>البيان</th>
-                  <th>المشروع</th>
-                  {withContractor && <th>المقاول / العهدة</th>}
-                  {withBank && <th>البنك</th>}
-                  {withNotes && <th>ملاحظات</th>}
-                  <th className="w-amount">المبلغ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((m) => (
-                  <tr key={m.key}>
-                    <td className="num">{m.seq ?? ''}</td>
-                    <td>
-                      <span className={`tag tag-${TAG[m.kind]}`}>{KIND_LABEL[m.kind]}</span>
-                      {m.fromAdvance && <span className="count"> من عهدة</span>}
-                    </td>
-                    <td>{m.category}</td>
-                    <td>{m.title}</td>
-                    <td>{m.project}</td>
-                    {withContractor && <td>{m.party}</td>}
-                    {withBank && <td>{m.detail}</td>}
-                    {withNotes && <td>{m.notes}</td>}
-                    <td className="num">{money(m.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={span}>عدد الحركات</td>
-                  <td className="num">{t.count}</td>
-                </tr>
-              </tfoot>
-            </table>
+            <PrintTables sections={[section]} ledger />
             {t.expense !== t.cashExpense && (
               <p className="muted small">من المصروف {money(t.expense - t.cashExpense)} اتدفع من عهد، فمتحسبش تاني مع دفعات العهد.</p>
             )}

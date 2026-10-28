@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
-import { dateText, money, todayText, TYPE_LABEL } from '../../lib/format'
+import { money, todayText, TYPE_LABEL } from '../../lib/format'
 import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
 import { Kpis, Signatures } from '../../components/PaperExtras'
-import DataGrid, { type GridSection } from '../../components/DataGrid'
+import DataGrid from '../../components/DataGrid'
+import PrintTables from '../../components/PrintTables'
+import type { Section } from '../../lib/tableTypes'
+import type { ReportColumns } from '../../lib/reportColumns'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
-export type ReportColumns = { withContractor: boolean; withBank: boolean; withNotes: boolean }
 
 type Group = { name: string; rows: Entry[]; total: number }
 
@@ -53,10 +55,10 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
   const hasBank = entries.some((e) => e.bank)
   const withBank = bankWanted && hasBank
-  const cols = 4 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
 
   // the same tables for the screen: sortable and filterable (print keeps the paper tables below)
-  const gridSections: GridSection[] = []
+  const incomeSections: Section[] = []
+  const groupSections: Section[] = []
   const entryCols = (first: string) => [
     { h: 'رقم', kind: 'int' as const },
     { h: 'التاريخ', kind: 'date' as const },
@@ -78,7 +80,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   const footerOf = (label: string, total: number, n: number) => [label, ...Array(n - 2).fill(null), total]
   if (incomes.length > 0) {
     const c = entryCols('البيان').filter((x) => x.h !== 'المقاول' && x.h !== 'البنك')
-    gridSections.push({
+    incomeSections.push({
       heading: 'الوارد',
       cols: c,
       rows: incomes.map((e) => [e.seq, e.entry_date, e.category, ...(withNotes ? [e.notes] : []), e.amount]),
@@ -87,7 +89,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   }
   for (const g of expenseGroups) {
     const c = entryCols('البيان')
-    gridSections.push({
+    groupSections.push({
       heading: `${g.name} (${g.rows.length} قيد)`,
       cols: c,
       rows: g.rows.map((e) => entryRow(e, e.item)),
@@ -170,97 +172,28 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
         />
 
         <div className="screen-only">
-          {gridSections.length === 0 ? <p className="muted">مفيش قيود.</p> : gridSections.map((g) => <DataGrid key={g.heading} section={g} />)}
+          {incomeSections.length + groupSections.length === 0 ? <p className="muted">مفيش قيود.</p> : [...incomeSections, ...groupSections].map((g) => <DataGrid key={g.heading} section={g} />)}
           {expenseGroups.length > 0 && <p className="grid-total">إجمالي المصروفات: <b>{money(project.expenses)}</b></p>}
         </div>
 
-        <div className="print-only">
-        {incomes.length > 0 && (
+        <PrintTables sections={incomeSections} />
+        {expenseGroups.length > 0 && (
           <>
-            <h2>الوارد</h2>
-            <table className="paper-table group">
-              <thead>
-                <tr>
-                  <th className="w-seq">رقم</th>
-                  <th className="w-date">التاريخ</th>
-                  <th>البيان</th>
-                  {withNotes && <th>ملاحظات</th>}
-                  <th className="w-amount">المبلغ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {incomes.map((e) => (
-                  <tr key={e.id}>
-                    <td className="num">{e.seq}</td>
-                    <td className="num">{dateText(e.entry_date)}</td>
-                    <td>{e.category}</td>
-                    {withNotes && <td>{e.notes}</td>}
-                    <td className="num">{money(e.amount)}</td>
+            <div className="print-only"><h2>المصروفات حسب البند</h2></div>
+            <PrintTables sections={groupSections.map((g) => ({ ...g, bar: true }))} />
+            <div className="print-only">
+              <table className="paper-table grand">
+                <tbody>
+                  <tr>
+                    <td>إجمالي المصروفات</td>
+                    <td className="num">{money(project.expenses)}</td>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan={withNotes ? 4 : 3}>إجمالي الوارد</td>
-                  <td className="num">{money(incomeTotal)}</td>
-                </tr>
-              </tfoot>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </>
         )}
-        <h2>المصروفات حسب البند</h2>
-        {expenseGroups.length === 0 && <p className="muted">مفيش مصروفات.</p>}
-        {expenseGroups.map((g) => (
-          <table key={g.name} className="paper-table group">
-            <thead>
-              <tr className="group-title">
-                <th colSpan={cols}>
-                  {g.name} <span className="count">({g.rows.length} قيد)</span>
-                </th>
-              </tr>
-              <tr>
-                <th className="w-seq">رقم</th>
-                <th className="w-date">التاريخ</th>
-                <th>البيان</th>
-                {withContractor && <th>المقاول</th>}
-                {withBank && <th>البنك</th>}
-                {withNotes && <th>ملاحظات</th>}
-                <th className="w-amount">المبلغ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {g.rows.map((e) => (
-                <tr key={e.id}>
-                  <td className="num">{e.seq}</td>
-                  <td className="num">{dateText(e.entry_date)}</td>
-                  <td>{e.item}</td>
-                  {withContractor && <td>{e.contractor?.name}</td>}
-                  {withBank && <td>{e.bank?.name}</td>}
-                  {withNotes && <td>{e.notes}</td>}
-                  <td className="num">{money(e.amount)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan={cols - 1}>إجمالي {g.name}</td>
-                <td className="num">{money(g.total)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        ))}
-        {expenseGroups.length > 0 && (
-          <table className="paper-table grand">
-            <tbody>
-              <tr>
-                <td>إجمالي المصروفات</td>
-                <td className="num">{money(project.expenses)}</td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-
-        </div>
+        {expenseGroups.length === 0 && <div className="print-only"><h2>المصروفات حسب البند</h2><p className="muted">مفيش مصروفات.</p></div>}
 
         <Signatures />
 

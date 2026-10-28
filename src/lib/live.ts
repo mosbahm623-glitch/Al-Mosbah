@@ -1,8 +1,5 @@
 import { supabase } from './supabase'
-import { notifyApprovalsChanged } from './approvals'
-
-/** Fired (on window) whenever data may have changed: someone else saved something, or the app came back to the screen. */
-export const DATA_CHANGED = 'data-changed'
+import { notifyApprovalsChanged, notifyDataChanged } from './events'
 
 const TABLES = ['entries', 'advance_installments', 'advance_returns', 'contractor_transactions', 'projects', 'advances', 'bank_accounts', 'contractors']
 
@@ -13,7 +10,7 @@ export function startLive(): () => void {
     window.clearTimeout(timer)
     // a burst of changes (e.g. approving many entries) makes a single refresh
     timer = window.setTimeout(() => {
-      window.dispatchEvent(new Event(DATA_CHANGED))
+      notifyDataChanged()
       notifyApprovalsChanged()
     }, 400)
   }

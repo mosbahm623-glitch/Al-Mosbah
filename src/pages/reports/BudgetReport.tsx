@@ -4,6 +4,7 @@ import { TYPE_LABEL, money, todayISO } from '../../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../../lib/projects'
 import { NEAR_LIMIT, budgetRows, type BudgetMode } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
+import { toCents } from '../../lib/money'
 
 const TITLE: Record<BudgetMode, string> = { all: 'متابعة الميزانيات', near: 'مشاريع قربت من الميزانية', over: 'مشاريع تجاوزت الميزانية' }
 
@@ -15,9 +16,8 @@ export default function BudgetReport({ mode }: { mode: BudgetMode }) {
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>
 
-  const cents = (n: number) => Math.round(n * 100)
-  const budget = rows.reduce((s, r) => s + cents(r.p.budget), 0) / 100
-  const spent = rows.reduce((s, r) => s + cents(r.p.expenses), 0) / 100
+  const budget = rows.reduce((s, r) => s + toCents(r.p.budget), 0) / 100
+  const spent = rows.reduce((s, r) => s + toCents(r.p.expenses), 0) / 100
   const over = rows.filter((r) => r.over).length
 
   return (
@@ -50,7 +50,7 @@ export default function BudgetReport({ mode }: { mode: BudgetMode }) {
             r.remaining,
             `${r.percent}%`,
           ]),
-          footer: ['الإجمالي', null, null, budget, spent, (cents(budget) - cents(spent)) / 100, budget > 0 ? `${Math.round((spent / budget) * 100)}%` : null],
+          footer: ['الإجمالي', null, null, budget, spent, (toCents(budget) - toCents(spent)) / 100, budget > 0 ? `${Math.round((spent / budget) * 100)}%` : null],
           empty: mode === 'all' ? 'مفيش مشاريع ليها ميزانية.' : 'مفيش مشاريع بالحالة دي.',
         },
       ]}

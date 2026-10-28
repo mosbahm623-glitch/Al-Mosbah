@@ -1,15 +1,16 @@
 import { useCallback, useMemo } from 'react'
-import TableReport, { type Cell } from '../../components/TableReport'
+import TableReport from '../../components/TableReport'
+import type { Cell } from '../../lib/tableTypes'
 import { money, periodText, todayISO } from '../../lib/format'
 import { fetchPaged } from '../../lib/paged'
 import { inRange, runLedger } from '../../lib/reportBuilders'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
+import { toCents } from '../../lib/money'
 
 type Txn = { id: string; kind: 'due' | 'payment'; amount: number; txn_date: string; notes: string | null; project: { name: string } | null }
 type Spent = { id: string; seq: number; category: string; item: string | null; amount: number; entry_date: string; project: { name: string } | null }
 
-const cents = (n: number) => Math.round(n * 100)
 
 /** What we owe one contractor (dues − payments, with a running balance) and what was spent under his name. */
 export default function ContractorStatement({ id, name, from, to }: { id: string; name: string; from: string; to: string }) {
@@ -29,10 +30,10 @@ export default function ContractorStatement({ id, name, from, to }: { id: string
   const view = useMemo(() => {
     if (!data) return null
     const ledger = runLedger(0, data.txns.map((t) => ({ ...t, date: t.txn_date, delta: t.kind === 'due' ? t.amount : -t.amount })), from, to)
-    const dues = ledger.rows.filter((r) => r.kind === 'due').reduce((s, r) => s + cents(r.amount), 0) / 100
-    const paid = ledger.rows.filter((r) => r.kind === 'payment').reduce((s, r) => s + cents(r.amount), 0) / 100
+    const dues = ledger.rows.filter((r) => r.kind === 'due').reduce((s, r) => s + toCents(r.amount), 0) / 100
+    const paid = ledger.rows.filter((r) => r.kind === 'payment').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const spent = data.spent.filter((e) => inRange(e.entry_date, from, to))
-    return { ledger, dues, paid, spent, spentTotal: spent.reduce((s, e) => s + cents(e.amount), 0) / 100 }
+    return { ledger, dues, paid, spent, spentTotal: spent.reduce((s, e) => s + toCents(e.amount), 0) / 100 }
   }, [data, from, to])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الكشف، جرّب تاني</p>

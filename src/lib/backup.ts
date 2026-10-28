@@ -80,7 +80,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
         col('رقم القيد', 'seq', 'int', 12), col('التاريخ', 'entry_date', 'date'), { h: 'النوع', w: 10, get: (r) => tr(KIND, r.kind) },
         col('المشروع', 'project', 'text', 22), col('البند', 'category', 'text', 18), col('البيان', 'item', 'text', 26),
         col('المقاول', 'contractor', 'text', 18), col('المبلغ', 'amount', 'money'), { h: 'كان', w: 14, get: (r) => tr(STATUS, r.status_before_delete) },
-        col('ملاحظات', 'notes', 'text', 28), col('سجّله', 'created_by_name', 'text', 16), col('اتمسح بواسطة', 'deleted_by_name', 'text', 16),
+        col('ملاحظات', 'notes', 'text', 28), col('سجّله', 'created_by_name', 'text', 16), col('اتمسح بواسطة', 'deleted_by_name', 'text', 16), col('سبب المسح', 'delete_reason', 'text', 30),
         col('وقت المسح', 'deleted_at', 'time'), id(),
       ],
     },

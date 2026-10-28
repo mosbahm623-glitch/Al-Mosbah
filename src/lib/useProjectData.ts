@@ -15,6 +15,7 @@ const asEntry = (d: DeletedEntry): Entry => ({
   notes: d.notes,
   advance_id: null,
   status: 'deleted',
+  deleteReason: d.delete_reason,
   contractor: d.contractor ? { name: d.contractor } : null,
   bank: null,
   creator: { full_name: d.created_by_name },

@@ -31,6 +31,8 @@ export type Entry = {
   creator?: { full_name: string | null } | null
   /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
   status: 'pending' | 'approved' | 'rejected' | 'deleted'
+  /** why a deleted entry was deleted (deleted entries only) */
+  deleteReason?: string | null
   /** only loaded where entries of several projects are listed (custody page) */
   project?: { name: string } | null
   project_id?: string

@@ -50,6 +50,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   const [saving, setSaving] = useState(false)
   const [targetProject, setTargetProject] = useState(projectId)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [reason, setReason] = useState('')
   const fromAdvance = Boolean(advanceId ?? entry?.advance_id)
 
   const category = categories.data?.find((c) => c.name === categoryName)
@@ -83,8 +84,10 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   async function remove() {
     if (!entry) return
     if (!confirmDelete) return setConfirmDelete(true)
+    if (reason.trim().length < 2) return setError('اكتب سبب الحذف')
     setSaving(true)
-    const { data, error: err } = await supabase.rpc('delete_entry', { p_id: entry.id, p_rev: entry.rev })
+    setError(null)
+    const { data, error: err } = await supabase.rpc('delete_entry', { p_id: entry.id, p_rev: entry.rev, p_reason: reason.trim() })
     setSaving(false)
     if (err) return setError('القيد ما اتحذفش، جرّب تاني')
     if (!data) return setError(CHANGED)
@@ -239,6 +242,12 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
         </label>
         {isAdmin && entry && <EntryHistory entryId={entry.id} />}
         {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
+        {confirmDelete && (
+          <label className="field span-2">
+            سبب الحذف
+            <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="مثلًا: القيد اتسجل بالغلط" autoFocus required />
+          </label>
+        )}
         {error && <p className="msg msg-error span-2">{error}</p>}
         <div className="dialog-actions span-2">
           <button className="btn" disabled={saving}>
@@ -248,7 +257,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
             إلغاء
           </button>
           {entry && (
-            <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving}>
+            <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving || (confirmDelete && reason.trim().length < 2)}>
               {confirmDelete ? 'تأكيد حذف القيد' : 'حذف القيد'}
             </button>
           )}

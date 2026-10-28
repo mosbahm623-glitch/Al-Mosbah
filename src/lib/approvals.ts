@@ -55,6 +55,7 @@ export type DeletedEntry = {
   notes: string | null
   status_before_delete: string | null
   deleted_at: string
+  delete_reason: string | null
   project: string | null
   contractor: string | null
   deleted_by_name: string | null

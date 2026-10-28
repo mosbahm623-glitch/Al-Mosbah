@@ -8,7 +8,7 @@ type Change = { id: number; action: string; old_row: Snapshot; new_row: Snapshot
 
 const ACTION: Record<string, string> = { edit: 'تعديل', approve: 'موافقة', reject: 'رفض', delete: 'مسح', restore: 'استرجاع', hard_delete: 'مسح نهائي' }
 const STATUS: Record<string, string> = { pending: 'مستنّي موافقة', approved: 'معتمد', rejected: 'مرفوض', deleted: 'محذوف' }
-const FIELDS: [string, string][] = [['category', 'البند'], ['item', 'البيان'], ['amount', 'المبلغ'], ['entry_date', 'التاريخ'], ['notes', 'ملاحظات'], ['status', 'الحالة']]
+const FIELDS: [string, string][] = [['category', 'البند'], ['item', 'البيان'], ['amount', 'المبلغ'], ['entry_date', 'التاريخ'], ['notes', 'ملاحظات'], ['status', 'الحالة'], ['delete_reason', 'سبب المسح']]
 
 const show = (key: string, v: unknown) => {
   if (v == null || v === '') return '—'

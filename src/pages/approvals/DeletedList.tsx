@@ -50,6 +50,7 @@ export default function DeletedList() {
                   {e.notes && <div><dt>ملاحظات</dt><dd>{e.notes}</dd></div>}
                   <div><dt>سجّله</dt><dd>{e.created_by_name ?? '—'}</dd></div>
                   <div><dt>اتمسح بواسطة</dt><dd>{e.deleted_by_name ?? '—'} · {when(e.deleted_at)}</dd></div>
+                  {e.delete_reason && <div><dt>السبب</dt><dd>{e.delete_reason}</dd></div>}
                   <div><dt>كان</dt><dd>{STATUS[e.status_before_delete ?? ''] ?? '—'}</dd></div>
                 </dl>
               </div>

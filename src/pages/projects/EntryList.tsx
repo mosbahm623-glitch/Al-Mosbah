@@ -105,7 +105,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       {e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}
                       {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
                       {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
-                      {e.status === 'deleted' && <> <span className="chip chip-neutral">محذوف</span></>}
+                      {e.status === 'deleted' && <> <span className="chip chip-neutral">محذوف</span>{e.deleteReason && <span className="small"> · السبب: {e.deleteReason}</span>}</>}
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.bank?.name}</td>

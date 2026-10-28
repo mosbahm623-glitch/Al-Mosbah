@@ -43,19 +43,19 @@ export type Database = {
           advance_id: string | null; amount: number; bank_id: string | null; category: string; contractor_id: string | null
           created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null
           entry_date: string; id: string; item: string | null; kind: string; notes: string | null
-          project_id: string; seq: number; status: string
+          project_id: string; seq: number; rev: number; status: string
         },
         {
           advance_id?: string | null; amount: number; bank_id?: string | null; category: string; contractor_id?: string | null
           created_at?: string; created_by?: string | null; decided_at?: string | null; decided_by?: string | null
           entry_date?: string; id?: string; item?: string | null; kind: string; notes?: string | null
-          project_id: string; seq?: never; status?: string
+          project_id: string; seq?: never; rev?: never; status?: string
         },
         {
           advance_id?: string | null; amount?: number; bank_id?: string | null; category?: string; contractor_id?: string | null
           created_at?: string; created_by?: string | null; decided_at?: string | null; decided_by?: string | null
           entry_date?: string; id?: string; item?: string | null; kind?: string; notes?: string | null
-          project_id?: string; seq?: never; status?: string
+          project_id?: string; seq?: never; rev?: never; status?: string
         }
       >
       expense_categories: T<

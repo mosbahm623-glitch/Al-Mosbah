@@ -18,13 +18,14 @@ export default function Approvals() {
   const [error, setError] = useState<string | null>(null)
   const rows = list.data ?? []
 
-  async function act(ids: string[], status: 'approved' | 'rejected') {
+  async function act(items: PendingEntry[], status: 'approved' | 'rejected') {
     setBusy(true)
     setError(null)
-    const { error: err } = await decide(ids, status)
+    const r = await decide(items.map((i) => ({ id: i.id, rev: i.rev })), status)
     setBusy(false)
-    if (err) return setError('ما اتنفّذش، جرّب تاني')
-    notifyApprovalsChanged()
+    if (r.failed) setError('ما اتنفّذش، جرّب تاني')
+    else if (r.skipped > 0) setError(`${r.skipped} قيد اتغيّر من حد تاني من وقت ما فتحت الصفحة، اتحدّثت القايمة، راجعه وبعدين وافق`)
+    if (r.done > 0) notifyApprovalsChanged()
     list.reload()
   }
 
@@ -35,7 +36,7 @@ export default function Approvals() {
         actions={
           tab === 'pending' &&
           rows.length > 1 && (
-            <button className="btn btn-icon" disabled={busy} onClick={() => void act(rows.map((r) => r.id), 'approved')}>
+            <button className="btn btn-icon" disabled={busy} onClick={() => void act(rows, 'approved')}>
               <Check size={18} aria-hidden="true" />
               موافقة على الكل ({rows.length})
             </button>
@@ -82,12 +83,12 @@ export default function Approvals() {
                   <small>ج.م</small>
                 </div>
                 <div className="appr-actions">
-                  <button className="btn btn-icon" disabled={busy} onClick={() => void act([e.id], 'approved')} aria-label={`موافقة على القيد ${e.seq}`}>
+                  <button className="btn btn-icon" disabled={busy} onClick={() => void act([e], 'approved')} aria-label={`موافقة على القيد ${e.seq}`}>
                     <Check size={17} aria-hidden="true" />
                     موافقة
                   </button>
                   {tab === 'pending' && (
-                    <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void act([e.id], 'rejected')} aria-label={`رفض القيد ${e.seq}`}>
+                    <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void act([e], 'rejected')} aria-label={`رفض القيد ${e.seq}`}>
                       <X size={17} aria-hidden="true" />
                       رفض
                     </button>

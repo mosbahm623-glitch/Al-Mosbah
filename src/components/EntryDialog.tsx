@@ -25,6 +25,8 @@ type Props = {
   advanceId?: string
   entry?: Entry; onClose: () => void; onSaved: () => void }
 
+const CHANGED = 'القيد ده اتغيّر (أو اتمسح) من حد تاني من وقت ما فتحته. اقفل النافذة وافتحه تاني عشان تشوف آخر نسخة وبعدين عدّل.'
+
 export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, onClose, onSaved }: Props) {
   const isAdmin = useAuth().profile?.role === 'admin'
   const fetchCategories = useCallback(
@@ -84,9 +86,10 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     if (!entry) return
     if (!confirmDelete) return setConfirmDelete(true)
     setSaving(true)
-    const { error: err } = await supabase.from('entries').delete().eq('id', entry.id)
+    const { data, error: err } = await supabase.from('entries').delete().eq('id', entry.id).eq('rev', entry.rev).select('id')
     setSaving(false)
     if (err) return setError('القيد ما اتحذفش، جرّب تاني')
+    if (!data?.length) return setError(CHANGED)
     onSaved()
     onClose()
   }
@@ -132,11 +135,12 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
       entry_date: date,
       notes: notes.trim() || null,
     }
-    const { error: err } = entry
-      ? await supabase.from('entries').update(row).eq('id', entry.id)
+    const res = entry
+      ? await supabase.from('entries').update(row).eq('id', entry.id).eq('rev', entry.rev).select('id')
       : await supabase.from('entries').insert({ ...row, advance_id: advanceId ?? null })
     setSaving(false)
-    if (err) return setError('القيد ما اتحفظش، جرّب تاني')
+    if (res.error) return setError('القيد ما اتحفظش، جرّب تاني')
+    if (entry && !res.data?.length) return setError(CHANGED)
     onSaved()
     onClose()
   }

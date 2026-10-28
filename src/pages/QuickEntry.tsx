@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
@@ -22,16 +22,22 @@ export default function QuickEntry() {
     [uid],
   )
   const mine = useAsync<Mine[]>(fetchMine)
+  const [tab, setTab] = useState<'new' | 'mine'>('new')
   const active = (projects.data ?? []).filter((p) => p.status === 'active')
 
   return (
     <div className="page-stack">
       <PageHead title="تسجيل قيد سريع" note="اختار المشروع وسجّل القيد من هنا. القيد بيستنّى موافقتك قبل ما يتحسب." />
+      <div className="qe-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === 'new'} className={tab === 'new' ? 'on' : ''} onClick={() => setTab('new')}>قيد جديد</button>
+        <button type="button" role="tab" aria-selected={tab === 'mine'} className={tab === 'mine' ? 'on' : ''} onClick={() => setTab('mine')}>آخر قيودك</button>
+      </div>
       {projects.failed && <p className="msg msg-error">مقدرناش نحمّل المشاريع، جرّب تاني</p>}
-      {projects.data && active.length === 0 && <div className="card empty">مفيش مشاريع شغّالة.</div>}
-      {active.length > 0 && <EntryDialog inline projectId="" projectName="" projects={active} onClose={() => undefined} onSaved={mine.reload} />}
+      {tab === 'new' && projects.data && active.length === 0 && <div className="card empty">مفيش مشاريع شغّالة.</div>}
+      {tab === 'new' && active.length > 0 && <EntryDialog inline projectId="" projectName="" projects={active} onClose={() => undefined} onSaved={mine.reload} />}
 
-      {mine.data && mine.data.length > 0 && (
+      {tab === 'mine' && mine.data && mine.data.length === 0 && <div className="card empty">لسه ما سجلتش قيود.</div>}
+      {tab === 'mine' && mine.data && mine.data.length > 0 && (
         <section className="panel">
           <div className="panel-head"><h2>آخر قيودك</h2></div>
           <div className="table-wrap">

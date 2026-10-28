@@ -619,3 +619,7 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 @media (hover: none) and (pointer: coarse) {
   input, select, textarea { font-size: 16px !important; }
 }
+
+.qe-tabs { display: flex; gap: 0.25rem; padding: 0.25rem; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; }
+.qe-tabs button { flex: 1; font: inherit; font-weight: 600; min-height: 44px; border: 0; border-radius: 9px; background: none; color: var(--muted); cursor: pointer; }
+.qe-tabs button.on { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); }

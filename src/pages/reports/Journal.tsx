@@ -1,98 +1,63 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, FileSpreadsheet, Printer } from 'lucide-react'
-import PageHead from '../../components/PageHead'
-import { dateText, money, todayISO } from '../../lib/format'
-import { KIND_LABEL, fetchMovements, shiftDay, totalsOfDay, type Movement } from '../../lib/movements'
+import { useCallback, useMemo, useState } from 'react'
+import { FileSpreadsheet, Printer } from 'lucide-react'
+import { dateText, money } from '../../lib/format'
+import { useAsync } from '../../lib/useAsync'
+import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement, type MovementKind } from '../../lib/movements'
 import { exportJournalExcel } from '../../lib/exportJournalExcel'
+import { Kpis, Signatures } from '../../components/PaperExtras'
+import { usePreparedBy } from '../../auth/usePreparedBy'
+import type { ReportColumns } from '../projects/ProjectReport'
 
-export default function Journal() {
-  const [day, setDay] = useState(todayISO)
-  // nothing is loaded or drawn until "عرض" is pressed; picking another day hides it again
-  const [result, setResult] = useState<{ day: string; data: Movement[] | null } | null>(null)
-  const [loading, setLoading] = useState(false)
-  const shown = result?.day === day ? result : null
-  const data = shown?.data ?? null
-  const failed = shown !== null && shown.data === null
+const TAG: Record<MovementKind, string> = { income: 'ok', expense: 'err', installment: 'warn', return: 'blue', due: 'blue', payment: 'blue' }
 
-  async function show() {
-    const wanted = day
-    setLoading(true)
-    const rows = await fetchMovements({ day: wanted })
-    setResult({ day: wanted, data: rows })
-    setLoading(false)
-  }
+/** One day's journal: every approved movement of that day, with totals per kind. Shown inside the reports page. */
+export default function Journal({ day, withContractor, withBank: bankWanted, withNotes }: { day: string } & ReportColumns) {
+  const fetchDay = useCallback(async () => {
+    const rows = await fetchMovements({ day })
+    return { data: rows, error: rows === null }
+  }, [day])
+  const { data, failed } = useAsync<Movement[]>(fetchDay)
+  const preparedBy = usePreparedBy()
   const [busy, setBusy] = useState(false)
   const [exportFailed, setExportFailed] = useState(false)
 
   // oldest first, the way a paper journal is read
   const rows = useMemo(() => [...(data ?? [])].sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)), [data])
   const t = useMemo(() => totalsOfDay(rows), [rows])
-  const isToday = day === todayISO()
+  const withBank = bankWanted && rows.some((m) => m.detail)
+  const cols = { withContractor, withBank, withNotes }
+  const span = 4 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
 
   async function excel() {
     setBusy(true)
     setExportFailed(false)
     try {
-      await exportJournalExcel({ day, rows })
+      await exportJournalExcel({ day, rows, ...cols })
     } catch {
       setExportFailed(true)
     }
     setBusy(false)
   }
 
-  const summary: [string, number][] = [
-    ['إجمالي الوارد', t.income],
-    ['إجمالي المصروف', t.expense],
-    ['دفعات عهد', t.installment],
-    ['مرتجع عهد', t.return],
-    ['مستحقات مقاولين', t.due],
-    ['مدفوعات مقاولين', t.payment],
-  ]
+  if (failed) return <p className="msg msg-error">مقدرناش نحمّل اليومية، جرّب تاني</p>
+  if (!data) return <p className="muted">جارٍ التحميل...</p>
 
   return (
     <div className="page-stack report-page">
-      <div className="no-print">
-        <PageHead
-          title="اليومية"
-          parent={{ label: 'التقارير والتصدير', href: '#/reports' }}
-          note="كل حركات اليوم المعتمد: وارد ومصروف وعهد ومقاولين."
-          actions={
-            <>
-              <button className="btn btn-icon" onClick={() => window.print()} disabled={rows.length === 0}>
-                <Printer size={18} aria-hidden="true" />
-                طباعة / PDF
-              </button>
-              <button className="btn btn-ghost btn-icon" onClick={() => void excel()} disabled={busy || rows.length === 0}>
-                <FileSpreadsheet size={18} aria-hidden="true" />
-                {busy ? 'جارٍ التجهيز...' : 'Excel'}
-              </button>
-            </>
-          }
-        />
-        <div className="toolbar">
-          <button className="btn btn-ghost btn-icon" onClick={() => setDay(shiftDay(day, -1))} aria-label="اليوم السابق">
-            <ChevronRight size={18} aria-hidden="true" />
-            السابق
+      <div className="report-bar no-print">
+        <div className="head-actions">
+          <button className="btn btn-icon" onClick={() => window.print()} disabled={rows.length === 0}>
+            <Printer size={18} aria-hidden="true" />
+            طباعة / PDF
           </button>
-          <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} aria-label="تاريخ اليومية" />
-          <button className="btn btn-ghost btn-icon" onClick={() => setDay(shiftDay(day, 1))} disabled={isToday} aria-label="اليوم التالي">
-            التالي
-            <ChevronLeft size={18} aria-hidden="true" />
-          </button>
-          {!isToday && (
-            <button className="btn btn-ghost" onClick={() => setDay(todayISO())}>
-              النهاردة
-            </button>
-          )}
-          <button className="btn" onClick={() => void show()} disabled={loading}>
-            {loading ? 'جارٍ التحميل...' : 'عرض'}
+          <button className="btn btn-ghost btn-icon" onClick={() => void excel()} disabled={busy || rows.length === 0}>
+            <FileSpreadsheet size={18} aria-hidden="true" />
+            {busy ? 'جارٍ التجهيز...' : 'Excel'}
           </button>
         </div>
-        {failed && <p className="msg msg-error">مقدرناش نحمّل اليومية، جرّب تاني</p>}
-        {exportFailed && <p className="msg msg-error">ملف الإكسل ما اتجهزش، جرّب تاني</p>}
       </div>
+      {exportFailed && <p className="msg msg-error no-print">ملف الإكسل ما اتجهزش، جرّب تاني</p>}
 
-      {data && (
       <article className="paper">
         <header className="paper-head">
           <div>
@@ -101,23 +66,34 @@ export default function Journal() {
           </div>
           <dl className="paper-meta">
             <div><dt>عدد الحركات</dt><dd>{t.count}</dd></div>
+            {preparedBy && <div><dt>أعدّه</dt><dd>{preparedBy}</dd></div>}
           </dl>
         </header>
 
-        {rows.length === 0 && <p className="muted">مفيش حركات في اليوم ده.</p>}
-
-        {rows.length > 0 && (
+        {rows.length === 0 ? (
+          <p className="muted">مفيش حركات في اليوم ده.</p>
+        ) : (
           <>
-            <table className="paper-table group">
+            <Kpis
+              items={[
+                { label: 'إجمالي الوارد', value: money(t.income), tone: 'ok' },
+                { label: 'إجمالي المصروف', value: money(t.expense), tone: 'err' },
+                { label: 'دفعات عهد', value: money(t.installment), tone: 'warn' },
+                { label: 'مرتجع عهد', value: money(t.return), tone: 'blue' },
+                { label: 'مستحقات مقاولين', value: money(t.due), tone: 'neutral' },
+                { label: 'مدفوعات مقاولين', value: money(t.payment), tone: 'blue' },
+              ]}
+            />
+            <table className="paper-table group ledger">
               <thead>
                 <tr>
                   <th className="w-seq">رقم</th>
                   <th>النوع</th>
                   <th>البيان</th>
                   <th>المشروع</th>
-                  <th>المقاول / العهدة</th>
-                  <th>البنك</th>
-                  <th>ملاحظات</th>
+                  {withContractor && <th>المقاول / العهدة</th>}
+                  {withBank && <th>البنك</th>}
+                  {withNotes && <th>ملاحظات</th>}
                   <th className="w-amount">المبلغ</th>
                 </tr>
               </thead>
@@ -126,45 +102,34 @@ export default function Journal() {
                   <tr key={m.key}>
                     <td className="num">{m.seq ?? ''}</td>
                     <td>
-                      {KIND_LABEL[m.kind]}
-                      {m.fromAdvance && <span className="count"> (من عهدة)</span>}
+                      <span className={`tag tag-${TAG[m.kind]}`}>{KIND_LABEL[m.kind]}</span>
+                      {m.fromAdvance && <span className="count"> من عهدة</span>}
                     </td>
                     <td>{m.title}</td>
                     <td>{m.project}</td>
-                    <td>{m.party}</td>
-                    <td>{m.detail}</td>
-                    <td>{m.notes}</td>
+                    {withContractor && <td>{m.party}</td>}
+                    {withBank && <td>{m.detail}</td>}
+                    {withNotes && <td>{m.notes}</td>}
                     <td className="num">{money(m.amount)}</td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-
-            <table className="paper-table summary">
-              <thead>
+              <tfoot>
                 <tr>
-                  {summary.map(([label]) => (
-                    <th key={label}>{label}</th>
-                  ))}
+                  <td colSpan={span}>عدد الحركات</td>
+                  <td className="num">{t.count}</td>
                 </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {summary.map(([label, value]) => (
-                    <td key={label} className="num">{money(value)}</td>
-                  ))}
-                </tr>
-              </tbody>
+              </tfoot>
             </table>
             {t.expense !== t.cashExpense && (
-              <p className="muted">من المصروف {money(t.expense - t.cashExpense)} اتدفع من عهد، فمتحسبش تاني مع دفعات العهد.</p>
+              <p className="muted small">من المصروف {money(t.expense - t.cashExpense)} اتدفع من عهد، فمتحسبش تاني مع دفعات العهد.</p>
             )}
           </>
         )}
 
+        <Signatures />
         <footer className="paper-foot">المصباح · يومية {dateText(day)}</footer>
       </article>
-      )}
     </div>
   )
 }

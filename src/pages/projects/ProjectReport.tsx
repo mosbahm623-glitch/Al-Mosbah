@@ -4,16 +4,25 @@ import { dateText, money, todayText, TYPE_LABEL } from '../../lib/format'
 import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
+import { Kpis, Signatures } from '../../components/PaperExtras'
+import { usePreparedBy } from '../../auth/usePreparedBy'
+
+export type ReportColumns = { withContractor: boolean; withBank: boolean; withNotes: boolean }
 
 type Group = { name: string; rows: Entry[]; total: number }
 
-export default function ProjectReport({ id }: { id: string }) {
+/** `embedded`: shown inside the reports page, which owns the column choices and the back navigation. */
+export default function ProjectReport({ id, embedded }: { id: string; embedded?: ReportColumns }) {
+  const preparedBy = usePreparedBy()
   const { project, entries: allEntries, loading, failed: loadFailed } = useProjectData(id)
   // only approved entries count in the report
   const entries = useMemo(() => allEntries?.filter((e) => e.status === 'approved'), [allEntries])
-  const [withContractor, setWithContractor] = useState(true)
-  const [bankWanted, setBankWanted] = useState(true)
-  const [withNotes, setWithNotes] = useState(true)
+  const [ownContractor, setWithContractor] = useState(true)
+  const [ownBank, setBankWanted] = useState(true)
+  const [ownNotes, setWithNotes] = useState(true)
+  const withContractor = embedded ? embedded.withContractor : ownContractor
+  const bankWanted = embedded ? embedded.withBank : ownBank
+  const withNotes = embedded ? embedded.withNotes : ownNotes
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [today] = useState(() => todayText())
@@ -60,6 +69,8 @@ export default function ProjectReport({ id }: { id: string }) {
   return (
     <div className="page-stack report-page">
       <div className="report-bar no-print">
+        {!embedded && (
+          <>
         <a className="btn btn-ghost btn-icon" href={`#/projects/${id}`}>
           <ArrowRight size={18} aria-hidden="true" />
           رجوع للمشروع
@@ -78,6 +89,8 @@ export default function ProjectReport({ id }: { id: string }) {
           <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
           الملاحظات
         </label>
+          </>
+        )}
         <div className="head-actions">
           <button className="btn btn-icon" onClick={() => window.print()}>
             <Printer size={18} aria-hidden="true" />
@@ -101,29 +114,19 @@ export default function ProjectReport({ id }: { id: string }) {
             <div><dt>النوع</dt><dd>{TYPE_LABEL[project.type]}</dd></div>
             <div><dt>الحالة</dt><dd>{project.status === 'active' ? 'نشط' : 'مقفول'}</dd></div>
             <div><dt>تاريخ التقرير</dt><dd>{today}</dd></div>
+            {preparedBy && <div><dt>أعدّه</dt><dd>{preparedBy}</dd></div>}
           </dl>
         </header>
 
-        <table className="paper-table summary">
-          <thead>
-            <tr>
-              <th>الميزانية</th>
-              <th>الوارد</th>
-              <th>المصروف</th>
-              <th>الرصيد</th>
-              <th>استهلاك الميزانية</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="num">{money(project.budget)}</td>
-              <td className="num">{money(project.income)}</td>
-              <td className="num">{money(project.expenses)}</td>
-              <td className={`num strong ${balance < 0 ? 'neg' : ''}`}>{money(balance)}</td>
-              <td className={isOver(project) ? 'neg strong' : ''}>{project.budget > 0 ? `${percentOf(project)}%` : '—'}</td>
-            </tr>
-          </tbody>
-        </table>
+        <Kpis
+          items={[
+            { label: 'الميزانية', value: money(project.budget) },
+            { label: 'الوارد', value: money(project.income), tone: 'ok' },
+            { label: 'المصروف', value: money(project.expenses), tone: 'err' },
+            { label: 'الرصيد', value: money(balance), tone: 'neutral', neg: balance < 0 },
+            { label: 'استهلاك الميزانية', value: project.budget > 0 ? `${percentOf(project)}%` : '—', tone: 'warn', neg: isOver(project) },
+          ]}
+        />
 
         {incomes.length > 0 && (
           <>
@@ -209,6 +212,8 @@ export default function ProjectReport({ id }: { id: string }) {
             </tbody>
           </table>
         )}
+
+        <Signatures />
 
         <footer className="paper-foot">المصباح · {project.name} · {today}</footer>
       </article>

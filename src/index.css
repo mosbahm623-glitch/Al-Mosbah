@@ -394,17 +394,13 @@ a.btn { text-decoration: none; }
 .check input { width: 1.1rem; height: 1.1rem; padding: 0; }
 .report-bar { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .report-bar .head-actions { margin-inline-start: auto; }
-.report-open { display: grid; grid-template-columns: 1fr auto 1fr auto; gap: 0.75rem; align-items: end; }
-.report-open .btn { min-height: 44px; }
 a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
-.pick-list { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; padding-top: 0.5rem; }
-@media (max-width: 720px) { .report-open { grid-template-columns: 1fr; } }
 
 /* the paper is always light, whatever the theme */
 .paper { background: #fff; color: #161513; border: 1px solid var(--line); border-radius: 4px; padding: 1.25rem; max-width: 210mm; width: 100%; margin-inline: auto; font-size: 0.85rem; overflow-x: auto; }
 .paper h1 { font-size: 1.3rem; font-weight: 700; }
 .paper h2 { font-size: 1rem; margin: 1.2rem 0 0.5rem; }
-.paper-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; padding-bottom: 0.8rem; margin-bottom: 1rem; border-bottom: 2px solid #312d2a; }
+.paper-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; padding-bottom: 0.8rem; margin-bottom: 1rem; border-bottom: 3px solid #312d2a; }
 .paper-brand { font-size: 0.8rem; font-weight: 700; color: #c74634; }
 .paper-meta { display: flex; gap: 1.2rem; margin: 0; }
 .paper-meta dt { font-size: 0.7rem; color: #6b6560; }
@@ -423,6 +419,32 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .paper-table.grand td { background: #312d2a; color: #fff; font-weight: 700; font-size: 1rem; border-color: #312d2a; }
 .paper-foot { margin-top: 1rem; font-size: 0.7rem; color: #6b6560; text-align: center; }
 
+/* summary cards, ledger tables, tags and signatures on the printed paper */
+.kpis { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: 0.6rem; margin-bottom: 1rem; }
+@media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { border: 1px solid #dedad6; border-top: 3px solid #3d5a80; border-radius: 8px; padding: 0.55rem 0.8rem; }
+.kpi small { display: block; color: #6b6560; font-size: 0.74rem; }
+.kpi b { display: block; font-size: 1.15rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.kpi-ok { border-top-color: #2e7d57; } .kpi-err { border-top-color: #a8342a; } .kpi-warn { border-top-color: #a9680f; } .kpi-neutral { border-top-color: #6b6560; }
+.kpi.neg b { color: #a8342a; }
+.paper-table.ledger thead th { background: #312d2a; color: #fff; border-color: #312d2a; }
+.paper-table.ledger tbody tr:nth-child(even) td { background: #faf9f7; }
+.tag { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+.tag-ok { background: #e4f2ea; color: #2e7d57; } .tag-err { background: #fbe9e6; color: #a8342a; } .tag-warn { background: #fdf1dc; color: #a9680f; } .tag-blue { background: #eef1f6; color: #3d5a80; }
+.sign { display: flex; justify-content: space-between; gap: 1.5rem; margin-top: 2.2rem; font-size: 0.78rem; color: #6b6560; }
+.sign div { flex: 1; border-top: 1px solid #999; padding-top: 0.4rem; text-align: center; }
+
+/* reports page: choices on the side, the report next to it */
+.reports-layout { display: grid; gap: 1rem; align-items: start; }
+.reports-preview { min-width: 0; }
+.ctl { padding: 1rem; display: grid; gap: 0.9rem; }
+.ctl .seg { width: 100%; } .ctl .seg button { flex: 1; padding-inline: 0.4rem; }
+.cols { border: 0; padding: 0; margin: 0; display: grid; gap: 0; }
+.cols legend { font-size: 0.85rem; font-weight: 600; padding: 0; margin-bottom: 0.2rem; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); justify-content: center; }
+.btn-primary:disabled { opacity: 0.5; }
+@media (min-width: 900px) { .reports-layout { grid-template-columns: 300px minmax(0, 1fr); } }
+
 @page { size: A4; margin: 12mm; }
 @media print {
   .no-print, .topbar, .sidebar, .scrim { display: none !important; }
@@ -435,6 +457,8 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
   .paper-table tr { break-inside: avoid; }
   .paper-table.group { margin-bottom: 8pt; }
   .paper h2 { break-after: avoid; }
+  .kpi, .sign { break-inside: avoid; }
+  .reports-layout { display: block; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 

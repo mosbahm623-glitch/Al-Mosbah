@@ -6,6 +6,7 @@ import {
   CreditCard,
   FileBarChart,
   HandCoins,
+  History,
   Landmark,
   HardHat,
   LayoutDashboard,
@@ -44,7 +45,8 @@ export const NAV: NavGroup[] = [
     title: 'أدوات',
     items: [
       { path: 'search', label: 'بحث برقم القيد', icon: Search, module: 'tools' },
-      { path: 'journal', label: 'Booking Journal', icon: BookOpen, module: 'tools' },
+      { path: 'journal', label: 'اليومية', icon: BookOpen, module: 'tools' },
+      { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
       { path: 'my-payments', label: 'دفعاتي', icon: CreditCard, module: 'tools' },
       { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
       { path: 'whatsapp', label: 'إرسال واتساب', icon: MessageCircle, module: 'tools' },

@@ -13,7 +13,7 @@ const TAG: Record<MovementKind, string> = { income: 'ok', expense: 'err', instal
 /** One day's journal: every approved movement of that day, with totals per kind. Shown inside the reports page. */
 export default function Journal({ day, withContractor, withBank: bankWanted, withNotes }: { day: string } & ReportColumns) {
   const fetchDay = useCallback(async () => {
-    const rows = await fetchMovements({ day })
+    const rows = await fetchMovements({ from: day, to: day })
     return { data: rows, error: rows === null }
   }, [day])
   const { data, failed } = useAsync<Movement[]>(fetchDay)

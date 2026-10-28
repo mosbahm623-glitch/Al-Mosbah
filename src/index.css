@@ -427,6 +427,7 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .kpi b { display: block; font-size: 1.15rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .kpi-ok { border-top-color: #2e7d57; } .kpi-err { border-top-color: #a8342a; } .kpi-warn { border-top-color: #a9680f; } .kpi-neutral { border-top-color: #6b6560; }
 .kpi.neg b { color: #a8342a; }
+.paper-table.ledger th, .paper-table.ledger td { padding: 0.32rem 0.4rem; font-size: 0.8rem; }
 .paper-table.ledger thead th { background: #312d2a; color: #fff; border-color: #312d2a; }
 .paper-table.ledger tbody tr:nth-child(even) td { background: #faf9f7; }
 .tag { display: inline-block; padding: 1px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }

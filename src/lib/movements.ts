@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaged } from './paged'
 
 export type MovementKind = 'income' | 'expense' | 'installment' | 'return' | 'due' | 'payment'
 
@@ -87,43 +88,48 @@ const INSTALLMENT_SELECT = 'id,amount,paid_on,created_at,advance:advances(holder
 const RETURN_SELECT = 'id,amount,returned_on,created_at,notes,advance:advances(holder_name)'
 const TXN_SELECT = 'id,kind,amount,txn_date,created_at,notes,contractor:contractors(name),project:projects(name)'
 
-type Scope = { day: string } | { latest: number }
+type Scope = { from: string; to: string; project?: string } | { latest: number }
 
-/** Every kind of money movement, from the five tables, as one list (newest first). */
+/**
+ * Every kind of money movement, from the four tables, as one list (newest first).
+ * A period (`from`..`to`, both inclusive) reads approved entries only and every page of them;
+ * with a project, custody installments and returns are left out because they belong to no project.
+ */
 export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
-  const day = 'day' in scope ? scope.day : null
-  const n = 'latest' in scope ? scope.latest : 0
-
-  let entries = supabase.from('entries').select(ENTRY_SELECT)
-  let installments = supabase.from('advance_installments').select(INSTALLMENT_SELECT)
-  let returns = supabase.from('advance_returns').select(RETURN_SELECT)
-  let txns = supabase.from('contractor_transactions').select(TXN_SELECT)
-  if (day) {
-    // a day's journal only has approved entries, like the reports
-    entries = entries.eq('entry_date', day).eq('status', 'approved')
-    installments = installments.eq('paid_on', day)
-    returns = returns.eq('returned_on', day)
-    txns = txns.eq('txn_date', day)
-  } else {
-    entries = entries.order('created_at', { ascending: false }).limit(n)
-    installments = installments.order('created_at', { ascending: false }).limit(n)
-    returns = returns.order('created_at', { ascending: false }).limit(n)
-    txns = txns.order('created_at', { ascending: false }).limit(n)
+  if ('latest' in scope) {
+    const n = scope.latest
+    const [a, b, c, d] = await Promise.all([
+      supabase.from('entries').select(ENTRY_SELECT).order('created_at', { ascending: false }).limit(n).returns<EntryRow[]>(),
+      supabase.from('advance_installments').select(INSTALLMENT_SELECT).order('created_at', { ascending: false }).limit(n).returns<InstallmentRow[]>(),
+      supabase.from('advance_returns').select(RETURN_SELECT).order('created_at', { ascending: false }).limit(n).returns<ReturnRow[]>(),
+      supabase.from('contractor_transactions').select(TXN_SELECT).order('created_at', { ascending: false }).limit(n).returns<TxnRow[]>(),
+    ])
+    if (a.error || b.error || c.error || d.error) return null
+    const all = [...(a.data ?? []).map(fromEntry), ...(b.data ?? []).map(fromInstallment), ...(c.data ?? []).map(fromReturn), ...(d.data ?? []).map(fromTxn)]
+    return sortMovements(all).slice(0, n)
   }
+
+  const { from, to, project } = scope
   const [a, b, c, d] = await Promise.all([
-    entries.returns<EntryRow[]>(),
-    installments.returns<InstallmentRow[]>(),
-    returns.returns<ReturnRow[]>(),
-    txns.returns<TxnRow[]>(),
+    fetchPaged<EntryRow>((x, y) => {
+      let q = supabase.from('entries').select(ENTRY_SELECT).eq('status', 'approved').gte('entry_date', from).lte('entry_date', to)
+      if (project) q = q.eq('project_id', project)
+      return q.order('id').range(x, y).returns<EntryRow[]>()
+    }),
+    project
+      ? Promise.resolve<InstallmentRow[]>([])
+      : fetchPaged<InstallmentRow>((x, y) => supabase.from('advance_installments').select(INSTALLMENT_SELECT).gte('paid_on', from).lte('paid_on', to).order('id').range(x, y).returns<InstallmentRow[]>()),
+    project
+      ? Promise.resolve<ReturnRow[]>([])
+      : fetchPaged<ReturnRow>((x, y) => supabase.from('advance_returns').select(RETURN_SELECT).gte('returned_on', from).lte('returned_on', to).order('id').range(x, y).returns<ReturnRow[]>()),
+    fetchPaged<TxnRow>((x, y) => {
+      let q = supabase.from('contractor_transactions').select(TXN_SELECT).gte('txn_date', from).lte('txn_date', to)
+      if (project) q = q.eq('project_id', project)
+      return q.order('id').range(x, y).returns<TxnRow[]>()
+    }),
   ])
-  if (a.error || b.error || c.error || d.error) return null
-  const all = [
-    ...(a.data ?? []).map(fromEntry),
-    ...(b.data ?? []).map(fromInstallment),
-    ...(c.data ?? []).map(fromReturn),
-    ...(d.data ?? []).map(fromTxn),
-  ]
-  return sortMovements(all).slice(0, day ? undefined : n)
+  if (!a || !b || !c || !d) return null
+  return sortMovements([...a.map(fromEntry), ...b.map(fromInstallment), ...c.map(fromReturn), ...d.map(fromTxn)])
 }
 
 /** Newest recorded first; entries of the same moment keep their serial order. */

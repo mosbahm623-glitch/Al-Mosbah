@@ -14,7 +14,7 @@ export async function exportJournalExcel({ day, rows, withContractor, withBank: 
   const withBank = bankWanted && rows.some((m) => m.detail)
   const ws = wb.addWorksheet(`يومية ${dateText(day)}`, { properties: { tabColor: { argb: 'FFC74634' } } })
   const cols: { h: string; w: number; get: (m: Movement) => string | number }[] = [
-    { h: 'رقم القيد', w: 11, get: (m) => m.seq ?? '' },
+    { h: 'رقم القيد', w: 13, get: (m) => m.seq ?? '' },
     { h: 'النوع', w: 16, get: (m) => KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : '') },
     { h: 'البند', w: 18, get: (m) => m.category ?? '' },
     { h: 'البيان', w: 30, get: (m) => m.title },

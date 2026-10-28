@@ -413,7 +413,7 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .paper-table .count { font-weight: 400; font-size: 0.78rem; opacity: 0.85; }
 .paper-table tfoot td { background: #f5f2ee; font-weight: 700; }
 .paper-table .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.paper-table .w-seq { width: 3.2rem; } .paper-table .w-date { width: 6.2rem; } .paper-table .w-amount { width: 6.5rem; }
+.paper-table .w-seq { width: 5.4rem; } .paper-table .w-date { width: 6.2rem; } .paper-table .w-amount { width: 6.5rem; }
 .paper-table .neg { color: #a8342a; }
 .paper-table.summary td { font-size: 1rem; text-align: center; }
 .paper-table.summary th { text-align: center; }

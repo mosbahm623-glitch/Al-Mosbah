@@ -16,7 +16,10 @@ const COLUMNS =
   'id,seq,kind,category,item,amount,entry_date,status,decided_at,project:projects(name),contractor:contractors(name),creator:profiles!entries_created_by_profile_fkey(full_name),decider:profiles!entries_decided_by_fkey(full_name)'
 
 const cents = (n: number) => Math.round(n * 100)
-const timeText = (iso: string) => new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+const timeText = (iso: string) => {
+  const d = new Date(iso)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
 
 /** What was approved or rejected on one day, whatever the date of the entries themselves. */
 export default function ApprovalsReport({ day }: { day: string }) {

@@ -3,17 +3,22 @@ import PageHead from '../../components/PageHead'
 import { Check, X } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import { decide, fetchByStatus, notifyApprovalsChanged, type PendingEntry } from '../../lib/approvals'
-import { dateText, money } from '../../lib/format'
+import { dateText, money, todayISO } from '../../lib/format'
+import ApprovalsReport from '../reports/ApprovalsReport'
 import { useAsync } from '../../lib/useAsync'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
   { value: 'rejected', label: 'المرفوضة' },
+  { value: 'decided', label: 'قرارات اليوم' },
 ] as const
 
 export default function Approvals() {
   const [tab, setTab] = useState<(typeof TABS)[number]['value']>('pending')
-  const list = useAsync<PendingEntry[]>(useCallback(() => fetchByStatus(tab), [tab]))
+  const list = useAsync<PendingEntry[]>(
+    useCallback(() => (tab === 'decided' ? Promise.resolve({ data: [] as PendingEntry[], error: null }) : fetchByStatus(tab)), [tab]),
+  )
+  const [day, setDay] = useState(todayISO)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const rows = list.data ?? []
@@ -46,13 +51,22 @@ export default function Approvals() {
 
       <div className="toolbar">
         <Segmented label="الحالة" value={tab} options={TABS} onChange={setTab} />
-        <span className="toolbar-note muted small">{rows.length} قيد</span>
+        {tab === 'decided' ? (
+          <label className="field toolbar-note">
+            اليوم
+            <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} />
+          </label>
+        ) : (
+          <span className="toolbar-note muted small">{rows.length} قيد</span>
+        )}
       </div>
 
+      {tab === 'decided' && <ApprovalsReport key={day} day={day} />}
+
       {error && <p className="msg msg-error">{error}</p>}
-      {list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
-      {list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
-      {list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
+      {tab !== 'decided' && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
+      {tab !== 'decided' && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
+      {tab !== 'decided' && list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
 
       {rows.length > 0 && (
         <div className="appr-list">

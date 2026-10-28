@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
 import Search from './pages/Search'
 import Notifications from './pages/Notifications'
+import QuickEntry from './pages/QuickEntry'
 const Projects = lazy(() => import('./pages/projects/Projects'))
 const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
 const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
@@ -24,13 +25,14 @@ import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
 
 function Content() {
-  const { isAdmin, isStaff, can } = useAuth()
+  const { isAdmin, isStaff, isOwner, can } = useAuth()
   const route = useRoute()
   const item = ALL_ITEMS.find((i) => i.path === route)
   const section = route.split('/')[0]
   const sectionItem = ALL_ITEMS.find((i) => i.path === section)
 
   if (route === 'notifications') return <Notifications />
+  if (route === 'quick-entry') return isOwner ? <QuickEntry /> : <ComingSoon title="الصفحة مش موجودة" />
   if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff)) return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />

@@ -23,11 +23,16 @@ type Props = {
   projects?: ProjectSummary[]
   /** new entries are paid from this custody (counted through the custody, not as project expense) */
   advanceId?: string
-  entry?: Entry; onClose: () => void; onSaved: () => void }
+  entry?: Entry
+  /** quick entry page: shown on the page itself, with a project picker; the form clears after a save instead of closing */
+  inline?: boolean
+  onClose: () => void
+  onSaved: () => void
+}
 
 const CHANGED = 'القيد ده اتغيّر (أو اتمسح) من حد تاني من وقت ما فتحته. اقفل النافذة وافتحه تاني عشان تشوف آخر نسخة وبعدين عدّل.'
 
-export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, onClose, onSaved }: Props) {
+export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, inline, onClose, onSaved }: Props) {
   const { isAdmin, isStaff } = useAuth()
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
@@ -51,6 +56,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   const [targetProject, setTargetProject] = useState(projectId)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [reason, setReason] = useState('')
+  const [done, setDone] = useState<string | null>(null)
   const fromAdvance = Boolean(advanceId ?? entry?.advance_id)
 
   const category = categories.data?.find((c) => c.name === categoryName)
@@ -103,8 +109,10 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     if (isExpense && !itemName.trim()) return setError('اكتب البيان')
     if (!isExpense && !incomeLabel.trim()) return setError('اكتب بيان الوارد')
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
+    if (!targetProject) return setError('اختار المشروع')
     setSaving(true)
     setError(null)
+    setDone(null)
     let contractorId: string | null = null
     if (isExpense && contractorName.trim()) {
       contractorId = await findOrCreateContractor(contractorName.trim())
@@ -138,22 +146,30 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     }
     const res = entry
       ? await supabase.from('entries').update(row).eq('id', entry.id).eq('rev', entry.rev).select('id')
-      : await supabase.from('entries').insert({ ...row, advance_id: advanceId ?? null })
+      : await supabase.from('entries').insert({ ...row, advance_id: advanceId ?? null }).select('seq')
     setSaving(false)
     if (res.error) return setError('القيد ما اتحفظش، جرّب تاني')
     if (entry && !res.data?.length) return setError(CHANGED)
     onSaved()
-    onClose()
+    if (!inline) return onClose()
+    // quick entry: keep the project, kind and date for the next one
+    setDone(`اتسجّل القيد رقم ${(res.data as { seq?: number }[] | null)?.[0]?.seq ?? ''} ومستنّي موافقتك`)
+    setCategoryName('')
+    setItemName('')
+    setContractorName('')
+    setBankName('')
+    setIncomeLabel('')
+    setAmount('')
+    setNotes('')
   }
 
-  return (
-    <Dialog title={entry ? `تعديل القيد #${entry.seq}` : fromAdvance ? 'مصروف من العهدة' : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
+  const form = (
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
-        {projects && (fromAdvance ? projects.length > 0 : entry && projects.length > 1) && (
+        {projects && (fromAdvance || inline ? projects.length > 0 : entry && projects.length > 1) && (
           <label className="field span-2">
             المشروع
-            <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)} required={fromAdvance}>
-              {fromAdvance && <option value="">اختار المشروع</option>}
+            <select value={targetProject} onChange={(e) => setTargetProject(e.target.value)} required={fromAdvance || inline}>
+              {(fromAdvance || inline) && <option value="">اختار المشروع</option>}
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -249,13 +265,16 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           </label>
         )}
         {error && <p className="msg msg-error span-2">{error}</p>}
+        {done && <p className="msg msg-ok span-2" role="status">{done}</p>}
         <div className="dialog-actions span-2">
           <button className="btn" disabled={saving}>
             {saving ? 'جارٍ الحفظ...' : entry ? 'حفظ التعديل' : 'حفظ القيد'}
           </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
+          {!inline && (
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
+              إلغاء
+            </button>
+          )}
           {entry && (
             <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving || (confirmDelete && reason.trim().length < 2)}>
               {confirmDelete ? 'تأكيد حذف القيد' : 'حذف القيد'}
@@ -263,6 +282,11 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           )}
         </div>
       </form>
+  )
+  if (inline) return <section className="panel quick-form">{form}</section>
+  return (
+    <Dialog title={entry ? `تعديل القيد #${entry.seq}` : fromAdvance ? 'مصروف من العهدة' : 'قيد جديد'} subtitle={projectName} wide onClose={onClose}>
+      {form}
     </Dialog>
   )
 }

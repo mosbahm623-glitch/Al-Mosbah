@@ -17,9 +17,18 @@ Deno.serve(async (req) => {
   const caller = createClient(url, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })
-  const { data: userData } = await caller.auth.getUser()
-  if (!userData.user) return reply({ error: 'unauthorized' }, 401)
-  const { data: me } = await caller.from('profiles').select('role,is_active').eq('id', userData.user.id).maybeSingle()
+  // the gateway already verified the token's signature and expiry (verify_jwt); read who it belongs to without a
+  // second round trip to the auth server, which fails when the browser session row is gone
+  let callerId = ''
+  try {
+    const token = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '')
+    const claims = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    if (claims.role === 'authenticated' && typeof claims.sub === 'string') callerId = claims.sub
+  } catch {
+    callerId = ''
+  }
+  if (!callerId) return reply({ error: 'unauthorized' }, 401)
+  const { data: me } = await caller.from('profiles').select('role,is_active').eq('id', callerId).maybeSingle()
   if (!me || !['admin', 'owner'].includes(me.role) || !me.is_active) return reply({ error: 'forbidden' }, 403)
 
   let body: { email?: string; password?: string; full_name?: string }

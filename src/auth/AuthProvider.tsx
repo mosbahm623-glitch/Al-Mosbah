@@ -16,6 +16,8 @@ type AuthState = {
   profile: Profile | null
   /** only the admin approves entries (and restores deleted ones) */
   isAdmin: boolean
+  /** the owner only: has the quick entry page */
+  isOwner: boolean
   /** admin or owner: full access to every page and to managing users */
   isStaff: boolean
   /** can the current user open (view) or change (edit) this page? */
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       profile,
       isAdmin: profile?.role === 'admin',
+      isOwner: profile?.role === 'owner',
       isStaff: profile?.role === 'admin' || profile?.role === 'owner',
       can: (module, level = 'view') => allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
       signIn: async (email, password) => {

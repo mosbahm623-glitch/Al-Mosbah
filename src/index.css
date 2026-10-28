@@ -611,3 +611,6 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .entry-history summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .entry-history ul { list-style: none; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.5rem; }
 .entry-history li { border-inline-start: 3px solid var(--line); padding-inline-start: 0.6rem; }
+
+.quick-form { padding: 1.25rem; max-width: 760px; }
+.msg-ok { background: var(--ok-bg); color: var(--ok); }

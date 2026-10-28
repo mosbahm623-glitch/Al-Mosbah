@@ -7,6 +7,33 @@ import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
 import { notifyDataChanged } from '../lib/events'
 import { useAsync } from '../lib/useAsync'
 
+type InstallEvent = Event & { prompt: () => Promise<void> }
+const isIphone = /iphone|ipad|ipod/i.test(navigator.userAgent)
+const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+
+/** Phones deliver notifications best (iPhone: only) when the app is on the home screen. */
+function InstallHint() {
+  const [prompt, setPrompt] = useState<InstallEvent | null>(null)
+  useEffect(() => {
+    const on = (e: Event) => {
+      e.preventDefault()
+      setPrompt(e as InstallEvent)
+    }
+    window.addEventListener('beforeinstallprompt', on)
+    return () => window.removeEventListener('beforeinstallprompt', on)
+  }, [])
+  if (isInstalled()) return null
+  if (isIphone)
+    return <p className="muted small">على الآيفون: افتح الموقع من Safari، اضغط زرار المشاركة (المربع والسهم)، واختار "إضافة إلى الشاشة الرئيسية"، وافتح التطبيق من الأيقونة وبعدها فعّل الإشعارات.</p>
+  if (prompt)
+    return (
+      <button className="btn btn-ghost btn-icon" onClick={() => void prompt.prompt()}>
+        تثبيت التطبيق على الموبايل
+      </button>
+    )
+  return null
+}
+
 const when = (iso: string) => new Date(iso).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })
 
 export default function Notifications() {
@@ -56,7 +83,8 @@ export default function Notifications() {
       />
 
       <section className="panel notice-push">
-        {push === 'unsupported' && <p className="muted small">المتصفح ده مش بيدعم إشعارات الموبايل. على الآيفون ثبّت التطبيق على الشاشة الرئيسية الأول (iOS 16.4 أو أحدث).</p>}
+        <InstallHint />
+        {push === 'unsupported' && <p className="muted small">المتصفح ده مش بيدعم إشعارات الموبايل{isIphone ? ' من غير تثبيت التطبيق على الشاشة الرئيسية (iOS 16.4 أو أحدث)' : ''}.</p>}
         {push === 'blocked' && <p className="msg msg-error">الإشعارات متقفولة لموقع المصباح. افتحها من إعدادات المتصفح للموقع وبعدين ارجع هنا.</p>}
         {(push === 'on' || push === 'off') && (
           <>

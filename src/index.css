@@ -491,7 +491,7 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 }
 
 /* phones: date pickers and the report paper must fit the screen */
-.ctl .field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+.ctl .field-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.6rem; }
 .ctl .field, .ctl input, .ctl select { min-width: 0; max-width: 100%; }
 .ctl input[type='date'] { width: 100%; min-width: 0; box-sizing: border-box; -webkit-appearance: none; appearance: none; text-align: start; }
 @media (max-width: 640px) {

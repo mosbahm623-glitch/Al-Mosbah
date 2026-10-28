@@ -13,11 +13,12 @@ import Journal from './Journal'
 import PeriodReport from './PeriodReport'
 import CategoryReport from './CategoryReport'
 import BudgetReport from './BudgetReport'
+import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
 
-type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'bank' | 'pending'
+type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'contractors' | 'bank' | 'pending'
 
 const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[] = [
   {
@@ -40,6 +41,7 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
     items: [
       { value: 'advance', label: 'كشف عهدة' },
       { value: 'contractor', label: 'كشف حساب مقاول' },
+      { value: 'contractors', label: 'ملخص كل المقاولين' },
       { value: 'bank', label: 'كشف حساب بنك' },
     ],
   },
@@ -49,7 +51,7 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
 type Named = { id: string; name: string }
 const fetchContractors = () => supabase.from('contractors').select('id,name').order('name').returns<Named[]>()
 
-const hasPeriod = (t: ReportType) => t === 'period' || t === 'category' || t === 'contractor' || t === 'bank'
+const hasPeriod = (t: ReportType) => t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
 const hasColumns = (t: ReportType) => t === 'journal' || t === 'project' || t === 'advance' || t === 'period'
 
 export default function Reports() {
@@ -91,6 +93,7 @@ export default function Reports() {
     budget: 'all',
     advance: pickedAdvance,
     contractor: pickedContractor,
+    contractors: 'all',
     bank: pickedBank,
     pending: 'all',
   }[type]
@@ -254,6 +257,7 @@ export default function Reports() {
           {visible && type === 'contractor' && (
             <ContractorStatement key={n} id={pickedContractor} name={contractors.data?.find((c) => c.id === pickedContractor)?.name ?? ''} from={from} to={to} />
           )}
+          {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} />}
           {visible && type === 'bank' && bank && <BankStatement key={n} id={bank.id} name={bank.name} opening={bank.opening_balance} from={from} to={to} />}
           {visible && type === 'pending' && <PendingReport key={n} status={pendingStatus} />}
         </div>

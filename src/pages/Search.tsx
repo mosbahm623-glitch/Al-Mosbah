@@ -70,7 +70,7 @@ function SearchView({ q }: { q: string }) {
       <form className="toolbar" onSubmit={submit} role="search">
         <label className="search-box">
           <SearchIcon size={18} aria-hidden="true" />
-          <input type="search" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="مثلاً: 413 أو كهرباء أو اسم مقاول" aria-label="بحث في القيود" autoFocus />
+          <input type="search" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="مثلاً: 413 أو كهرباء أو اسم مقاول" aria-label="بحث في القيود" autoComplete="off" />
         </label>
         <button className="btn btn-primary" type="submit">بحث</button>
       </form>

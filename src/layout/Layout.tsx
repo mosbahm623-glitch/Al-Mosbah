@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
@@ -28,6 +28,13 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isAdmin = profile?.role === 'admin'
 
   useEffect(() => startLive(), [])
+
+  const searchTimer = useRef<number | undefined>(undefined)
+  const goSearch = (raw: string) => {
+    const q = raw.trim()
+    if (!q && route !== 'search') return
+    window.location.hash = `#/search${q ? `?q=${encodeURIComponent(q)}` : ''}`
+  }
 
   function toggleSidebar() {
     const next = !open
@@ -86,12 +93,24 @@ export default function Layout({ children }: { children: ReactNode }) {
           role="search"
           onSubmit={(e) => {
             e.preventDefault()
-            const q = new FormData(e.currentTarget).get('q')?.toString().trim() ?? ''
-            window.location.hash = `#/search${q ? `?q=${encodeURIComponent(q)}` : ''}`
+            window.clearTimeout(searchTimer.current)
+            goSearch(new FormData(e.currentTarget).get('q')?.toString() ?? '')
           }}
         >
           <Search size={18} aria-hidden="true" />
-          <input name="q" type="search" placeholder="بحث برقم القيد أو البند أو البيان أو المشروع" aria-label="بحث" />
+          <input
+            name="q"
+            type="search"
+            autoComplete="off"
+            placeholder="بحث برقم القيد أو البند أو البيان أو المشروع"
+            aria-label="بحث"
+            onChange={(e) => {
+              // results appear while typing, once the typing pauses
+              const v = e.target.value
+              window.clearTimeout(searchTimer.current)
+              searchTimer.current = window.setTimeout(() => goSearch(v), 400)
+            }}
+          />
         </form>
 
         <div className="top-actions">

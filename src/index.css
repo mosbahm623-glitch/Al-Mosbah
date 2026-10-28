@@ -284,6 +284,7 @@ input:focus-visible, .btn:focus-visible, .top-btn:focus-visible, .nav-link:focus
 .top-search:focus-within { background: rgb(255 255 255 / 0.2); outline: 2px solid var(--accent-text); }
 .top-search input { border: 0; outline: 0; background: none; color: inherit; padding: 0; font-size: 0.85rem; min-width: 0; }
 .top-search input::placeholder { color: #c9c3bb; }
+.top-search input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 100px #4a443f inset; }
 @media (min-width: 900px) {
   .top-search { display: flex; }
   .search-link { display: none; }

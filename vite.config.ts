@@ -10,6 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: { importScripts: ['push-sw.js'] },
       manifest: {
         name: 'المصباح',
         short_name: 'المصباح',

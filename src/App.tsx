@@ -5,6 +5,7 @@ import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
 import Search from './pages/Search'
+import Notifications from './pages/Notifications'
 const Projects = lazy(() => import('./pages/projects/Projects'))
 const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
 const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
@@ -29,6 +30,7 @@ function Content() {
   const section = route.split('/')[0]
   const sectionItem = ALL_ITEMS.find((i) => i.path === section)
 
+  if (route === 'notifications') return <Notifications />
   if (sectionItem?.adminOnly && profile?.role !== 'admin') return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />

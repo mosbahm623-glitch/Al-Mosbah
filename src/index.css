@@ -570,3 +570,11 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 
 .row-deleted td, .row-deleted td * { color: var(--err); text-decoration: line-through; }
 .row-deleted td:last-child, .row-deleted td:last-child *, .row-deleted .chip { text-decoration: none; }
+
+.bell { position: relative; }
+.bell-badge { position: absolute; top: 2px; inset-inline-start: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--err); color: #fff; font-size: 0.68rem; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+.notice-push { display: grid; gap: 0.6rem; justify-items: start; }
+.notice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.notice a { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.8rem 1rem; border: 1px solid var(--line, #ddd); border-radius: 10px; color: inherit; text-decoration: none; background: var(--panel, transparent); }
+.notice-new a { border-inline-start: 4px solid var(--err); background: color-mix(in srgb, var(--err) 6%, transparent); }
+.notice-text { display: grid; gap: 0.15rem; }

@@ -8,6 +8,16 @@ type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relat
 export type Database = {
   public: {
     Tables: {
+      notifications: T<
+        { id: number; user_id: string; kind: string; title: string; body: string | null; url: string | null; entry_id: string | null; created_at: string; read_at: string | null },
+        { id?: never; user_id: string; kind: string; title: string; body?: string | null; url?: string | null; entry_id?: string | null; created_at?: string; read_at?: string | null },
+        { read_at?: string | null }
+      >
+      push_subscriptions: T<
+        { id: number; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string },
+        { id?: never; user_id: string; endpoint: string; p256dh: string; auth: string; created_at?: string },
+        { endpoint?: string; p256dh?: string; auth?: string }
+      >
       backup_log: T<
         { at: string; by: string | null; id: number; note: string | null },
         { at?: string; by?: string | null; id?: never; note?: string | null },

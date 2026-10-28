@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
+import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
@@ -22,6 +23,7 @@ function initialOpen(): boolean {
 export default function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut, can } = useAuth()
   const pending = usePendingCount(profile?.role === 'admin')
+  const unread = useUnread()
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
@@ -125,8 +127,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <a className="top-btn" href="#/notifications" aria-label="الإشعارات">
+          <a className="top-btn bell" href="#/notifications" aria-label={unread > 0 ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}>
             <Bell size={20} />
+            {unread > 0 && <span className="bell-badge">{unread > 99 ? '99+' : unread}</span>}
           </a>
           <div className="user">
             <span className="avatar" aria-hidden="true">

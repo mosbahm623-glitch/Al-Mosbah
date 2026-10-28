@@ -1,5 +1,7 @@
 import { useCallback, useState, useSyncExternalStore, type FormEvent } from 'react'
-import { Search as SearchIcon } from 'lucide-react'
+import { Pencil, Search as SearchIcon } from 'lucide-react'
+import { useAuth } from '../auth/AuthProvider'
+import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
 import { ENTRY_COLUMNS, type Entry } from '../lib/projects'
@@ -55,7 +57,11 @@ export default function Search() {
 function SearchView({ q }: { q: string }) {
   const [draft, setDraft] = useState(q)
   const load = useCallback(async () => (q ? search(q) : { data: [] as Hit[], error: false }), [q])
-  const { data, failed, loading } = useAsync<Hit[]>(load)
+  const { data, failed, loading, reload } = useAsync<Hit[]>(load)
+  const { profile, can } = useAuth()
+  const canEdit = can('projects', 'edit')
+  const isAdmin = profile?.role === 'admin'
+  const [editing, setEditing] = useState<Hit | null>(null)
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -96,6 +102,7 @@ function SearchView({ q }: { q: string }) {
                   <th>المقاول</th>
                   <th>الحالة</th>
                   <th>المبلغ</th>
+                  {canEdit && <th><span className="sr-only">إجراءات</span></th>}
                 </tr>
               </thead>
               <tbody>
@@ -110,12 +117,25 @@ function SearchView({ q }: { q: string }) {
                     <td>{e.contractor?.name}</td>
                     <td><span className={`chip ${e.status === 'approved' ? 'chip-neutral' : e.status === 'pending' ? 'chip-warn' : 'chip-err'}`}>{STATUS[e.status]}</span></td>
                     <td className="num strong">{money(e.amount)}</td>
+                    {canEdit && (
+                      <td>
+                        {(isAdmin || e.status !== 'approved') && (
+                          <button type="button" className="icon-btn" aria-label={`تعديل أو مسح القيد ${e.seq}`} title="تعديل / مسح" onClick={() => setEditing(e)}>
+                            <Pencil size={17} />
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
+      )}
+
+      {editing && (
+        <EntryDialog projectId={editing.project_id} projectName={editing.project?.name ?? ''} entry={editing} onClose={() => setEditing(null)} onSaved={reload} />
       )}
     </div>
   )

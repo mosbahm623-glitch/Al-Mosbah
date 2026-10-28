@@ -4,6 +4,7 @@ import { advanceBalance } from '../../lib/advances'
 import { dateText, money, todayText } from '../../lib/format'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { Kpis, Signatures } from '../../components/PaperExtras'
+import DataGrid, { type GridSection } from '../../components/DataGrid'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
 /** Printable statement of one custody: what the holder received, spent (per project) and returned. */
@@ -22,6 +23,31 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
   const spent = [...(entries ?? [])].filter((e) => e.status === 'approved').sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
   const given = [...(installments ?? [])].sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
+
+  const gridSections: GridSection[] = [
+    {
+      heading: 'الدفعات المستلمة',
+      cols: [{ h: 'التاريخ', kind: 'date' }, { h: 'المبلغ', kind: 'money' }],
+      rows: given.map((i) => [i.paid_on, i.amount]),
+      footer: ['إجمالي المستلم', advance.given],
+      empty: 'مفيش دفعات.',
+    },
+    {
+      heading: 'المصروفات',
+      cols: [
+        { h: 'رقم', kind: 'int' }, { h: 'التاريخ', kind: 'date' }, { h: 'المشروع' }, { h: 'البند' }, { h: 'البيان' },
+        ...(withContractor ? [{ h: 'المقاول' }] : []),
+        ...(withNotes ? [{ h: 'ملاحظات' }] : []),
+        { h: 'المبلغ', kind: 'money' as const },
+      ],
+      rows: spent.map((e) => [e.seq, e.entry_date, e.project?.name ?? null, e.category, e.item, ...(withContractor ? [e.contractor?.name ?? null] : []), ...(withNotes ? [e.notes] : []), e.amount]),
+      footer: ['إجمالي المصروف', ...Array(4 + (withContractor ? 1 : 0) + (withNotes ? 1 : 0)).fill(null), advance.spent],
+      empty: 'مفيش مصروفات.',
+    },
+    ...(back.length > 0
+      ? [{ heading: 'المرتجع', cols: [{ h: 'التاريخ', kind: 'date' as const }, { h: 'ملاحظات' }, { h: 'المبلغ', kind: 'money' as const }], rows: back.map((r) => [r.returned_on, r.notes, r.amount]), footer: ['إجمالي المرتجع', null, advance.returned] }]
+      : []),
+  ]
 
   return (
     <div className="page-stack report-page">
@@ -62,6 +88,14 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
           ]}
         />
 
+        <div className="screen-only">
+          {gridSections.map((g) => (
+            <DataGrid key={g.heading} section={g} />
+          ))}
+          <p className="grid-total">المتبقي مع المستلم (المستلم − المصروف − المرتجع): <b className={balance < 0 ? 'neg' : ''}>{money(balance)}</b></p>
+        </div>
+
+        <div className="print-only">
         <h2>الدفعات المستلمة</h2>
         {given.length === 0 ? (
           <p className="muted">مفيش دفعات.</p>
@@ -132,6 +166,8 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
             <tr><td>المتبقي مع المستلم (المستلم − المصروف − المرتجع)</td><td className="num">{money(balance)}</td></tr>
           </tbody>
         </table>
+
+        </div>
 
         <Signatures />
 

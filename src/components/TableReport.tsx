@@ -4,6 +4,7 @@ import { dateText, money, todayText } from '../lib/format'
 import { exportTableExcel } from '../lib/exportTableExcel'
 import { usePreparedBy } from '../auth/usePreparedBy'
 import { Kpis, Signatures, type Kpi } from './PaperExtras'
+import DataGrid from './DataGrid'
 
 export type Cell = string | number | null
 export type Col = { h: string; kind?: 'text' | 'money' | 'date' | 'int' }
@@ -78,11 +79,17 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
 
         {kpis && <Kpis items={kpis} />}
 
+        <div className="screen-only">
+          {sections.map((s, i) => (
+            <DataGrid key={s.heading ?? i} section={s} />
+          ))}
+        </div>
+
         {sections.map((s, i) => {
           const lead = s.footer ? Math.max(1, s.footer.findIndex((v, j) => j > 0 && v !== null && v !== '')) : 1
           const span = s.footer && s.footer.findIndex((v, j) => j > 0 && v !== null && v !== '') === -1 ? s.cols.length : lead
           return (
-            <section key={s.heading ?? i}>
+            <section key={s.heading ?? i} className="print-only">
               {s.heading && <h2>{s.heading}</h2>}
               {s.rows.length === 0 ? (
                 <p className="muted">{s.empty ?? 'مفيش بيانات.'}</p>
@@ -124,7 +131,7 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
           )
         })}
 
-        {note && <p className="muted small">{note}</p>}
+        {note && <p className="muted small note">{note}</p>}
         <Signatures />
         <footer className="paper-foot">المصباح · {title} · {today}</footer>
       </article>

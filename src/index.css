@@ -534,3 +534,33 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
   /* signature lines and the printed footer only make sense on paper */
   .paper .sign, .paper .paper-foot { display: none; }
 }
+
+/* ===== on-screen data tables (reports) ===== */
+.print-only { display: none; }
+@media print {
+  .screen-only { display: none !important; }
+  .print-only { display: revert; }
+}
+.grid-block { margin-bottom: 1.2rem; }
+.grid-head { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.6rem; }
+.grid-head h2 { margin: 0; font-size: 1rem; }
+.grid-filter { display: flex; align-items: center; gap: 0.4rem; border: 1px solid var(--line); border-radius: 8px; padding: 0 0.6rem; background: var(--surface); margin-inline-start: auto; min-width: 12rem; }
+.grid-filter input { border: 0; outline: 0; background: none; color: inherit; font: inherit; padding: 0.4rem 0; min-width: 0; width: 100%; }
+.grid-filter:focus-within { border-color: var(--accent); }
+.grid-scroll { max-height: 70vh; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.grid { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.86rem; }
+.grid th, .grid td { padding: 0.55rem 0.8rem; text-align: start; vertical-align: top; border-bottom: 1px solid var(--line-2); }
+.grid thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-2); padding: 0; white-space: nowrap; border-bottom: 1px solid var(--line); }
+.grid thead th button { display: inline-flex; align-items: center; gap: 0.3rem; width: 100%; padding: 0.6rem 0.8rem; border: 0; background: none; font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--muted); cursor: pointer; text-align: start; }
+.grid thead th button:hover { color: var(--fg); }
+.grid thead th[aria-sort='ascending'] button, .grid thead th[aria-sort='descending'] button { color: var(--accent-text); }
+.grid .dim { opacity: 0.35; }
+.grid tbody tr:hover td { background: var(--hover); }
+.grid td.num, .grid th.num button { font-variant-numeric: tabular-nums; }
+.grid td.num { white-space: nowrap; }
+.grid td.neg { color: var(--err); }
+.grid-none { text-align: center !important; color: var(--muted); padding: 1.5rem !important; }
+.grid tfoot td { position: sticky; bottom: 0; z-index: 1; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line); border-bottom: 0; }
+.grid tfoot tr.grid-sub td { bottom: 2.3rem; font-weight: 600; color: var(--muted); }
+.grid-total { margin: 0.4rem 0 0; font-size: 0.95rem; }
+.grid-total b.neg { color: var(--err); }

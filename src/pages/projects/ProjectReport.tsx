@@ -5,6 +5,7 @@ import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
 import { Kpis, Signatures } from '../../components/PaperExtras'
+import DataGrid, { type GridSection } from '../../components/DataGrid'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
 export type ReportColumns = { withContractor: boolean; withBank: boolean; withNotes: boolean }
@@ -53,6 +54,46 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   const hasBank = entries.some((e) => e.bank)
   const withBank = bankWanted && hasBank
   const cols = 4 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
+
+  // the same tables for the screen: sortable and filterable (print keeps the paper tables below)
+  const gridSections: GridSection[] = []
+  const entryCols = (first: string) => [
+    { h: 'رقم', kind: 'int' as const },
+    { h: 'التاريخ', kind: 'date' as const },
+    { h: first },
+    ...(withContractor ? [{ h: 'المقاول' }] : []),
+    ...(withBank ? [{ h: 'البنك' }] : []),
+    ...(withNotes ? [{ h: 'ملاحظات' }] : []),
+    { h: 'المبلغ', kind: 'money' as const },
+  ]
+  const entryRow = (e: Entry, first: string | null) => [
+    e.seq,
+    e.entry_date,
+    first,
+    ...(withContractor ? [e.contractor?.name ?? null] : []),
+    ...(withBank ? [e.bank?.name ?? null] : []),
+    ...(withNotes ? [e.notes] : []),
+    e.amount,
+  ]
+  const footerOf = (label: string, total: number, n: number) => [label, ...Array(n - 2).fill(null), total]
+  if (incomes.length > 0) {
+    const c = entryCols('البيان').filter((x) => x.h !== 'المقاول' && x.h !== 'البنك')
+    gridSections.push({
+      heading: 'الوارد',
+      cols: c,
+      rows: incomes.map((e) => [e.seq, e.entry_date, e.category, ...(withNotes ? [e.notes] : []), e.amount]),
+      footer: footerOf('إجمالي الوارد', incomeTotal, c.length),
+    })
+  }
+  for (const g of expenseGroups) {
+    const c = entryCols('البيان')
+    gridSections.push({
+      heading: `${g.name} (${g.rows.length} قيد)`,
+      cols: c,
+      rows: g.rows.map((e) => entryRow(e, e.item)),
+      footer: footerOf(`إجمالي ${g.name}`, g.total, c.length),
+    })
+  }
 
   async function excel() {
     if (!project) return
@@ -128,6 +169,12 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
           ]}
         />
 
+        <div className="screen-only">
+          {gridSections.length === 0 ? <p className="muted">مفيش قيود.</p> : gridSections.map((g) => <DataGrid key={g.heading} section={g} />)}
+          {expenseGroups.length > 0 && <p className="grid-total">إجمالي المصروفات: <b>{money(project.expenses)}</b></p>}
+        </div>
+
+        <div className="print-only">
         {incomes.length > 0 && (
           <>
             <h2>الوارد</h2>
@@ -212,6 +259,8 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
             </tbody>
           </table>
         )}
+
+        </div>
 
         <Signatures />
 

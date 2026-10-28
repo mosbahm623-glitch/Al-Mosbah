@@ -5,6 +5,7 @@ import { useAsync } from '../../lib/useAsync'
 import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement, type MovementKind } from '../../lib/movements'
 import { exportJournalExcel } from '../../lib/exportJournalExcel'
 import { Kpis, Signatures } from '../../components/PaperExtras'
+import DataGrid from '../../components/DataGrid'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 import type { ReportColumns } from '../projects/ProjectReport'
 
@@ -84,7 +85,25 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
                 { label: 'مدفوعات مقاولين', value: money(t.payment), tone: 'blue' },
               ]}
             />
-            <table className="paper-table group ledger">
+            <div className="screen-only">
+              <DataGrid
+                section={{
+                  cols: [
+                    { h: 'رقم', kind: 'int' }, { h: 'النوع' }, { h: 'البند' }, { h: 'البيان' }, { h: 'المشروع' },
+                    ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
+                    ...(withBank ? [{ h: 'البنك' }] : []),
+                    ...(withNotes ? [{ h: 'ملاحظات' }] : []),
+                    { h: 'المبلغ', kind: 'money' as const },
+                  ],
+                  rows: rows.map((m) => [
+                    m.seq, KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : ''), m.category, m.title, m.project,
+                    ...(withContractor ? [m.party] : []), ...(withBank ? [m.detail] : []), ...(withNotes ? [m.notes] : []), m.amount,
+                  ]),
+                  footer: [`عدد الحركات: ${t.count}`, ...Array(span).fill(null)],
+                }}
+              />
+            </div>
+            <table className="paper-table group ledger print-only">
               <thead>
                 <tr>
                   <th className="w-seq">رقم</th>

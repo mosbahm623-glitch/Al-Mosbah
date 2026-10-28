@@ -1,20 +1,26 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, FileSpreadsheet, Printer } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import { dateText, money, todayISO } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
 import { KIND_LABEL, fetchMovements, shiftDay, totalsOfDay, type Movement } from '../../lib/movements'
 import { exportJournalExcel } from '../../lib/exportJournalExcel'
 
-const wrap = async (day: string) => {
-  const data = await fetchMovements({ day })
-  return { data, error: data === null }
-}
-
 export default function Journal() {
   const [day, setDay] = useState(todayISO)
-  const load = useCallback(() => wrap(day), [day])
-  const { data, failed, loading, reload } = useAsync<Movement[]>(load)
+  // nothing is loaded or drawn until "عرض" is pressed; picking another day hides it again
+  const [result, setResult] = useState<{ day: string; data: Movement[] | null } | null>(null)
+  const [loading, setLoading] = useState(false)
+  const shown = result?.day === day ? result : null
+  const data = shown?.data ?? null
+  const failed = shown !== null && shown.data === null
+
+  async function show() {
+    const wanted = day
+    setLoading(true)
+    const rows = await fetchMovements({ day: wanted })
+    setResult({ day: wanted, data: rows })
+    setLoading(false)
+  }
   const [busy, setBusy] = useState(false)
   const [exportFailed, setExportFailed] = useState(false)
 
@@ -78,14 +84,15 @@ export default function Journal() {
               النهاردة
             </button>
           )}
-          <button className="btn btn-ghost" onClick={reload} disabled={loading}>
-            {loading ? 'جارٍ التحديث...' : 'تحديث'}
+          <button className="btn" onClick={() => void show()} disabled={loading}>
+            {loading ? 'جارٍ التحميل...' : 'عرض'}
           </button>
         </div>
         {failed && <p className="msg msg-error">مقدرناش نحمّل اليومية، جرّب تاني</p>}
         {exportFailed && <p className="msg msg-error">ملف الإكسل ما اتجهزش، جرّب تاني</p>}
       </div>
 
+      {data && (
       <article className="paper">
         <header className="paper-head">
           <div>
@@ -97,8 +104,7 @@ export default function Journal() {
           </dl>
         </header>
 
-        {loading && !data && <p className="muted">جارٍ التحميل...</p>}
-        {data && rows.length === 0 && <p className="muted">مفيش حركات في اليوم ده.</p>}
+        {rows.length === 0 && <p className="muted">مفيش حركات في اليوم ده.</p>}
 
         {rows.length > 0 && (
           <>
@@ -158,6 +164,7 @@ export default function Journal() {
 
         <footer className="paper-foot">المصباح · يومية {dateText(day)}</footer>
       </article>
+      )}
     </div>
   )
 }

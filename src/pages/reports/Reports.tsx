@@ -35,6 +35,8 @@ export default function Reports() {
   const [status, setStatus] = useState<StatusFilter>('all')
   const [type, setType] = useState<TypeFilter>('all')
   const [left, setLeft] = useState<ReadonlySet<string>>(new Set())
+  // nothing is drawn until "عرض" is pressed; changing a filter hides it again
+  const [shown, setShown] = useState(false)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [today] = useState(() => todayText())
@@ -45,12 +47,14 @@ export default function Reports() {
   const totals = useMemo(() => totalsOf(rows), [rows])
   const scope = scopeText(status, type, rows.length, candidates.length)
 
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    setShown(false)
     setLeft((s) => {
       const next = new Set(s)
       if (!next.delete(id)) next.add(id)
       return next
     })
+  }
 
   async function excel() {
     setBusy(true)
@@ -131,19 +135,22 @@ export default function Reports() {
             <div className="panel-head">
               <h2>تقرير مجمّع لكل المشاريع</h2>
               <div className="head-actions">
-                <button className="btn btn-icon" onClick={() => window.print()} disabled={rows.length === 0}>
+                <button className="btn" onClick={() => setShown(true)} disabled={rows.length === 0}>
+                  عرض
+                </button>
+                <button className="btn btn-ghost btn-icon" onClick={() => window.print()} disabled={!shown || rows.length === 0}>
                   <Printer size={18} aria-hidden="true" />
                   طباعة / PDF
                 </button>
-                <button className="btn btn-ghost btn-icon" onClick={() => void excel()} disabled={busy || rows.length === 0}>
+                <button className="btn btn-ghost btn-icon" onClick={() => void excel()} disabled={busy || !shown || rows.length === 0}>
                   <FileSpreadsheet size={18} aria-hidden="true" />
                   {busy ? 'جارٍ التجهيز...' : 'Excel'}
                 </button>
               </div>
             </div>
             <div className="toolbar">
-              <Segmented label="الحالة" value={status} options={STATUS} onChange={setStatus} />
-              <Segmented label="النوع" value={type} options={TYPES} onChange={setType} />
+              <Segmented label="الحالة" value={status} options={STATUS} onChange={(v) => { setShown(false); setStatus(v) }} />
+              <Segmented label="النوع" value={type} options={TYPES} onChange={(v) => { setShown(false); setType(v) }} />
             </div>
             {candidates.length > 1 && (
               <div className="pick-list" role="group" aria-label="المشاريع في التقرير">
@@ -158,6 +165,7 @@ export default function Reports() {
           </section>
           {failed && <p className="msg msg-error no-print">ملف الإكسل ما اتجهزش، جرّب تاني</p>}
 
+          {shown && (
           <article className="paper">
             <header className="paper-head">
               <div>
@@ -221,6 +229,7 @@ export default function Reports() {
 
             <footer className="paper-foot">المصباح · تقرير مجمّع · {today}</footer>
           </article>
+          )}
         </>
       )}
     </div>

@@ -13,12 +13,13 @@ import Journal from './Journal'
 import PeriodReport from './PeriodReport'
 import CategoryReport from './CategoryReport'
 import BudgetReport from './BudgetReport'
+import ApprovalsReport from './ApprovalsReport'
 import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
 
-type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'contractors' | 'bank' | 'pending'
+type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'contractors' | 'bank' | 'pending' | 'approvals'
 
 const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[] = [
   {
@@ -45,7 +46,13 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
       { value: 'bank', label: 'كشف حساب بنك' },
     ],
   },
-  { label: 'المتابعة', items: [{ value: 'pending', label: 'حالة القيود (معلّقة / مقبولة / مرفوضة)' }] },
+  {
+    label: 'المتابعة',
+    items: [
+      { value: 'approvals', label: 'الموافقات (قرارات يوم)' },
+      { value: 'pending', label: 'حالة القيود (معلّقة / مقبولة / مرفوضة)' },
+    ],
+  },
 ]
 
 type Named = { id: string; name: string }
@@ -99,6 +106,7 @@ export default function Reports() {
     contractors: 'all',
     bank: pickedBank,
     pending: 'all',
+    approvals: day,
   }[type]
   const key = useMemo(
     () =>
@@ -159,7 +167,7 @@ export default function Reports() {
             </select>
           </label>
 
-          {type === 'journal' && (
+          {(type === 'journal' || type === 'approvals') && (
             <label className="field">
               التاريخ
               <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} />
@@ -262,6 +270,7 @@ export default function Reports() {
             </div>
           )}
           {visible && type === 'journal' && <Journal key={n} day={day} {...cols} />}
+          {visible && type === 'approvals' && <ApprovalsReport key={n} day={day} />}
           {visible && type === 'period' && (
             <PeriodReport key={n} from={from} to={to} projectId={projectId} projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''} {...cols} />
           )}

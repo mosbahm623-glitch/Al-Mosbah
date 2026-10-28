@@ -2,14 +2,12 @@ import type { Module } from '../auth/permissions'
 import {
   Bell,
   CheckSquare,
-  CreditCard,
   FileBarChart,
   HandCoins,
   History,
   Landmark,
   HardHat,
   LayoutDashboard,
-  MessageCircle,
   FolderKanban,
   Search,
   Users,
@@ -45,9 +43,7 @@ export const NAV: NavGroup[] = [
     items: [
       { path: 'search', label: 'بحث في القيود', icon: Search, module: 'tools' },
       { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
-      { path: 'my-payments', label: 'دفعاتي', icon: CreditCard, module: 'tools' },
       { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
-      { path: 'whatsapp', label: 'إرسال واتساب', icon: MessageCircle, module: 'tools' },
     ],
   },
 ]

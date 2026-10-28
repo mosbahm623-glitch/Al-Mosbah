@@ -10,21 +10,16 @@ export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
 const TITLE: Record<PendingStatus, string> = { pending: 'القيود المعلّقة', approved: 'القيود المقبولة', rejected: 'القيود المرفوضة', all: 'حالة القيود' }
 
 /** Entries waiting for an admin's decision, or turned down, with who recorded them. */
-export default function PendingReport({ status }: { status: PendingStatus }) {
+export default function PendingReport({ status, creatorId, creatorName }: { status: PendingStatus; creatorId: string; creatorName: string }) {
   const load = useCallback(async () => {
     const wanted = status === 'all' ? ['pending', 'approved', 'rejected'] : [status]
-    const rows = await fetchPaged<Entry>((a, b) =>
-      supabase
-        .from('entries')
-        .select(`${ENTRY_COLUMNS},project:projects(name)`)
-        .in('status', wanted)
-        .order('created_at')
-        .order('id')
-        .range(a, b)
-        .returns<Entry[]>(),
-    )
+    const rows = await fetchPaged<Entry>((a, b) => {
+      let q = supabase.from('entries').select(`${ENTRY_COLUMNS},project:projects(name)`).in('status', wanted)
+      if (creatorId) q = q.eq('created_by', creatorId)
+      return q.order('created_at').order('id').range(a, b).returns<Entry[]>()
+    })
     return { data: rows, error: rows === null }
-  }, [status])
+  }, [status, creatorId])
   const { data, failed } = useAsync<Entry[]>(load)
 
   const view = useMemo(() => {
@@ -40,6 +35,7 @@ export default function PendingReport({ status }: { status: PendingStatus }) {
   return (
     <TableReport
       title={TITLE[status]}
+      meta={creatorName ? [{ label: 'سجّله', value: creatorName }] : undefined}
       filename={`المصباح - ${TITLE[status]} - ${todayISO()}.xlsx`}
       kpis={[
         { label: 'معلّقة', value: String(view.pending), tone: 'warn' },

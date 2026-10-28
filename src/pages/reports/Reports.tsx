@@ -49,6 +49,7 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
 ]
 
 type Named = { id: string; name: string }
+const fetchPeople = () => supabase.from('profiles').select('id,full_name').order('full_name').returns<{ id: string; full_name: string | null }[]>()
 const fetchContractors = () => supabase.from('contractors').select('id,name').order('name').returns<Named[]>()
 
 const hasPeriod = (t: ReportType) => t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
@@ -59,6 +60,7 @@ export default function Reports() {
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const banks = useAsync<BankSummary[]>(fetchBankSummaries)
   const contractors = useAsync<Named[]>(fetchContractors)
+  const people = useAsync<{ id: string; full_name: string | null }[]>(fetchPeople)
 
   const [type, setType] = useState<ReportType>('journal')
   const [day, setDay] = useState(todayISO)
@@ -71,6 +73,7 @@ export default function Reports() {
   const [kindFilter, setKindFilter] = useState<'all' | ProjectType>('all')
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('all')
   const [pendingStatus, setPendingStatus] = useState<PendingStatus>('pending')
+  const [creatorId, setCreatorId] = useState('')
   const [withContractor, setWithContractor] = useState(true)
   const [withBank, setWithBank] = useState(true)
   const [withNotes, setWithNotes] = useState(true)
@@ -106,10 +109,10 @@ export default function Reports() {
         type === 'period' ? projectId : '',
         type === 'category' ? kindFilter : '',
         type === 'budget' ? budgetMode : '',
-        type === 'pending' ? pendingStatus : '',
+        type === 'pending' ? [pendingStatus, creatorId] : '',
         hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes] : '',
       ]),
-    [type, target, from, to, projectId, kindFilter, budgetMode, pendingStatus, withContractor, withBank, withNotes],
+    [type, target, from, to, projectId, kindFilter, budgetMode, pendingStatus, creatorId, withContractor, withBank, withNotes],
   )
   const visible = shown?.key === key && Boolean(target) && rangeOk
   const cols = { withContractor, withBank, withNotes }
@@ -200,6 +203,17 @@ export default function Reports() {
               </select>
             </label>
           )}
+          {type === 'pending' && (
+            <label className="field">
+              سجّله
+              <select value={creatorId} onChange={(e) => setCreatorId(e.target.value)}>
+                <option value="">كل الأسماء</option>
+                {(people.data ?? []).map((u) => (
+                  <option key={u.id} value={u.id}>{u.full_name || 'بدون اسم'}</option>
+                ))}
+              </select>
+            </label>
+          )}
 
           {hasPeriod(type) && (
             <div className="field-row">
@@ -260,7 +274,7 @@ export default function Reports() {
           )}
           {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} />}
           {visible && type === 'bank' && bank && <BankStatement key={n} id={bank.id} name={bank.name} opening={bank.opening_balance} from={from} to={to} />}
-          {visible && type === 'pending' && <PendingReport key={n} status={pendingStatus} />}
+          {visible && type === 'pending' && <PendingReport key={n} status={pendingStatus} creatorId={creatorId} creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''} />}
         </div>
       </div>
     </div>

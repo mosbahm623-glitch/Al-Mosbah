@@ -4,6 +4,7 @@ import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
 import Segmented from './Segmented'
 import CreatableSelect from './CreatableSelect'
+import EntryHistory from './EntryHistory'
 import { supabase } from '../lib/supabase'
 import { useAsync } from '../lib/useAsync'
 import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
@@ -236,6 +237,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        {isAdmin && entry && <EntryHistory entryId={entry.id} />}
         {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
         {error && <p className="msg msg-error span-2">{error}</p>}
         <div className="dialog-actions span-2">
@@ -247,7 +249,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           </button>
           {entry && (
             <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving}>
-              {confirmDelete ? 'تأكيد الحذف نهائياً' : 'حذف القيد'}
+              {confirmDelete ? 'تأكيد حذف القيد' : 'حذف القيد'}
             </button>
           )}
         </div>

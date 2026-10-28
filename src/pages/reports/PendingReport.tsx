@@ -6,13 +6,13 @@ import { ENTRY_COLUMNS, type Entry } from '../../lib/projects'
 import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
 
-export type PendingStatus = 'pending' | 'rejected' | 'all'
-const TITLE: Record<PendingStatus, string> = { pending: 'القيود المعلّقة', rejected: 'القيود المرفوضة', all: 'القيود المعلّقة والمرفوضة' }
+export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
+const TITLE: Record<PendingStatus, string> = { pending: 'القيود المعلّقة', approved: 'القيود المقبولة', rejected: 'القيود المرفوضة', all: 'حالة القيود' }
 
 /** Entries waiting for an admin's decision, or turned down, with who recorded them. */
 export default function PendingReport({ status }: { status: PendingStatus }) {
   const load = useCallback(async () => {
-    const wanted = status === 'all' ? ['pending', 'rejected'] : [status]
+    const wanted = status === 'all' ? ['pending', 'approved', 'rejected'] : [status]
     const rows = await fetchPaged<Entry>((a, b) =>
       supabase
         .from('entries')
@@ -30,7 +30,8 @@ export default function PendingReport({ status }: { status: PendingStatus }) {
   const view = useMemo(() => {
     const rows = data ?? []
     const sum = (s: Entry['status']) => rows.filter((e) => e.status === s).reduce((t, e) => t + Math.round(e.amount * 100), 0) / 100
-    return { rows, pending: rows.filter((e) => e.status === 'pending').length, rejected: rows.filter((e) => e.status === 'rejected').length, pendingTotal: sum('pending') }
+    const count = (st: Entry['status']) => rows.filter((e) => e.status === st).length
+    return { rows, pending: count('pending'), approved: count('approved'), rejected: count('rejected'), pendingTotal: sum('pending'), approvedTotal: sum('approved') }
   }, [data])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
@@ -43,6 +44,8 @@ export default function PendingReport({ status }: { status: PendingStatus }) {
       kpis={[
         { label: 'معلّقة', value: String(view.pending), tone: 'warn' },
         { label: 'إجمالي المعلّق', value: money(view.pendingTotal), tone: 'warn' },
+        { label: 'مقبولة', value: String(view.approved), tone: 'ok' },
+        { label: 'إجمالي المقبول', value: money(view.approvedTotal), tone: 'ok' },
         { label: 'مرفوضة', value: String(view.rejected), tone: 'err' },
       ]}
       sections={[
@@ -66,7 +69,7 @@ export default function PendingReport({ status }: { status: PendingStatus }) {
             e.category,
             e.item,
             e.creator?.full_name ?? null,
-            e.status === 'pending' ? 'معلّق' : 'مرفوض',
+            e.status === 'pending' ? 'معلّق' : e.status === 'approved' ? 'مقبول' : 'مرفوض',
             e.amount,
           ]),
           footer: [`عدد القيود: ${view.rows.length}`, ...Array(8).fill(null)],

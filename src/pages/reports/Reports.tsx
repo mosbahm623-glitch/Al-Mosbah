@@ -45,7 +45,7 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
       { value: 'bank', label: 'كشف حساب بنك' },
     ],
   },
-  { label: 'المتابعة', items: [{ value: 'pending', label: 'القيود المعلّقة والمرفوضة' }] },
+  { label: 'المتابعة', items: [{ value: 'pending', label: 'حالة القيود (معلّقة / مقبولة / مرفوضة)' }] },
 ]
 
 type Named = { id: string; name: string }
@@ -194,8 +194,9 @@ export default function Reports() {
               الحالة
               <select value={pendingStatus} onChange={(e) => setPendingStatus(e.target.value as PendingStatus)}>
                 <option value="pending">معلّقة</option>
+                <option value="approved">مقبولة</option>
                 <option value="rejected">مرفوضة</option>
-                <option value="all">الاتنين</option>
+                <option value="all">الكل</option>
               </select>
             </label>
           )}

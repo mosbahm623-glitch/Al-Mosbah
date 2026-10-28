@@ -42,3 +42,28 @@ export async function countPending() {
   const { count } = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending')
   return count ?? 0
 }
+
+export type DeletedEntry = {
+  id: string
+  seq: number
+  rev: number
+  kind: 'income' | 'expense'
+  category: string
+  item: string | null
+  amount: number
+  entry_date: string
+  notes: string | null
+  status_before_delete: string | null
+  deleted_at: string
+  project: string | null
+  contractor: string | null
+  deleted_by_name: string | null
+  created_by_name: string | null
+}
+
+export const fetchDeleted = () => supabase.rpc('deleted_entries')
+
+export async function restoreEntry(id: string) {
+  const { data, error } = await supabase.rpc('restore_entry', { p_id: id })
+  return !error && data === true
+}

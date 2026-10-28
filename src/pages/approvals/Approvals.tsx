@@ -6,18 +6,24 @@ import { decide, fetchByStatus, type PendingEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money, todayISO } from '../../lib/format'
 import ApprovalsReport from './ApprovalsReport'
+import DeletedList from './DeletedList'
+import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
   { value: 'rejected', label: 'المرفوضة' },
   { value: 'decided', label: 'قرارات اليوم' },
+  { value: 'deleted', label: 'المحذوفة' },
 ] as const
 
 export default function Approvals() {
   const [tab, setTab] = useState<(typeof TABS)[number]['value']>('pending')
+  const isAdmin = useAuth().profile?.role === 'admin'
+  const tabs = isAdmin ? TABS : TABS.filter((t) => t.value !== 'deleted')
+  const other = tab === 'decided' || tab === 'deleted'
   const list = useAsync<PendingEntry[]>(
-    useCallback(() => (tab === 'decided' ? Promise.resolve({ data: [] as PendingEntry[], error: null }) : fetchByStatus(tab)), [tab]),
+    useCallback(() => (tab === 'decided' || tab === 'deleted' ? Promise.resolve({ data: [] as PendingEntry[], error: null }) : fetchByStatus(tab)), [tab]),
   )
   const [day, setDay] = useState(todayISO)
   const [busy, setBusy] = useState(false)
@@ -51,8 +57,8 @@ export default function Approvals() {
       />
 
       <div className="toolbar">
-        <Segmented label="الحالة" value={tab} options={TABS} onChange={setTab} />
-        {tab === 'decided' ? (
+        <Segmented label="الحالة" value={tab} options={tabs} onChange={setTab} />
+        {tab === 'deleted' ? null : tab === 'decided' ? (
           <label className="field toolbar-note">
             اليوم
             <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} />
@@ -62,12 +68,13 @@ export default function Approvals() {
         )}
       </div>
 
+      {tab === 'deleted' && <DeletedList />}
       {tab === 'decided' && <ApprovalsReport key={day} day={day} />}
 
       {error && <p className="msg msg-error">{error}</p>}
-      {tab !== 'decided' && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
-      {tab !== 'decided' && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
-      {tab !== 'decided' && list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
+      {!other && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
+      {!other && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
+      {!other && list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
 
       {rows.length > 0 && (
         <div className="appr-list">

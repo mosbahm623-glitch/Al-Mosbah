@@ -83,10 +83,10 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     if (!entry) return
     if (!confirmDelete) return setConfirmDelete(true)
     setSaving(true)
-    const { data, error: err } = await supabase.from('entries').delete().eq('id', entry.id).eq('rev', entry.rev).select('id')
+    const { data, error: err } = await supabase.rpc('delete_entry', { p_id: entry.id, p_rev: entry.rev })
     setSaving(false)
     if (err) return setError('القيد ما اتحذفش، جرّب تاني')
-    if (!data?.length) return setError(CHANGED)
+    if (!data) return setError(CHANGED)
     onSaved()
     onClose()
   }

@@ -564,3 +564,6 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .grid tfoot tr.grid-sub td { bottom: 2.3rem; font-weight: 600; color: var(--muted); }
 .grid-total { margin: 0.4rem 0 0; font-size: 0.95rem; }
 .grid-total b.neg { color: var(--err); }
+
+.backup { display: grid; gap: 0.6rem; justify-items: start; }
+.backup-stale { border-color: var(--err); }

@@ -2,6 +2,7 @@ import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, t
 import { supabase } from '../lib/supabase'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import BackupPanel from '../components/BackupPanel'
 
 type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
 
@@ -40,6 +41,8 @@ export default function Dashboard() {
       </div>
 
       {error && <p className="msg msg-error">{error}</p>}
+
+      <BackupPanel />
 
       {data && (
         <>

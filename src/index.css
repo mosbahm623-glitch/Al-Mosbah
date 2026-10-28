@@ -509,3 +509,28 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .search-box { flex: 1; min-width: 12rem; display: flex; align-items: center; gap: 0.5rem; background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 10px; padding: 0 0.7rem; }
 .search-box input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 0.6rem 0; outline: none; font: inherit; color: inherit; }
 .search-count { padding: 0.6rem 1rem 0; margin: 0; }
+
+/* On screen the report looks like the rest of the app (follows light/dark, full width);
+   print and PDF keep the white paper look defined above. */
+@media screen {
+  .paper { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; max-width: none; padding: 1.2rem 1.4rem; }
+  .paper-head { border-bottom: 1px solid var(--line); }
+  .paper-brand { color: var(--accent-text); }
+  .paper-meta dt { color: var(--muted); }
+  .paper-table th, .paper-table td { border-color: var(--line-2); }
+  .paper-table thead th, .paper-table.ledger thead th { background: var(--surface-2); color: var(--muted); font-size: 0.78rem; border-color: var(--line-2); }
+  .paper-table.ledger tbody tr:nth-child(even) td { background: transparent; }
+  .paper-table.ledger tbody tr:hover td { background: var(--hover); }
+  .paper-table .group-title th { background: var(--surface-2); color: var(--fg); }
+  .paper-table tfoot td { background: var(--surface-2); }
+  .paper-table.grand td { background: var(--surface-2); color: var(--fg); border-color: var(--line-2); }
+  .paper-table .neg, .kpi.neg b { color: var(--err); }
+  .kpi { background: var(--surface); border-color: var(--line); border-top-color: var(--blue); }
+  .kpi small { color: var(--muted); }
+  .kpi-ok { border-top-color: var(--ok); } .kpi-err { border-top-color: var(--err); } .kpi-warn { border-top-color: var(--warn); } .kpi-neutral { border-top-color: var(--neutral); }
+  .tag-ok { background: var(--ok-bg); color: var(--ok); } .tag-err { background: var(--err-bg); color: var(--err); }
+  .tag-warn { background: var(--warn-bg); color: var(--warn); } .tag-blue { background: var(--blue-bg); color: var(--blue); }
+  .paper .muted { color: var(--muted); }
+  /* signature lines and the printed footer only make sense on paper */
+  .paper .sign, .paper .paper-foot { display: none; }
+}

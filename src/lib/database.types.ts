@@ -1,6 +1,5 @@
 // Generated from the Supabase schema (project kytaxbhajnmdstyiorus). Regenerate after every migration.
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 type Rel = { foreignKeyName: string; columns: string[]; isOneToOne: false; referencedRelation: string; referencedColumns: string[] }
 type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relationships: Rels }

@@ -67,3 +67,5 @@ export async function restoreEntry(id: string) {
   const { data, error } = await supabase.rpc('restore_entry', { p_id: id })
   return !error && data === true
 }
+
+export const fetchProjectDeleted = (projectId: string) => supabase.rpc('project_deleted_entries', { p_project: projectId })

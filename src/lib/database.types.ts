@@ -103,6 +103,7 @@ export type Database = {
       dashboard_summary: { Args: never; Returns: any }
       delete_entry: { Args: { p_id: string; p_rev: number }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
+      project_deleted_entries: { Args: { p_project: string }; Returns: any }
       deleted_entries: { Args: never; Returns: any }
       entry_history_of: { Args: { p_id: string }; Returns: any }
       project_summaries: { Args: never; Returns: any }

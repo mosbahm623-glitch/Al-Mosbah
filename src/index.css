@@ -503,3 +503,8 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
   .sign { gap: 0.7rem; }
 }
 @media print { .paper-table { display: table; overflow: visible; } }
+
+/* search page */
+.search-box { flex: 1; min-width: 12rem; display: flex; align-items: center; gap: 0.5rem; background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 10px; padding: 0 0.7rem; }
+.search-box input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 0.6rem 0; outline: none; font: inherit; color: inherit; }
+.search-count { padding: 0.6rem 1rem 0; margin: 0; }

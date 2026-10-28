@@ -91,7 +91,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           }}
         >
           <Search size={18} aria-hidden="true" />
-          <input name="q" type="search" placeholder="بحث برقم القيد أو اسم المشروع" aria-label="بحث" />
+          <input name="q" type="search" placeholder="بحث برقم القيد أو البند أو البيان أو المشروع" aria-label="بحث" />
         </form>
 
         <div className="top-actions">

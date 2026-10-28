@@ -4,6 +4,7 @@ import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
+import Search from './pages/Search'
 const Projects = lazy(() => import('./pages/projects/Projects'))
 const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
 const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
@@ -35,6 +36,7 @@ function Content() {
   if (route === 'dashboard') return <Dashboard />
   if (route === 'reports' || route === 'reports/journal') return <Reports />
   if (route === 'recent') return <Recent />
+  if (route === 'search') return <Search />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
   if (report) return <ProjectReport id={report[1]} />

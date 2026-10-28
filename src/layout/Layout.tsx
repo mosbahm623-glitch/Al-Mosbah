@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
+import { startLive } from '../lib/live'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -25,6 +26,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
   const isAdmin = profile?.role === 'admin'
+
+  useEffect(() => startLive(), [])
 
   function toggleSidebar() {
     const next = !open

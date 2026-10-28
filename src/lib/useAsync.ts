@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { DATA_CHANGED } from './live'
 
 type Result<T> = PromiseLike<{ data: T | null; error: unknown }>
 
@@ -20,6 +21,13 @@ export function useAsync<T>(fn: () => Result<T>) {
       active = false
     }
   }, [fn, tick])
+
+  // live refresh: swap the data in quietly, without the loading state
+  useEffect(() => {
+    const onChange = () => setTick((t) => t + 1)
+    window.addEventListener(DATA_CHANGED, onChange)
+    return () => window.removeEventListener(DATA_CHANGED, onChange)
+  }, [])
 
   const reload = useCallback(() => {
     setState((s) => ({ ...s, loading: true }))

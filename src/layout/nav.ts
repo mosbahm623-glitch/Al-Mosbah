@@ -18,7 +18,10 @@ type NavItem = {
   path: string
   label: string
   icon: LucideIcon
+  /** only the admin (approvals) */
   adminOnly?: boolean
+  /** admin and owner */
+  staffOnly?: boolean
   /** visible only to users who were granted this page */
   module?: Module
 }
@@ -34,7 +37,7 @@ export const NAV: NavGroup[] = [
       { path: 'banks', label: 'البنوك', icon: Landmark, module: 'banks' },
       { path: 'contractors', label: 'مستحقات المقاولين', icon: HardHat, module: 'contractors' },
       { path: 'approvals', label: 'الموافقات', icon: CheckSquare, adminOnly: true },
-      { path: 'users', label: 'المستخدمين', icon: Users, adminOnly: true },
+      { path: 'users', label: 'المستخدمين', icon: Users, staffOnly: true },
       { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart, module: 'reports' },
     ],
   },

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
+import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
 import { supabase } from '../../lib/supabase'
 import type { AdvanceOption, UserRow } from '../../lib/users'
@@ -9,6 +10,7 @@ type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))
 const ROLES = [
   { value: 'user', label: 'مستخدم' },
+  { value: 'owner', label: 'مالك' },
   { value: 'admin', label: 'أدمن' },
 ] as const
 
@@ -16,7 +18,8 @@ type Props = { user: UserRow; advances: AdvanceOption[]; isSelf: boolean; onClos
 
 /** Role, status and one level (none / view / edit) per page. */
 export default function UserDialog({ user, advances, isSelf, onClose, onSaved }: Props) {
-  const [role, setRole] = useState<'admin' | 'user'>(user.role)
+  const { isAdmin } = useAuth()
+  const [role, setRole] = useState<'admin' | 'owner' | 'user'>(user.role)
   const [active, setActive] = useState(user.is_active)
   const [levels, setLevels] = useState<Record<Module, Choice>>(
     () => Object.fromEntries(MODULES.map((m) => [m.id, user.permissions.find((p) => p.module === m.id)?.level ?? 'none'])) as Record<Module, Choice>,
@@ -39,7 +42,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
     const rows = MODULES.flatMap((m) => (levels[m.id] === 'none' ? [] : [{ user_id: user.id, module: m.id, level: levels[m.id] as Level }]))
     const cleared = await supabase.from('user_permissions').delete().eq('user_id', user.id)
     const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
-    const wanted = levels.advances === 'none' || role === 'admin' ? [] : advanceIds
+    const wanted = levels.advances === 'none' || role !== 'user' ? [] : advanceIds
     const clearedAccess = await supabase.from('user_advance_access').delete().eq('user_id', user.id)
     const savedAccess = wanted.length ? await supabase.from('user_advance_access').insert(wanted.map((advance_id) => ({ user_id: user.id, advance_id }))) : { error: null }
     setSaving(false)
@@ -54,7 +57,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
       <form onSubmit={(e) => void submit(e)} className="dialog-form">
         <div className="field">
           الدور
-          <Segmented label="الدور" value={role} options={ROLES} onChange={setRole} />
+          <Segmented label="الدور" value={role} options={isAdmin ? ROLES : ROLES.filter((r) => r.value !== 'admin')} onChange={setRole} />
         </div>
         <label className="check">
           <input type="checkbox" checked={active} disabled={isSelf} onChange={(e) => setActive(e.target.checked)} />
@@ -62,8 +65,10 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
         </label>
         {isSelf && <p className="muted small">مينفعش تغيّر دورك أو توقف حسابك بنفسك.</p>}
 
-        {role === 'admin' ? (
-          <p className="muted">الأدمن عنده كل الصلاحيات على كل الصفحات.</p>
+        {role !== 'user' ? (
+          <p className="muted">
+            {role === 'admin' ? 'الأدمن عنده كل الصلاحيات على كل الصفحات، وهو الوحيد اللي بيوافق على القيود.' : 'المالك عنده كل الصلاحيات على كل الصفحات، لكن قيوده بتستنى موافقة الأدمن ومش بيوافق على حاجة.'}
+          </p>
         ) : (
           <div className="perm-list">
             {MODULES.map((m) => (

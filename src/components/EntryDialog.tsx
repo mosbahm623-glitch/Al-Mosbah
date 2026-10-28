@@ -28,7 +28,7 @@ type Props = {
 const CHANGED = 'القيد ده اتغيّر (أو اتمسح) من حد تاني من وقت ما فتحته. اقفل النافذة وافتحه تاني عشان تشوف آخر نسخة وبعدين عدّل.'
 
 export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, onClose, onSaved }: Props) {
-  const isAdmin = useAuth().profile?.role === 'admin'
+  const { isAdmin, isStaff } = useAuth()
   const fetchCategories = useCallback(
     () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
     [],
@@ -240,7 +240,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
-        {isAdmin && entry && <EntryHistory entryId={entry.id} />}
+        {isStaff && entry && <EntryHistory entryId={entry.id} />}
         {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
         {confirmDelete && (
           <label className="field span-2">

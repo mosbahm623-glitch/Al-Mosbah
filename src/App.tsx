@@ -24,14 +24,14 @@ import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
 
 function Content() {
-  const { profile, can } = useAuth()
+  const { isAdmin, isStaff, can } = useAuth()
   const route = useRoute()
   const item = ALL_ITEMS.find((i) => i.path === route)
   const section = route.split('/')[0]
   const sectionItem = ALL_ITEMS.find((i) => i.path === section)
 
   if (route === 'notifications') return <Notifications />
-  if (sectionItem?.adminOnly && profile?.role !== 'admin') return <ComingSoon title="الصفحة مش موجودة" />
+  if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff)) return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />
   if (route === 'approvals') return <Approvals />
@@ -52,7 +52,7 @@ function Content() {
   if (advanceReport) return <AdvanceReport id={advanceReport[1]} />
   const advance = /^advances\/([0-9a-f-]{36})$/.exec(route)
   if (advance) return <AdvanceDetail id={advance[1]} />
-  if (!item || (item.adminOnly && profile?.role !== 'admin')) {
+  if (!item || (item.adminOnly && !isAdmin) || (item.staffOnly && !isStaff)) {
     return <ComingSoon title="الصفحة مش موجودة" />
   }
   return <ComingSoon title={item.label} />

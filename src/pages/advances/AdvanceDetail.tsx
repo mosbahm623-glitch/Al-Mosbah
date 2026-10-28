@@ -18,9 +18,8 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, profile } = useAuth()
+  const { can, isStaff: isAdmin } = useAuth()
   const canEdit = can('advances', 'edit')
-  const isAdmin = profile?.role === 'admin'
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
   const [money_, setMoney] = useState<Money | null>(null)

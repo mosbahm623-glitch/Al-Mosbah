@@ -8,11 +8,11 @@ const when = (iso: string) => new Date(iso).toLocaleDateString('ar-EG', { dateSt
 
 /** Admin only. The free plan has no automatic database backups, so this saves a full copy and warns when it has been a week. */
 export default function BackupPanel() {
-  const { profile } = useAuth()
+  const { profile, isStaff } = useAuth()
   const last = useAsync<{ at: string | null; stale: boolean }>(useCallback(async () => ({ data: await lastBackup(), error: null }), []))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  if (profile?.role !== 'admin' || !last.data) return null
+  if (!isStaff || !last.data) return null
 
   async function run() {
     if (!profile) return

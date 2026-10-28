@@ -58,9 +58,8 @@ function SearchView({ q }: { q: string }) {
   const [draft, setDraft] = useState(q)
   const load = useCallback(async () => (q ? search(q) : { data: [] as Hit[], error: false }), [q])
   const { data, failed, loading, reload } = useAsync<Hit[]>(load)
-  const { profile, can } = useAuth()
+  const { can, isStaff: isAdmin } = useAuth()
   const canEdit = can('projects', 'edit')
-  const isAdmin = profile?.role === 'admin'
   const [editing, setEditing] = useState<Hit | null>(null)
 
   function submit(e: FormEvent) {

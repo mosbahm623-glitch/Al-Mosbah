@@ -16,7 +16,7 @@ const KINDS = [
 type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void; onRestored?: () => void }
 
 export default function EntryList({ entries, canEdit, onEdit, onRestored }: Props) {
-  const isAdmin = useAuth().profile?.role === 'admin'
+  const { isAdmin, isStaff } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
 
@@ -123,7 +123,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                               <RotateCcw size={17} />
                             </button>
                           )
-                        ) : (isAdmin || e.status !== 'approved') && (
+                        ) : (isStaff || e.status !== 'approved') && (
                           <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
                             <Pencil size={17} />
                           </button>

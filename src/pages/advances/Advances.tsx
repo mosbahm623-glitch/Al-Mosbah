@@ -17,8 +17,7 @@ const STATUS = [
 ] as const
 
 export default function Advances() {
-  const { profile } = useAuth()
-  const isAdmin = profile?.role === 'admin'
+  const { isStaff: isAdmin } = useAuth()
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')

@@ -6,7 +6,7 @@ import { allows, type Level, type Module, type Permissions } from './permissions
 export type Profile = {
   id: string
   full_name: string | null
-  role: 'admin' | 'user'
+  role: 'admin' | 'owner' | 'user'
   is_active: boolean
 }
 
@@ -14,6 +14,10 @@ type AuthState = {
   loading: boolean
   session: Session | null
   profile: Profile | null
+  /** only the admin approves entries (and restores deleted ones) */
+  isAdmin: boolean
+  /** admin or owner: full access to every page and to managing users */
+  isStaff: boolean
   /** can the current user open (view) or change (edit) this page? */
   can: (module: Module, level?: Level) => boolean
   signIn: (email: string, password: string) => Promise<string | null>
@@ -109,7 +113,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       session,
       profile,
-      can: (module, level = 'view') => allows(profile?.role === 'admin', permissions, module, level),
+      isAdmin: profile?.role === 'admin',
+      isStaff: profile?.role === 'admin' || profile?.role === 'owner',
+      can: (module, level = 'view') => allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return error ? translateAuthError(error.message) : null

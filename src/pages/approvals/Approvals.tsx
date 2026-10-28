@@ -19,7 +19,7 @@ const TABS = [
 
 export default function Approvals() {
   const [tab, setTab] = useState<(typeof TABS)[number]['value']>('pending')
-  const isAdmin = useAuth().profile?.role === 'admin'
+  const { isAdmin } = useAuth()
   const tabs = isAdmin ? TABS : TABS.filter((t) => t.value !== 'deleted')
   const other = tab === 'decided' || tab === 'deleted'
   const list = useAsync<PendingEntry[]>(

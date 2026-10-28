@@ -9,7 +9,7 @@ import NewUserDialog from './NewUserDialog'
 import UserDialog from './UserDialog'
 
 export default function Users() {
-  const { profile } = useAuth()
+  const { profile, isAdmin } = useAuth()
   const users = useAsync<UserRow[]>(fetchUsers)
   const advances = useAsync<AdvanceOption[]>(fetchAdvanceOptions)
   const [adding, setAdding] = useState(false)
@@ -50,7 +50,7 @@ export default function Users() {
                   <tr key={u.id}>
                     <td className="strong">{u.full_name ?? '—'}</td>
                     <td className="muted" dir="ltr">{u.email}</td>
-                    <td>{u.role === 'admin' ? 'أدمن' : 'مستخدم'}</td>
+                    <td>{u.role === 'admin' ? 'أدمن' : u.role === 'owner' ? 'مالك' : 'مستخدم'}</td>
                     <td>
                       <span className={`chip ${u.is_active ? 'chip-ok' : 'chip-neutral'}`}>
                         <span className="dot" />
@@ -58,7 +58,7 @@ export default function Users() {
                       </span>
                     </td>
                     <td className="muted small">
-                      {u.role === 'admin'
+                      {u.role !== 'user'
                         ? 'كل الصفحات'
                         : u.permissions.length
                           ? MODULES.flatMap((m) => {
@@ -68,9 +68,11 @@ export default function Users() {
                           : 'مفيش صلاحيات'}
                     </td>
                     <td>
-                      <button className="icon-btn" aria-label={`صلاحيات ${u.full_name ?? ''}`} onClick={() => setEditing(u)}>
-                        <Pencil size={16} aria-hidden="true" />
-                      </button>
+                      {(isAdmin || u.role !== 'admin') && (
+                        <button className="icon-btn" aria-label={`صلاحيات ${u.full_name ?? ''}`} onClick={() => setEditing(u)}>
+                          <Pencil size={16} aria-hidden="true" />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

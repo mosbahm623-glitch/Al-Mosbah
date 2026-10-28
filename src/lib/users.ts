@@ -5,7 +5,7 @@ export type UserRow = {
   id: string
   full_name: string | null
   email: string | null
-  role: 'admin' | 'user'
+  role: 'admin' | 'owner' | 'user'
   is_active: boolean
   permissions: { module: Module; level: Level }[]
   /** custodies this user may see (matters only when he has the العهد page) */

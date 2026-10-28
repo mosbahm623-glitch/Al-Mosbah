@@ -21,13 +21,12 @@ function initialOpen(): boolean {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { profile, signOut, can } = useAuth()
-  const pending = usePendingCount(profile?.role === 'admin')
+  const { profile, signOut, can, isAdmin, isStaff } = useAuth()
+  const pending = usePendingCount(isAdmin)
   const unread = useUnread()
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
-  const isAdmin = profile?.role === 'admin'
 
   useEffect(() => startLive(), [])
 
@@ -137,7 +136,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </span>
             <span className="user-text">
               <span>{profile?.full_name ?? 'مستخدم'}</span>
-              <span className="user-role">{isAdmin ? 'أدمن' : 'مستخدم'}</span>
+              <span className="user-role">{isAdmin ? 'أدمن' : isStaff ? 'مالك' : 'مستخدم'}</span>
             </span>
           </div>
           <button className="top-btn" onClick={() => void signOut()} aria-label="تسجيل الخروج" title="تسجيل الخروج">
@@ -151,7 +150,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside id="sidebar" className="sidebar" aria-label="القائمة الرئيسية" inert={!open}>
         <nav className="sidebar-nav">
           {NAV.map((group, i) => {
-            const items = group.items.filter((it) => (it.adminOnly ? isAdmin : !it.module || can(it.module)))
+            const items = group.items.filter((it) => (it.adminOnly ? isAdmin : it.staffOnly ? isStaff : !it.module || can(it.module)))
             if (items.length === 0) return null
             return (
               <div className="nav-group" key={i}>

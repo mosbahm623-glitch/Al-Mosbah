@@ -568,7 +568,6 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 .backup { display: grid; gap: 0.6rem; justify-items: start; }
 .backup-stale { border-color: var(--err); }
 
-.deleted-panel { padding: 0.75rem 1rem; }
-.deleted-panel > summary { cursor: pointer; color: var(--muted); font-weight: 600; }
-.deleted-table td { color: var(--muted); text-decoration: line-through; }
-.deleted-table td:last-child { text-decoration: none; }
+.row-deleted td { color: var(--muted); background: color-mix(in srgb, var(--muted) 10%, transparent); text-decoration: line-through; }
+.row-deleted td:last-child, .row-deleted .chip { text-decoration: none; }
+.row-deleted .chip { opacity: 0.8; }

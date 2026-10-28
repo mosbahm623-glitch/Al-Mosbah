@@ -20,7 +20,7 @@ const SELECT = `${ENTRY_COLUMNS},project_id,project:projects(name)`
 const LIMIT = 100
 // % _ and , have a meaning inside a PostgREST filter
 const clean = (q: string) => q.replace(/[%_,()*\\]/g, ' ').trim()
-const STATUS = { pending: 'معلّق', approved: 'مقبول', rejected: 'مرفوض' } as const
+const STATUS = { pending: 'معلّق', approved: 'مقبول', rejected: 'مرفوض', deleted: 'محذوف' } as const
 
 /** Entries by number, البند, البيان, project or contractor name. */
 async function search(q: string) {

@@ -30,7 +30,7 @@ export type Entry = {
   advance_id: string | null
   creator?: { full_name: string | null } | null
   /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'deleted'
   /** only loaded where entries of several projects are listed (custody page) */
   project?: { name: string } | null
   project_id?: string

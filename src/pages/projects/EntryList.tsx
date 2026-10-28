@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, RotateCcw } from 'lucide-react'
+import { restoreEntry } from '../../lib/approvals'
+import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import { dateText, money } from '../../lib/format'
@@ -11,12 +13,17 @@ const KINDS = [
   { value: 'expense', label: 'مصروف' },
 ] as const
 
-type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void }
+type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void; onRestored?: () => void }
 
-export default function EntryList({ entries, canEdit, onEdit }: Props) {
+export default function EntryList({ entries, canEdit, onEdit, onRestored }: Props) {
   const isAdmin = useAuth().profile?.role === 'admin'
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
+
+  async function restore(id: string) {
+    if (await restoreEntry(id)) notifyApprovalsChanged()
+    onRestored?.()
+  }
 
   // chips: total spent per بند (expenses only), biggest first
   const chips = useMemo(() => {
@@ -84,7 +91,7 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
               </thead>
               <tbody>
                 {shown.map((e) => (
-                  <tr key={e.id}>
+                  <tr key={e.id} className={e.status === 'deleted' ? 'row-deleted' : undefined}>
                     <td className="strong num">#{e.seq}</td>
                     <td className="num muted">{dateText(e.entry_date)}</td>
                     <td>
@@ -98,6 +105,7 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                       {e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}
                       {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
                       {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
+                      {e.status === 'deleted' && <> <span className="chip chip-neutral">محذوف</span></>}
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.bank?.name}</td>
@@ -109,7 +117,13 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                     </td>
                     {canEdit && (
                       <td>
-                        {(isAdmin || e.status !== 'approved') && (
+                        {e.status === 'deleted' ? (
+                          isAdmin && (
+                            <button type="button" className="icon-btn" aria-label={`استرجاع القيد ${e.seq}`} title="استرجاع" onClick={() => void restore(e.id)}>
+                              <RotateCcw size={17} />
+                            </button>
+                          )
+                        ) : (isAdmin || e.status !== 'approved') && (
                           <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
                             <Pencil size={17} />
                           </button>

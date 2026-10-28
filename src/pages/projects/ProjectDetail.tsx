@@ -10,7 +10,6 @@ import { isOver, percentOf, type Entry } from '../../lib/projects'
 import StatusChip from './StatusChip'
 import ProjectDialog from './ProjectDialog'
 import EntryDialog from '../../components/EntryDialog'
-import DeletedEntries from './DeletedEntries'
 import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {
@@ -100,9 +99,7 @@ export default function ProjectDetail({ id }: { id: string }) {
         </section>
       )}
 
-      {entries && <EntryList entries={entries} canEdit={canEdit} onEdit={setEditing} />}
-
-      <DeletedEntries projectId={id} />
+      {entries && <EntryList entries={entries} canEdit={canEdit} onEdit={setEditing} onRestored={reload} />}
 
       {dialog === 'entry' && (
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reload} />

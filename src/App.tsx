@@ -34,7 +34,7 @@ function Content() {
   if (route === 'approvals') return <Approvals />
   if (route === 'dashboard') return <Dashboard />
   if (route === 'reports') return <Reports />
-  if (route === 'journal') return <Journal />
+  if (route === 'reports/journal') return <Journal />
   if (route === 'recent') return <Recent />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)

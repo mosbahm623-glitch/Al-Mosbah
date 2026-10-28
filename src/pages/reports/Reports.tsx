@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { FileSpreadsheet, Printer } from 'lucide-react'
+import { BookOpen, FileSpreadsheet, Printer } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import Segmented from '../../components/Segmented'
 import { money, todayText, TYPE_LABEL } from '../../lib/format'
@@ -74,6 +74,17 @@ export default function Reports() {
 
       {(projects.failed || advances.failed) && <p className="msg msg-error no-print">مقدرناش نحمّل البيانات، جرّب تاني</p>}
       {projects.loading && !all && <p className="muted no-print">جارٍ التحميل...</p>}
+
+      <section className="panel no-print">
+        <div className="panel-head">
+          <h2>اليومية</h2>
+          <a className="btn btn-icon" href="#/reports/journal">
+            <BookOpen size={18} aria-hidden="true" />
+            فتح اليومية
+          </a>
+        </div>
+        <p className="muted small">كل حركات يوم معين: وارد ومصروف وعهد ومقاولين، مع طباعة وExcel.</p>
+      </section>
 
       {all && (
         <section className="panel no-print">

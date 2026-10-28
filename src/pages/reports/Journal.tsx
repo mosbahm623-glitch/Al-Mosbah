@@ -48,6 +48,7 @@ export default function Journal() {
       <div className="no-print">
         <PageHead
           title="اليومية"
+          parent={{ label: 'التقارير والتصدير', href: '#/reports' }}
           note="كل حركات اليوم المعتمد: وارد ومصروف وعهد ومقاولين."
           actions={
             <>

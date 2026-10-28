@@ -1,6 +1,5 @@
 import type { Module } from '../auth/permissions'
 import {
-  BookOpen,
   Bell,
   CheckSquare,
   CreditCard,
@@ -45,7 +44,6 @@ export const NAV: NavGroup[] = [
     title: 'أدوات',
     items: [
       { path: 'search', label: 'بحث برقم القيد', icon: Search, module: 'tools' },
-      { path: 'journal', label: 'اليومية', icon: BookOpen, module: 'tools' },
       { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
       { path: 'my-payments', label: 'دفعاتي', icon: CreditCard, module: 'tools' },
       { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },

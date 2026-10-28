@@ -1,14 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { fetchOwnAccess, type OwnProfile } from '../lib/users'
 import { allows, type Level, type Module, type Permissions } from './permissions'
 
-export type Profile = {
-  id: string
-  full_name: string | null
-  role: 'admin' | 'owner' | 'user'
-  is_active: boolean
-}
+export type Profile = OwnProfile
 
 type AuthState = {
   loading: boolean
@@ -66,12 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       writeCache(null)
       return
     }
-    const [p, r] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, role, is_active').eq('id', userId).maybeSingle(),
-      supabase.from('user_permissions').select('module,level').eq('user_id', userId),
-    ])
-    const prof = (p.data as Profile | null) ?? null
-    const perms = Object.fromEntries((r.data ?? []).map((x) => [x.module, x.level])) as Permissions
+    const { profile: prof, permissions: perms } = await fetchOwnAccess(userId)
     setProfile(prof)
     setPermissions(perms)
     writeCache(prof ? { uid: userId, profile: prof, permissions: perms } : null)

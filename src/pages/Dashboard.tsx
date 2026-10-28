@@ -1,27 +1,11 @@
 import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { fetchDashboardSummary, type DashboardSummary as Summary } from '../lib/dashboard'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import BackupPanel from '../components/BackupPanel'
 
-type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
-
-type Summary = {
-  total_income: number
-  total_expenses: number
-  total_advances: number
-  advances_balance: number
-  contractor_dues: number
-  active_projects: number
-  net_cash: number
-  over_count: number
-  budget_rows: BudgetRow[]
-}
-
-const fetchSummary = () => supabase.rpc('dashboard_summary')
-
 export default function Dashboard() {
-  const { data, failed, loading, reload } = useAsync<Summary>(fetchSummary)
+  const { data, failed, loading, reload } = useAsync<Summary>(fetchDashboardSummary)
   const error = failed ? 'مقدرناش نحمّل الأرقام، جرّب تاني' : null
 
   return (

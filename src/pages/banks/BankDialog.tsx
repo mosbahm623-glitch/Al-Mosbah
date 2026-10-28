@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
-import { supabase } from '../../lib/supabase'
-import type { BankSummary } from '../../lib/banks'
+import { saveBank, type BankSummary } from '../../lib/banks'
 
 type Props = { bank?: BankSummary; onClose: () => void; onSaved: () => void }
 
@@ -19,12 +18,9 @@ export default function BankDialog({ bank, onClose, onSaved }: Props) {
     if (!Number.isFinite(value)) return setError('الرصيد الافتتاحي لازم يكون رقم')
     setSaving(true)
     setError(null)
-    const row = { name: name.trim(), opening_balance: value }
-    const { error: err } = bank
-      ? await supabase.from('bank_accounts').update(row).eq('id', bank.id)
-      : await supabase.from('bank_accounts').insert(row)
+    const result = await saveBank({ id: bank?.id, name: name.trim(), opening_balance: value })
     setSaving(false)
-    if (err) return setError(err.code === '23505' ? 'فيه بنك بنفس الاسم' : 'ما اتحفظش، جرّب تاني')
+    if (result !== 'ok') return setError(result === 'duplicate' ? 'فيه بنك بنفس الاسم' : 'ما اتحفظش، جرّب تاني')
     onSaved()
     onClose()
   }

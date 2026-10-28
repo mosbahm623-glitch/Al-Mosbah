@@ -1,10 +1,18 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Al-Mosbah/',
+  test: {
+    // The tests cover pure logic, but some modules import the Supabase client, which refuses to start without these.
+    // Dummy values: no test ever reaches the network.
+    env: {
+      VITE_SUPABASE_URL: 'http://127.0.0.1:54321',
+      VITE_SUPABASE_PUBLISHABLE_KEY: 'test-publishable-key',
+    },
+  },
   plugins: [
     react(),
     VitePWA({

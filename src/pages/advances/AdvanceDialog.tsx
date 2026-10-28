@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
-import { supabase } from '../../lib/supabase'
-import type { AdvanceSummary } from '../../lib/advances'
+import { saveAdvance, type AdvanceSummary } from '../../lib/advances'
 
 type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
 
@@ -22,28 +21,12 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
     if (!Number.isFinite(amount) || amount < 0) return setError('المبلغ لازم يكون رقم صحيح')
     setSaving(true)
     setError(null)
-    const row = { holder_name: holder.trim(), notes: notes.trim() || null }
-    if (advance) {
-      const { error: err } = await supabase.from('advances').update(row).eq('id', advance.id)
-      setSaving(false)
-      if (err) return setError('ما اتحفظش، جرّب تاني')
-    } else {
-      const { data, error: err } = await supabase.from('advances').insert(row).select('id').single()
-      if (err || !data) {
-        setSaving(false)
-        return setError('العهدة ما اتحفظتش، جرّب تاني')
-      }
-      if (amount > 0) {
-        const { error: instErr } = await supabase
-          .from('advance_installments')
-          .insert({ advance_id: data.id, amount, paid_on: date })
-        if (instErr) {
-          setSaving(false)
-          onSaved()
-          return setError('العهدة اتسجلت لكن الدفعة الأولى ما اتسجلتش، ضيفها من صفحة العهدة')
-        }
-      }
-      setSaving(false)
+    const result = await saveAdvance({ id: advance?.id, holder: holder.trim(), notes: notes.trim() || null, first: amount, date })
+    setSaving(false)
+    if (result === 'failed') return setError(advance ? 'ما اتحفظش، جرّب تاني' : 'العهدة ما اتحفظتش، جرّب تاني')
+    if (result === 'installment-failed') {
+      onSaved()
+      return setError('العهدة اتسجلت لكن الدفعة الأولى ما اتسجلتش، ضيفها من صفحة العهدة')
     }
     onSaved()
     onClose()

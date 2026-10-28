@@ -5,6 +5,7 @@ import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import { dateText, money } from '../../lib/format'
+import { addMoney, sumMoney } from '../../lib/money'
 import type { Entry } from '../../lib/projects'
 
 const KINDS = [
@@ -28,10 +29,10 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   // chips: total spent per بند (expenses only), biggest first
   const chips = useMemo(() => {
     const totals = new Map<string, number>()
-    for (const e of entries) if (e.kind === 'expense' && e.status === 'approved') totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
+    for (const e of entries) if (e.kind === 'expense' && e.status === 'approved') totals.set(e.category, addMoney(totals.get(e.category) ?? 0, e.amount))
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
   }, [entries])
-  const expenseTotal = chips.reduce((s, [, v]) => s + v, 0)
+  const expenseTotal = sumMoney(chips.map(([, v]) => v))
 
   const shown = useMemo(
     () =>

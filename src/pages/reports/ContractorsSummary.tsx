@@ -1,23 +1,15 @@
-import { useCallback, useMemo } from 'react'
+import { useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell } from '../../lib/tableTypes'
 import { money, periodText, todayISO } from '../../lib/format'
-import { fetchPaged } from '../../lib/paged'
-import { supabase } from '../../lib/supabase'
+import { fetchAllContractorTxns, type ContractorSummaryTxn as Txn } from '../../lib/contractors'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
-
-type Txn = { kind: 'due' | 'payment'; amount: number; txn_date: string; contractor: { name: string } | null }
 
 
 /** Every contractor on one page: balance before the period, dues, payments and what is left to pay. */
 export default function ContractorsSummary({ from, to }: { from: string; to: string }) {
-  const load = useCallback(async () => {
-    const txns = await fetchPaged<Txn>((a, b) =>
-      supabase.from('contractor_transactions').select('kind,amount,txn_date,contractor_id,contractor:contractors(name)').order('id').range(a, b).returns<Txn[]>(),
-    )
-    return { data: txns, error: !txns }
-  }, [])
+  const load = fetchAllContractorTxns
   const { data, failed } = useAsync<Txn[]>(load)
 
   const view = useMemo(() => {

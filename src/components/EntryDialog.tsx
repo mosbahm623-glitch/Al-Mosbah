@@ -1,21 +1,19 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
 import Segmented from './Segmented'
 import CreatableSelect from './CreatableSelect'
 import EntryHistory from './EntryHistory'
-import { supabase } from '../lib/supabase'
+import { type Category, createCategory as saveCategory, deleteEntry, fetchCategories, insertEntry, rememberItem, updateEntry, type EntryRow } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
-import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
+import { createBank, createContractor, fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },
   { value: 'income', label: 'وارد' },
 ] as const
-
-type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 
 type Props = {
   projectId: string
@@ -34,10 +32,6 @@ const CHANGED = 'القيد ده اتغيّر (أو اتمسح) من حد تان
 
 export default function EntryDialog({ projectId, projectName, projects, advanceId, entry, inline, onClose, onSaved }: Props) {
   const { isAdmin, isStaff } = useAuth()
-  const fetchCategories = useCallback(
-    () => supabase.from('expense_categories').select('id,name,expense_items(id,name)').order('name'),
-    [],
-  )
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<Named[]>(fetchBankNames)
@@ -67,24 +61,19 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
   }, [categories.data, categoryName])
 
   async function createCategory(name: string) {
-    const { data, error: err } = await supabase.from('expense_categories').insert({ name }).select('id').single()
-    if (err || !data) return null
+    if (!(await saveCategory(name))) return null
     categories.reload()
     return name
   }
 
   async function findOrCreateContractor(name: string) {
     const existing = contractors.data?.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
-    if (existing) return existing.id
-    const { data, error: err } = await supabase.from('contractors').insert({ name }).select('id').single()
-    return err || !data ? null : (data.id as string)
+    return existing ? existing.id : createContractor(name)
   }
 
   async function findOrCreateBank(name: string) {
     const existing = banks.data?.find((b) => b.name.trim().toLowerCase() === name.toLowerCase())
-    if (existing) return existing.id
-    const { data, error: err } = await supabase.from('bank_accounts').insert({ name }).select('id').single()
-    return err || !data ? null : (data.id as string)
+    return existing ? existing.id : createBank(name)
   }
 
   async function remove() {
@@ -93,7 +82,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     if (reason.trim().length < 2) return setError('اكتب سبب الحذف')
     setSaving(true)
     setError(null)
-    const { data, error: err } = await supabase.rpc('delete_entry', { p_id: entry.id, p_rev: entry.rev, p_reason: reason.trim() })
+    const { data, error: err } = await deleteEntry(entry.id, entry.rev, reason.trim())
     setSaving(false)
     if (err) return setError('القيد ما اتحذفش، جرّب تاني')
     if (!data) return setError(CHANGED)
@@ -110,6 +99,8 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     if (!isExpense && !incomeLabel.trim()) return setError('اكتب بيان الوارد')
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     if (!targetProject) return setError('اختار المشروع')
+    if (isExpense && contractorName.trim() && !contractors.data) return setError('أسماء المقاولين لسه ما اتحمّلتش، جرّب تاني بعد ثانية')
+    if (!fromAdvance && bankName.trim() && !banks.data) return setError('أسماء البنوك لسه ما اتحمّلتش، جرّب تاني بعد ثانية')
     setSaving(true)
     setError(null)
     setDone(null)
@@ -131,9 +122,9 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     }
     if (isExpense && category && !category.expense_items.some((i) => i.name === itemName.trim())) {
       // remember the name so it shows up as a suggestion next time; the entry does not depend on it
-      await supabase.from('expense_items').insert({ name: itemName.trim(), category_id: category.id })
+      await rememberItem(category.id, itemName.trim())
     }
-    const row = {
+    const row: EntryRow = {
       project_id: targetProject,
       kind,
       category: isExpense ? category!.name : incomeLabel.trim(),
@@ -144,9 +135,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
       entry_date: date,
       notes: notes.trim() || null,
     }
-    const res = entry
-      ? await supabase.from('entries').update(row).eq('id', entry.id).eq('rev', entry.rev).select('id')
-      : await supabase.from('entries').insert({ ...row, advance_id: advanceId ?? null }).select('seq')
+    const res = entry ? await updateEntry(entry.id, entry.rev, row) : await insertEntry(row, advanceId ?? null)
     setSaving(false)
     if (res.error) return setError('القيد ما اتحفظش، جرّب تاني')
     if (entry && !res.data?.length) return setError(CHANGED)

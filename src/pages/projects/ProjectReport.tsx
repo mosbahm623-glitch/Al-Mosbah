@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
 import { money, todayText, TYPE_LABEL } from '../../lib/format'
+import { addMoney, subMoney, sumMoney } from '../../lib/money'
 import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
@@ -40,7 +41,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
       }
       const g = map.get(e.category) ?? { name: e.category, rows: [], total: 0 }
       g.rows.push(e)
-      g.total += e.amount
+      g.total = addMoney(g.total, e.amount)
       map.set(e.category, g)
     }
     return { expenseGroups: [...map.values()].sort((a, b) => b.total - a.total), incomes: inc }
@@ -51,8 +52,8 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   if (!project || !entries) return <p className="msg msg-error">المشروع مش موجود</p>
 
   const data = entries
-  const balance = project.income - project.expenses
-  const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
+  const balance = subMoney(project.income, project.expenses)
+  const incomeTotal = sumMoney(incomes.map((e) => e.amount))
   const hasBank = entries.some((e) => e.bank)
   const withBank = bankWanted && hasBank
 

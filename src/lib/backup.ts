@@ -1,7 +1,9 @@
 import { supabase } from './supabase'
+import type { Database } from './database.types'
 import { fetchPaged } from './paged'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 import { todayISO } from './format'
+import { ENTRY_STATUS_LABEL, HISTORY_ACTION_LABEL } from './labels'
 
 type Row = Record<string, unknown>
 type Kind = 'text' | 'money' | 'date' | 'time' | 'int' | 'tech'
@@ -9,7 +11,7 @@ type Col = { h: string; kind?: Kind; w?: number; get: (r: Row) => unknown }
 
 const BACKUP_EVERY_DAYS = 7
 
-export type LastBackup = { at: string | null; stale: boolean }
+type LastBackup = { at: string | null; stale: boolean }
 
 export async function lastBackup(): Promise<LastBackup | null> {
   const { data, error } = await supabase.from('backup_log').select('at').order('at', { ascending: false }).limit(1)
@@ -19,16 +21,15 @@ export async function lastBackup(): Promise<LastBackup | null> {
   return { at, stale: days >= BACKUP_EVERY_DAYS }
 }
 
-type Reader = (t: string, order: string, from: number, to: number) => PromiseLike<{ data: Row[] | null; error: unknown }>
-// table names are dynamic here, so the typed client is bypassed on purpose
-const read: Reader = (t, order, from, to) =>
-  (supabase as unknown as { from: (t: string) => { select: (c: string) => { order: (c: string) => { range: (a: number, b: number) => ReturnType<Reader> } } } })
-    .from(t).select('*').order(order).range(from, to)
+type TableName = keyof Database['public']['Tables']
+type Reader = (t: TableName, order: string, from: number, to: number) => PromiseLike<{ data: Row[] | null; error: unknown }>
+// the table name is dynamic here, so the column list is not known to the typed client
+const read: Reader = (t, order, from, to) => supabase.from(t).select('*').order(order).range(from, to)
 
 const KIND: Record<string, string> = { income: 'وارد', expense: 'مصروف', due: 'مستحق', payment: 'دفعة' }
-const STATUS: Record<string, string> = { pending: 'مستنّي موافقة', approved: 'معتمد', rejected: 'مرفوض', deleted: 'محذوف', open: 'مفتوحة', closed: 'مقفولة', active: 'نشط', done: 'منتهي' }
-const ACTION: Record<string, string> = { edit: 'تعديل', approve: 'موافقة', reject: 'رفض', delete: 'مسح', restore: 'استرجاع', hard_delete: 'مسح نهائي' }
-const ROLE: Record<string, string> = { admin: 'أدمن', user: 'مستخدم' }
+const STATUS: Record<string, string> = { ...ENTRY_STATUS_LABEL, open: 'مفتوحة', closed: 'مقفولة', active: 'نشط', done: 'منتهي' }
+const ACTION = HISTORY_ACTION_LABEL
+const ROLE: Record<string, string> = { admin: 'أدمن', owner: 'مالك', user: 'مستخدم' }
 const LEVEL: Record<string, string> = { view: 'عرض', edit: 'تعديل' }
 const tr = (m: Record<string, string>, v: unknown) => (v == null ? '' : (m[String(v)] ?? String(v)))
 const str = (v: unknown) => (v == null ? '' : String(v))
@@ -36,7 +37,7 @@ const day = (v: unknown) => (typeof v === 'string' && v ? v.slice(0, 10) : '')
 
 /** Reads every table (the deleted entries too) and saves one tidy Excel file: Arabic sheets, names instead of codes. Logs the backup. */
 export async function downloadBackup(userId: string): Promise<boolean> {
-  const need = async (t: string, order = 'id') => fetchPaged<Row>((a, b) => read(t, order, a, b))
+  const need = async (t: TableName, order = 'id') => fetchPaged<Row>((a, b) => read(t, order, a, b))
   const [entries, projects, categories, items, contractors, ctx, banks, advances, inst, rets, profiles, perms, access, history, log, counters] = await Promise.all([
     need('entries', 'seq'), need('projects'), need('expense_categories'), need('expense_items'), need('contractors'),
     need('contractor_transactions'), need('bank_accounts'), need('advances'), need('advance_installments'),

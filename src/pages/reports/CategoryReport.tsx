@@ -1,25 +1,14 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import { TYPE_LABEL, money, periodText, todayISO, type ProjectType } from '../../lib/format'
-import { fetchPaged } from '../../lib/paged'
+import { fetchCategorySpend, type CategorySpendRow as Row } from '../../lib/entries'
 import { categoryTotals } from '../../lib/reportBuilders'
-import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
 import { sumMoney } from '../../lib/money'
 
-type Row = { id: string; category: string; amount: number; project: { type: ProjectType } | null }
-
 /** Where the money went: expenses per بند across all projects (including what was paid from custodies). */
 export default function CategoryReport({ from, to, type }: { from: string; to: string; type: 'all' | ProjectType }) {
-  const load = useCallback(async () => {
-    const rows = await fetchPaged<Row>((a, b) => {
-      let q = supabase.from('entries').select('id,category,amount,project:projects(type)').eq('kind', 'expense').eq('status', 'approved')
-      if (from) q = q.gte('entry_date', from)
-      if (to) q = q.lte('entry_date', to)
-      return q.order('id').range(a, b).returns<Row[]>()
-    })
-    return { data: rows, error: rows === null }
-  }, [from, to])
+  const load = useCallback(() => fetchCategorySpend(from, to), [from, to])
   const { data, failed } = useAsync<Row[]>(load)
 
   const rows = useMemo(() => categoryTotals((data ?? []).filter((r) => type === 'all' || r.project?.type === type)), [data, type])

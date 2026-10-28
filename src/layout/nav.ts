@@ -1,4 +1,4 @@
-import type { Module } from '../auth/permissions'
+import type { Access } from '../auth/access'
 import {
   Bell,
   CheckSquare,
@@ -19,14 +19,8 @@ type NavItem = {
   path: string
   label: string
   icon: LucideIcon
-  /** only the admin (approvals) */
-  adminOnly?: boolean
-  /** admin and owner */
-  staffOnly?: boolean
-  /** the owner only */
-  ownerOnly?: boolean
-  /** visible only to users who were granted this page */
-  module?: Module
+  /** who sees this item and may open every page under its path */
+  access?: Access
 }
 
 type NavGroup = { title?: string; items: NavItem[] }
@@ -34,23 +28,23 @@ type NavGroup = { title?: string; items: NavItem[] }
 export const NAV: NavGroup[] = [
   {
     items: [
-      { path: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, module: 'dashboard' },
-      { path: 'quick-entry', label: 'تسجيل قيد سريع', icon: PlusCircle, ownerOnly: true },
-      { path: 'projects', label: 'المشاريع', icon: FolderKanban, module: 'projects' },
-      { path: 'advances', label: 'العهد', icon: HandCoins, module: 'advances' },
-      { path: 'banks', label: 'البنوك', icon: Landmark, module: 'banks' },
-      { path: 'contractors', label: 'مستحقات المقاولين', icon: HardHat, module: 'contractors' },
-      { path: 'approvals', label: 'الموافقات', icon: CheckSquare, adminOnly: true },
-      { path: 'users', label: 'المستخدمين', icon: Users, staffOnly: true },
-      { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart, module: 'reports' },
+      { path: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, access: { module: 'dashboard' } },
+      { path: 'quick-entry', label: 'تسجيل قيد سريع', icon: PlusCircle, access: { role: 'owner' } },
+      { path: 'projects', label: 'المشاريع', icon: FolderKanban, access: { module: 'projects' } },
+      { path: 'advances', label: 'العهد', icon: HandCoins, access: { module: 'advances' } },
+      { path: 'banks', label: 'البنوك', icon: Landmark, access: { module: 'banks' } },
+      { path: 'contractors', label: 'مستحقات المقاولين', icon: HardHat, access: { module: 'contractors' } },
+      { path: 'approvals', label: 'الموافقات', icon: CheckSquare, access: { role: 'admin' } },
+      { path: 'users', label: 'المستخدمين', icon: Users, access: { role: 'staff' } },
+      { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart, access: { module: 'reports' } },
     ],
   },
   {
     title: 'أدوات',
     items: [
-      { path: 'search', label: 'بحث في القيود', icon: Search, module: 'tools' },
-      { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
-      { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
+      { path: 'search', label: 'بحث في القيود', icon: Search, access: { module: 'tools' } },
+      { path: 'recent', label: 'آخر التحركات', icon: History, access: { module: 'tools' } },
+      { path: 'notifications', label: 'إشعارات', icon: Bell, access: { module: 'tools' } },
     ],
   },
 ]

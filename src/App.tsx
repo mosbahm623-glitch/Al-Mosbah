@@ -1,63 +1,26 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
+import { checkAccess } from './auth/access'
 import AuthScreen from './pages/AuthScreen'
-import ComingSoon from './pages/ComingSoon'
-import Dashboard from './pages/Dashboard'
-import Pending from './pages/Pending'
-import Search from './pages/Search'
-import Notifications from './pages/Notifications'
-import QuickEntry from './pages/QuickEntry'
-const Projects = lazy(() => import('./pages/projects/Projects'))
-const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
-const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
-const Advances = lazy(() => import('./pages/advances/Advances'))
-const AdvanceDetail = lazy(() => import('./pages/advances/AdvanceDetail'))
-const AdvanceReport = lazy(() => import('./pages/advances/AdvanceReport'))
 import NoAccess from './pages/NoAccess'
-const Users = lazy(() => import('./pages/users/Users'))
-const Banks = lazy(() => import('./pages/banks/Banks'))
-const BankDetail = lazy(() => import('./pages/banks/BankDetail'))
-const Approvals = lazy(() => import('./pages/approvals/Approvals'))
-const Reports = lazy(() => import('./pages/reports/Reports'))
-const Recent = lazy(() => import('./pages/reports/Recent'))
+import NotFound from './pages/NotFound'
+import Pending from './pages/Pending'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
+import { matchRoute } from './layout/routes'
 
 function Content() {
-  const { isAdmin, isStaff, isOwner, can } = useAuth()
+  const auth = useAuth()
   const route = useRoute()
-  const item = ALL_ITEMS.find((i) => i.path === route)
-  const section = route.split('/')[0]
-  const sectionItem = ALL_ITEMS.find((i) => i.path === section)
+  const matched = matchRoute(route)
+  if (matched?.def.open) return <matched.def.page id={matched.id} />
 
-  if (route === 'notifications') return <Notifications />
-  if (route === 'quick-entry') return isOwner ? <QuickEntry /> : <ComingSoon title="الصفحة مش موجودة" />
-  if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff)) return <ComingSoon title="الصفحة مش موجودة" />
-  if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
-  if (route === 'users') return <Users />
-  if (route === 'approvals') return <Approvals />
-  if (route === 'dashboard') return <Dashboard />
-  if (route === 'reports' || route === 'reports/journal') return <Reports />
-  if (route === 'recent') return <Recent />
-  if (route === 'search') return <Search />
-  if (route === 'projects') return <Projects />
-  const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
-  if (report) return <ProjectReport id={report[1]} />
-  const detail = /^projects\/([0-9a-f-]{36})$/.exec(route)
-  if (detail) return <ProjectDetail id={detail[1]} />
-  if (route === 'banks') return <Banks />
-  const bank = /^banks\/([0-9a-f-]{36})$/.exec(route)
-  if (bank) return <BankDetail id={bank[1]} />
-  if (route === 'advances') return <Advances />
-  const advanceReport = /^advances\/([0-9a-f-]{36})\/report$/.exec(route)
-  if (advanceReport) return <AdvanceReport id={advanceReport[1]} />
-  const advance = /^advances\/([0-9a-f-]{36})$/.exec(route)
-  if (advance) return <AdvanceDetail id={advance[1]} />
-  if (!item || (item.adminOnly && !isAdmin) || (item.staffOnly && !isStaff)) {
-    return <ComingSoon title="الصفحة مش موجودة" />
-  }
-  return <ComingSoon title={item.label} />
+  const section = ALL_ITEMS.find((i) => i.path === route.split('/')[0])
+  const allowed = checkAccess(section?.access, auth)
+  if (allowed === 'no-access') return <NoAccess />
+  if (allowed === 'not-found' || !matched) return <NotFound />
+  return <matched.def.page id={matched.id} />
 }
 
 function Gate() {

@@ -137,7 +137,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
 export const sortMovements = (rows: Movement[]) =>
   [...rows].sort((x, y) => y.at.localeCompare(x.at) || (y.seq ?? 0) - (x.seq ?? 0))
 
-export type DayTotals = Record<MovementKind, number> & {
+type DayTotals = Record<MovementKind, number> & {
   /** expense entries not paid from a custody (those are counted through the installments) */
   cashExpense: number
   count: number

@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 
-export type Notice = { id: number; kind: string; title: string; body: string | null; url: string | null; created_at: string; read_at: string | null }
+type Notice = { id: number; kind: string; title: string; body: string | null; url: string | null; created_at: string; read_at: string | null }
 
 export const fetchNotices = () =>
   supabase.from('notifications').select('id,kind,title,body,url,created_at,read_at').order('created_at', { ascending: false }).limit(100).returns<Notice[]>()

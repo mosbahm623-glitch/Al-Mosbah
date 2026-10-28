@@ -14,9 +14,14 @@ export function useAsync<T>(fn: () => Result<T>) {
 
   useEffect(() => {
     let active = true
-    fn().then(({ data, error }) => {
-      if (active) setState({ data, failed: Boolean(error), loading: false })
-    })
+    fn().then(
+      ({ data, error }) => {
+        if (active) setState({ data, failed: Boolean(error), loading: false })
+      },
+      () => {
+        if (active) setState({ data: null, failed: true, loading: false })
+      },
+    )
     return () => {
       active = false
     }

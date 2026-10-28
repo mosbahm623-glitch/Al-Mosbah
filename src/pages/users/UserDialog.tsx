@@ -3,8 +3,7 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
-import { supabase } from '../../lib/supabase'
-import type { AdvanceOption, UserRow } from '../../lib/users'
+import { saveUserAccess, type AdvanceOption, type UserRow } from '../../lib/users'
 
 type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))
@@ -32,22 +31,19 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
     e.preventDefault()
     setSaving(true)
     setError(null)
-    if (!isSelf && (role !== user.role || active !== user.is_active)) {
-      const { error: err } = await supabase.from('profiles').update({ role, is_active: active }).eq('id', user.id)
-      if (err) {
-        setSaving(false)
-        return setError('ما اتحفظش، جرّب تاني')
-      }
-    }
-    const rows = MODULES.flatMap((m) => (levels[m.id] === 'none' ? [] : [{ user_id: user.id, module: m.id, level: levels[m.id] as Level }]))
-    const cleared = await supabase.from('user_permissions').delete().eq('user_id', user.id)
-    const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
-    const wanted = levels.advances === 'none' || role !== 'user' ? [] : advanceIds
-    const clearedAccess = await supabase.from('user_advance_access').delete().eq('user_id', user.id)
-    const savedAccess = wanted.length ? await supabase.from('user_advance_access').insert(wanted.map((advance_id) => ({ user_id: user.id, advance_id }))) : { error: null }
+    const permissions = MODULES.flatMap((m) => (levels[m.id] === 'none' ? [] : [{ module: m.id, level: levels[m.id] as Level }]))
+    const result = await saveUserAccess({
+      userId: user.id,
+      changeProfile: !isSelf && (role !== user.role || active !== user.is_active),
+      role,
+      active,
+      permissions,
+      advanceIds: levels.advances === 'none' || role !== 'user' ? [] : advanceIds,
+    })
     setSaving(false)
-    if (clearedAccess.error || savedAccess.error) return setError('العهد المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
-    if (cleared.error || saved.error) return setError('الصلاحيات ما اتحفظتش، افتح المستخدم تاني وراجعها')
+    if (result === 'profile-failed') return setError('ما اتحفظش، جرّب تاني')
+    if (result === 'access-failed') return setError('العهد المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
+    if (result === 'permissions-failed') return setError('الصلاحيات ما اتحفظتش، افتح المستخدم تاني وراجعها')
     onSaved()
     onClose()
   }

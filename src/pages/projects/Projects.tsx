@@ -5,6 +5,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import Progress from '../../components/Progress'
 import { money, TYPE_LABEL } from '../../lib/format'
+import { subMoney, sumMoney } from '../../lib/money'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries, isOver, percentOf, type ProjectSummary } from '../../lib/projects'
 import ProjectDialog from './ProjectDialog'
@@ -41,7 +42,7 @@ export default function Projects() {
   }, [data, q, status, type])
 
   const overCount = rows.filter(isOver).length
-  const total = (f: (p: ProjectSummary) => number) => rows.reduce((s, p) => s + f(p), 0)
+  const total = (f: (p: ProjectSummary) => number) => sumMoney(rows.map(f))
 
   return (
     <div className="page-stack">
@@ -94,7 +95,7 @@ export default function Projects() {
                 </thead>
                 <tbody>
                   {rows.map((p) => {
-                    const bal = p.income - p.expenses
+                    const bal = subMoney(p.income, p.expenses)
                     return (
                       <tr key={p.id}>
                         <td className="strong"><a className="row-link" href={`#/projects/${p.id}`}>{p.name}</a></td>
@@ -124,7 +125,7 @@ export default function Projects() {
                     <td className="num strong">{money(total((p) => p.budget))}</td>
                     <td className="num strong">{money(total((p) => p.income))}</td>
                     <td className="num strong">{money(total((p) => p.expenses))}</td>
-                    <td className="num strong">{money(total((p) => p.income - p.expenses))}</td>
+                    <td className="num strong">{money(total((p) => subMoney(p.income, p.expenses)))}</td>
                     <td colSpan={2} />
                   </tr>
                 </tfoot>
@@ -134,7 +135,7 @@ export default function Projects() {
 
           <section className="proj-cards" aria-label="المشاريع">
             {rows.map((p) => {
-              const bal = p.income - p.expenses
+              const bal = subMoney(p.income, p.expenses)
               return (
                 <a key={p.id} className="proj-card" href={`#/projects/${p.id}`}>
                   <div className="proj-card-top">

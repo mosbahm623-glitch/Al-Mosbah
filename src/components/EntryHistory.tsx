@@ -1,13 +1,12 @@
 import { useCallback } from 'react'
-import { supabase } from '../lib/supabase'
+import { fetchEntryHistory } from '../lib/entries'
 import { money } from '../lib/format'
+import { ENTRY_STATUS_LABEL as STATUS, HISTORY_ACTION_LABEL as ACTION } from '../lib/labels'
 import { useAsync } from '../lib/useAsync'
 
 type Snapshot = Record<string, unknown> | null
 type Change = { id: number; action: string; old_row: Snapshot; new_row: Snapshot; changed_at: string; changed_by_name: string | null }
 
-const ACTION: Record<string, string> = { edit: 'تعديل', approve: 'موافقة', reject: 'رفض', delete: 'مسح', restore: 'استرجاع', hard_delete: 'مسح نهائي' }
-const STATUS: Record<string, string> = { pending: 'مستنّي موافقة', approved: 'معتمد', rejected: 'مرفوض', deleted: 'محذوف' }
 const FIELDS: [string, string][] = [['category', 'البند'], ['item', 'البيان'], ['amount', 'المبلغ'], ['entry_date', 'التاريخ'], ['notes', 'ملاحظات'], ['status', 'الحالة'], ['delete_reason', 'سبب المسح']]
 
 const show = (key: string, v: unknown) => {
@@ -24,7 +23,8 @@ const diff = (c: Change) =>
 
 /** Admin only: who did what to this entry, oldest first. */
 export default function EntryHistory({ entryId }: { entryId: string }) {
-  const { data } = useAsync<Change[]>(useCallback(() => supabase.rpc('entry_history_of', { p_id: entryId }), [entryId]))
+  const { data, failed } = useAsync<Change[]>(useCallback(() => fetchEntryHistory(entryId), [entryId]))
+  if (failed) return <p className="muted small span-2">مقدرناش نحمّل سجل التعديلات</p>
   if (!data || data.length === 0) return null
   return (
     <details className="span-2 entry-history">

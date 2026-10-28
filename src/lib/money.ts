@@ -7,3 +7,9 @@ export const sumMoney = (values: Iterable<number>) => {
   for (const v of values) c += toCents(v)
   return c / 100
 }
+
+/** Sum of the given amounts, exact to the cent. */
+export const addMoney = (...values: number[]) => sumMoney(values)
+
+/** a − b, exact to the cent. */
+export const subMoney = (a: number, b: number) => (toCents(a) - toCents(b)) / 100

@@ -2,7 +2,7 @@ import { isOver, percentOf, type ProjectSummary } from './projects'
 import { toCents } from './money'
 
 
-export type CategoryRow = { category: string; count: number; total: number; share: number }
+type CategoryRow = { category: string; count: number; total: number; share: number }
 
 /** Expense totals per بند, biggest first, with each بند's share of the whole (percent, one decimal). */
 export function categoryTotals(rows: { category: string; amount: number }[]): CategoryRow[] {

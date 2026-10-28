@@ -5,6 +5,7 @@ import { Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { bankBalance, byProject, fetchBankMovements, fetchBankSummaries, type BankMovement, type BankSummary } from '../../lib/banks'
 import { dateText, money } from '../../lib/format'
+import { addMoney, subMoney } from '../../lib/money'
 import { useAsync } from '../../lib/useAsync'
 import BankDialog from './BankDialog'
 
@@ -22,7 +23,7 @@ export default function BankDetail({ id }: { id: string }) {
     const out: { m: BankMovement; run: number }[] = []
     for (const m of rows ?? []) {
       const prev = out.length ? out[out.length - 1].run : (bank?.opening_balance ?? 0)
-      out.push({ m, run: prev + (m.kind === 'income' ? m.amount : -m.amount) })
+      out.push({ m, run: m.kind === 'income' ? addMoney(prev, m.amount) : subMoney(prev, m.amount) })
     }
     return out
   }, [rows, bank?.opening_balance])
@@ -81,7 +82,7 @@ export default function BankDetail({ id }: { id: string }) {
                     <td className="strong"><a className="row-link" href={`#/projects/${p.id}`}>{p.name}</a></td>
                     <td className="num tone-text-ok">{money(p.income)}</td>
                     <td className="num tone-text-err">{money(p.expenses)}</td>
-                    <td className="num strong">{money(p.income - p.expenses)}</td>
+                    <td className="num strong">{money(subMoney(p.income, p.expenses))}</td>
                   </tr>
                 ))}
               </tbody>

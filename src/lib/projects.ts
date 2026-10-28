@@ -53,3 +53,10 @@ export const fetchEntries = (projectId: string) =>
     .eq('project_id', projectId)
     .order('seq', { ascending: false })
     .returns<Entry[]>()
+
+/** New project (no `id`) or edit one. */
+export async function saveProject(input: { id?: string; name: string; type: ProjectType; status: 'active' | 'closed'; budget: number }) {
+  const row = { name: input.name, type: input.type, status: input.status, budget: input.budget }
+  const { error } = input.id ? await supabase.from('projects').update(row).eq('id', input.id) : await supabase.from('projects').insert(row)
+  return !error
+}

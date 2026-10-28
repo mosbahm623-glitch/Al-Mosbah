@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import { checkAccess } from '../auth/access'
 import { NAV } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
@@ -21,7 +22,8 @@ function initialOpen(): boolean {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { profile, signOut, can, isAdmin, isStaff, isOwner } = useAuth()
+  const auth = useAuth()
+  const { profile, signOut, isAdmin, isStaff } = auth
   const pending = usePendingCount(isAdmin)
   const unread = useUnread()
   const route = useRoute()
@@ -150,7 +152,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside id="sidebar" className="sidebar" aria-label="القائمة الرئيسية" inert={!open}>
         <nav className="sidebar-nav">
           {NAV.map((group, i) => {
-            const items = group.items.filter((it) => (it.ownerOnly ? isOwner : it.adminOnly ? isAdmin : it.staffOnly ? isStaff : !it.module || can(it.module)))
+            const items = group.items.filter((it) => checkAccess(it.access, auth) === 'ok')
             if (items.length === 0) return null
             return (
               <div className="nav-group" key={i}>

@@ -22,6 +22,21 @@ export type Database = {
         { at?: string; by?: string | null; id?: never; note?: string | null },
         { at?: string; by?: string | null; id?: never; note?: string | null }
       >
+      entry_counters: T<
+        { last: number; year: number },
+        { last?: number; year: number },
+        { last?: number; year?: number }
+      >
+      entry_history: T<
+        { action: string; changed_at: string; changed_by: string | null; entry_id: string; id: number; new_row: Record<string, unknown> | null; old_row: Record<string, unknown>; seq: number | null },
+        { action: string; changed_at?: string; changed_by?: string | null; entry_id: string; id?: never; new_row?: Record<string, unknown> | null; old_row: Record<string, unknown>; seq?: number | null },
+        { action?: string; changed_at?: string; changed_by?: string | null; entry_id?: string; id?: never; new_row?: Record<string, unknown> | null; old_row?: Record<string, unknown>; seq?: number | null }
+      >
+      data_pings: T<
+        { at: string; id: number },
+        { at?: string; id: number },
+        { at?: string; id?: number }
+      >
       advance_installments: T<
         { advance_id: string; amount: number; created_at: string; id: string; paid_on: string },
         { advance_id: string; amount: number; created_at?: string; id?: string; paid_on?: string },

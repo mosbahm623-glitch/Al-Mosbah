@@ -1,6 +1,7 @@
 import type { Entry, ProjectSummary } from './projects'
 import { TYPE_LABEL, todayISO, todayText } from './format'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
+import { sumMoney } from './money'
 
 type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
 
@@ -22,8 +23,8 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   const withBank = bankWanted && entries.some((e) => e.bank)
   const expenses = entries.filter((e) => e.kind === 'expense')
   const incomes = entries.filter((e) => e.kind === 'income')
-  const expenseTotal = expenses.reduce((s, e) => s + e.amount, 0)
-  const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
+  const expenseTotal = sumMoney(expenses.map((e) => e.amount))
+  const incomeTotal = sumMoney(incomes.map((e) => e.amount))
   const used = new Set<string>(['ملخص', 'كل القيود'])
 
   const setup = (ws: import('exceljs').Worksheet, headerRow: number) => {
@@ -121,7 +122,7 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
     t.getCell(1).value = `إجمالي ${cat}`
     ws.mergeCells(t.number, 1, t.number, amt - 1)
     const col = ws.getColumn(amt).letter
-    const total = rows.reduce((s, e) => s + e.amount, 0)
+    const total = sumMoney(rows.map((e) => e.amount))
     t.getCell(amt).value = { formula: `SUM(${col}2:${col}${lastRow})`, result: total }
     t.getCell(amt).numFmt = MONEY
     t.eachCell((c) => {

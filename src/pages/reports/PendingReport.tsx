@@ -2,9 +2,8 @@ import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import { money, todayISO } from '../../lib/format'
 import { toCents } from '../../lib/money'
-import { fetchPaged } from '../../lib/paged'
-import { ENTRY_COLUMNS, type Entry } from '../../lib/projects'
-import { supabase } from '../../lib/supabase'
+import { fetchEntriesByStatus } from '../../lib/entries'
+import type { Entry } from '../../lib/projects'
 import { useAsync } from '../../lib/useAsync'
 
 export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
@@ -12,15 +11,10 @@ const TITLE: Record<PendingStatus, string> = { pending: 'القيود المعل
 
 /** Entries waiting for an admin's decision, or turned down, with who recorded them. */
 export default function PendingReport({ status, creatorId, creatorName }: { status: PendingStatus; creatorId: string; creatorName: string }) {
-  const load = useCallback(async () => {
-    const wanted = status === 'all' ? ['pending', 'approved', 'rejected'] : [status]
-    const rows = await fetchPaged<Entry>((a, b) => {
-      let q = supabase.from('entries').select(`${ENTRY_COLUMNS},project:projects(name)`).in('status', wanted)
-      if (creatorId) q = q.eq('created_by', creatorId)
-      return q.order('created_at').order('id').range(a, b).returns<Entry[]>()
-    })
-    return { data: rows, error: rows === null }
-  }, [status, creatorId])
+  const load = useCallback(
+    () => fetchEntriesByStatus(status === 'all' ? ['pending', 'approved', 'rejected'] : [status], creatorId),
+    [status, creatorId],
+  )
   const { data, failed } = useAsync<Entry[]>(load)
 
   const view = useMemo(() => {

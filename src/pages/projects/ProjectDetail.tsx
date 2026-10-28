@@ -5,6 +5,7 @@ import { FileText, Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Progress from '../../components/Progress'
 import { money, TYPE_LABEL } from '../../lib/format'
+import { subMoney } from '../../lib/money'
 import { useProjectData } from '../../lib/useProjectData'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
 import StatusChip from './StatusChip'
@@ -30,7 +31,7 @@ export default function ProjectDetail({ id }: { id: string }) {
     )
   }
 
-  const balance = project.income - project.expenses
+  const balance = subMoney(project.income, project.expenses)
   const over = isOver(project)
 
   return (
@@ -92,7 +93,7 @@ export default function ProjectDetail({ id }: { id: string }) {
           <div className="usage-head">
             <span className="strong">استهلاك الميزانية</span>
             <span className={over ? 'tone-text-err strong' : 'muted'}>
-              {percentOf(project)}%{over ? ` · تجاوز ${money(project.expenses - project.budget)} ج.م` : ''}
+              {percentOf(project)}%{over ? ` · تجاوز ${money(subMoney(project.expenses, project.budget))} ج.م` : ''}
             </span>
           </div>
           <Progress percent={percentOf(project)} over={over} />

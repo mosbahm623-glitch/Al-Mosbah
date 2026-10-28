@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { Level, Module } from '../auth/permissions'
+import type { Level, Module, Permissions } from '../auth/permissions'
 
 export type UserRow = {
   id: string
@@ -54,4 +54,48 @@ export async function createUser(input: { full_name: string; email: string; pass
     }
   }
   return (code && CREATE_ERRORS[code]) || 'ما قدرناش ننشئ المستخدم، جرّب تاني'
+}
+
+export type SaveUserResult = 'ok' | 'profile-failed' | 'access-failed' | 'permissions-failed'
+
+/**
+ * Saves the role / status (unless `changeProfile` is false), then replaces the page permissions and, when the
+ * العهد page is granted to a plain user, the custodies he may see.
+ */
+export async function saveUserAccess(input: {
+  userId: string
+  changeProfile: boolean
+  role: UserRow['role']
+  active: boolean
+  permissions: { module: Module; level: Level }[]
+  advanceIds: string[]
+}): Promise<SaveUserResult> {
+  if (input.changeProfile) {
+    const { error } = await supabase.from('profiles').update({ role: input.role, is_active: input.active }).eq('id', input.userId)
+    if (error) return 'profile-failed'
+  }
+  const rows = input.permissions.map((p) => ({ user_id: input.userId, module: p.module, level: p.level }))
+  const cleared = await supabase.from('user_permissions').delete().eq('user_id', input.userId)
+  const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
+  const clearedAccess = await supabase.from('user_advance_access').delete().eq('user_id', input.userId)
+  const savedAccess = input.advanceIds.length
+    ? await supabase.from('user_advance_access').insert(input.advanceIds.map((advance_id) => ({ user_id: input.userId, advance_id })))
+    : { error: null }
+  if (clearedAccess.error || savedAccess.error) return 'access-failed'
+  if (cleared.error || saved.error) return 'permissions-failed'
+  return 'ok'
+}
+
+export type OwnProfile = Pick<UserRow, 'id' | 'full_name' | 'role' | 'is_active'>
+
+/** The signed-in person's own profile and page permissions. */
+export async function fetchOwnAccess(userId: string): Promise<{ profile: OwnProfile | null; permissions: Permissions }> {
+  const [p, r] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, role, is_active').eq('id', userId).maybeSingle(),
+    supabase.from('user_permissions').select('module,level').eq('user_id', userId),
+  ])
+  return {
+    profile: (p.data as OwnProfile | null) ?? null,
+    permissions: Object.fromEntries((r.data ?? []).map((x) => [x.module, x.level])) as Permissions,
+  }
 }

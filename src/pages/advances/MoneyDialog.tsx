@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
-import { supabase } from '../../lib/supabase'
+import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances'
 
 type Row = { id: string; amount: number; date: string; notes?: string | null }
 
@@ -9,15 +9,15 @@ type Props = {
   advanceId: string
   holder: string
   /** installments: money handed to the holder · returns: money the holder gave back */
-  kind: 'installment' | 'return'
+  kind: MoneyKind
   row?: Row
   onClose: () => void
   onSaved: () => void
 }
 
 const CONFIG = {
-  installment: { table: 'advance_installments', dateColumn: 'paid_on', add: 'دفعة جديدة', edit: 'تعديل الدفعة', notes: false },
-  return: { table: 'advance_returns', dateColumn: 'returned_on', add: 'رد عهدة', edit: 'تعديل المرتجع', notes: true },
+  installment: { add: 'دفعة جديدة', edit: 'تعديل الدفعة', notes: false },
+  return: { add: 'رد عهدة', edit: 'تعديل المرتجع', notes: true },
 } as const
 
 export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onSaved }: Props) {
@@ -35,12 +35,9 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     setSaving(true)
     setError(null)
-    const values = { amount: value, [cfg.dateColumn]: date, ...(cfg.notes ? { notes: notes.trim() || null } : {}) }
-    const { error: err } = row
-      ? await supabase.from(cfg.table).update(values as never).eq('id', row.id)
-      : await supabase.from(cfg.table).insert({ ...values, advance_id: advanceId } as never)
+    const ok = await saveAdvanceMoney(kind, advanceId, { id: row?.id, amount: value, date, notes: cfg.notes ? notes.trim() || null : null })
     setSaving(false)
-    if (err) return setError('ما اتحفظش، جرّب تاني')
+    if (!ok) return setError('ما اتحفظش، جرّب تاني')
     onSaved()
     onClose()
   }
@@ -49,9 +46,9 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
     if (!row) return
     if (!confirmDelete) return setConfirmDelete(true)
     setSaving(true)
-    const { error: err } = await supabase.from(cfg.table).delete().eq('id', row.id)
+    const ok = await deleteAdvanceMoney(kind, row.id)
     setSaving(false)
-    if (err) return setError('ما اتحذفش، جرّب تاني')
+    if (!ok) return setError('ما اتحذفش، جرّب تاني')
     onSaved()
     onClose()
   }

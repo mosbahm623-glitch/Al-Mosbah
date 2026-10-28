@@ -614,3 +614,8 @@ a.btn[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
 
 .quick-form { padding: 1.25rem; max-width: 760px; }
 .msg-ok { background: var(--ok-bg); color: var(--ok); }
+
+/* phones zoom the page when a field under 16px gets focus; keep every field at 16px so nothing moves */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea { font-size: 16px !important; }
+}

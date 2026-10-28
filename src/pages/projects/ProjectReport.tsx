@@ -174,7 +174,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
               <tr>
                 <th className="w-seq">رقم</th>
                 <th className="w-date">التاريخ</th>
-                <th>اسم المصروف</th>
+                <th>البيان</th>
                 {withContractor && <th>المقاول</th>}
                 {withBank && <th>البنك</th>}
                 {withNotes && <th>ملاحظات</th>}

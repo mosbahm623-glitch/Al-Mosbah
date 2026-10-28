@@ -88,7 +88,7 @@ export default function AdvanceReport({ id, embedded }: { id: string; embedded?:
                 <th className="w-date">التاريخ</th>
                 <th>المشروع</th>
                 <th>البند</th>
-                <th>اسم المصروف</th>
+                <th>البيان</th>
                 {withContractor && <th>المقاول</th>}
                 {withNotes && <th>ملاحظات</th>}
                 <th className="w-amount">المبلغ</th>

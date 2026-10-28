@@ -98,11 +98,11 @@ export default function BankDetail({ id }: { id: string }) {
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البيان</th><th>المقاول</th><th>وارد</th><th>مصروف</th><th>الرصيد</th></tr>
+                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>البيان</th><th>المقاول</th><th>وارد</th><th>مصروف</th><th>الرصيد</th></tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={7} className="muted">رصيد افتتاحي</td>
+                  <td colSpan={8} className="muted">رصيد افتتاحي</td>
                   <td className="num strong">{money(bank.opening_balance)}</td>
                 </tr>
                 {withBalance.map(({ m, run }) => (
@@ -110,7 +110,8 @@ export default function BankDetail({ id }: { id: string }) {
                     <td className="strong num">#{m.seq}</td>
                     <td className="num muted">{dateText(m.entry_date)}</td>
                     <td>{m.project_name}</td>
-                    <td>{m.kind === 'income' ? m.category : `${m.category} · ${m.item ?? ''}`}</td>
+                    <td>{m.category}</td>
+                    <td>{m.item}</td>
                     <td className="muted">{m.contractor}</td>
                     <td className="num tone-text-ok">{m.kind === 'income' ? money(m.amount) : ''}</td>
                     <td className="num tone-text-err">{m.kind === 'expense' ? money(m.amount) : ''}</td>

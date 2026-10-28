@@ -70,6 +70,7 @@ export default function Recent() {
                   <th>اتسجل</th>
                   <th>التاريخ</th>
                   <th>النوع</th>
+                  <th>البند</th>
                   <th>البيان</th>
                   <th>المشروع</th>
                   <th>المقاول / العهدة</th>
@@ -89,6 +90,7 @@ export default function Recent() {
                         {m.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
                         {m.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
                       </td>
+                      <td>{m.category}</td>
                       <td className="strong">{m.title}</td>
                       <td>{m.project}</td>
                       <td>{m.party}</td>

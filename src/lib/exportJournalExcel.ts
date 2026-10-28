@@ -16,7 +16,8 @@ export async function exportJournalExcel({ day, rows, withContractor, withBank: 
   const cols: { h: string; w: number; get: (m: Movement) => string | number }[] = [
     { h: 'رقم القيد', w: 11, get: (m) => m.seq ?? '' },
     { h: 'النوع', w: 16, get: (m) => KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : '') },
-    { h: 'البيان', w: 34, get: (m) => m.title },
+    { h: 'البند', w: 18, get: (m) => m.category ?? '' },
+    { h: 'البيان', w: 30, get: (m) => m.title },
     { h: 'المشروع', w: 24, get: (m) => m.project ?? '' },
     ...(withContractor ? [{ h: 'المقاول / العهدة', w: 24, get: (m: Movement) => m.party ?? '' }] : []),
     ...(withBank ? [{ h: 'البنك', w: 18, get: (m: Movement) => m.detail ?? '' }] : []),

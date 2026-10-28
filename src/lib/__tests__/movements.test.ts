@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { direction, shiftDay, sortMovements, totalsOfDay, type Movement } from '../movements'
 
 const m = (over: Partial<Movement>): Movement => ({
-  key: 'k', kind: 'expense', date: '2026-10-28', at: '2026-10-28T10:00:00Z', amount: 100, title: 't', project: null,
+  key: 'k', kind: 'expense', date: '2026-10-28', at: '2026-10-28T10:00:00Z', amount: 100, category: null, title: 't', project: null,
   party: null, detail: null, notes: null, seq: null, fromAdvance: false, status: 'approved', ...over,
 })
 

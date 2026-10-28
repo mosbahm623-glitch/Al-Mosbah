@@ -42,7 +42,7 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
     { h: 'التاريخ', w: 13 },
     { h: 'النوع', w: 10 },
     { h: 'البند', w: 18 },
-    { h: 'اسم المصروف', w: 30 },
+    { h: 'البيان', w: 30 },
     ...(withContractor ? [{ h: 'المقاول', w: 22 }] : []),
     ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
     ...(withNotes ? [{ h: 'ملاحظات', w: 30 }] : []),
@@ -98,7 +98,7 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
     const c2 = [
       { h: 'رقم القيد', w: 11 },
       { h: 'التاريخ', w: 13 },
-      { h: 'اسم المصروف', w: 32 },
+      { h: 'البيان', w: 32 },
       ...(withContractor ? [{ h: 'المقاول', w: 24 }] : []),
       ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
       ...(withNotes ? [{ h: 'ملاحظات', w: 32 }] : []),

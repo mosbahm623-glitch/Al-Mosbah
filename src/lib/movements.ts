@@ -19,6 +19,9 @@ export type Movement = {
   at: string
   amount: number
   /** project, custody holder or contractor the line is about */
+  /** البند: the expense category (entries only) */
+  category: string | null
+  /** البيان: the expense name for entries; the holder or contractor for custody and contractor lines */
   title: string
   project: string | null
   party: string | null
@@ -49,7 +52,8 @@ export const fromEntry = (e: EntryRow): Movement => ({
   date: e.entry_date,
   at: e.created_at,
   amount: e.amount,
-  title: e.kind === 'income' ? e.category : `${e.category}${e.item ? ` — ${e.item}` : ''}`,
+  category: e.category,
+  title: e.item ?? '',
   project: e.project?.name ?? null,
   party: e.contractor?.name ?? null,
   detail: e.bank?.name ?? null,
@@ -61,19 +65,19 @@ export const fromEntry = (e: EntryRow): Movement => ({
 
 export const fromInstallment = (r: InstallmentRow): Movement => ({
   key: `i-${r.id}`, kind: 'installment', date: r.paid_on, at: r.created_at, amount: r.amount,
-  title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: null,
+  category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: null,
   seq: null, fromAdvance: false, status: 'approved',
 })
 
 export const fromReturn = (r: ReturnRow): Movement => ({
   key: `r-${r.id}`, kind: 'return', date: r.returned_on, at: r.created_at, amount: r.amount,
-  title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: r.notes,
+  category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: r.notes,
   seq: null, fromAdvance: false, status: 'approved',
 })
 
 export const fromTxn = (t: TxnRow): Movement => ({
   key: `t-${t.id}`, kind: t.kind, date: t.txn_date, at: t.created_at, amount: t.amount,
-  title: t.contractor?.name ?? 'مقاول', project: t.project?.name ?? null, party: t.contractor?.name ?? null, detail: null, notes: t.notes,
+  category: null, title: t.contractor?.name ?? 'مقاول', project: t.project?.name ?? null, party: t.contractor?.name ?? null, detail: null, notes: t.notes,
   seq: null, fromAdvance: false, status: 'approved',
 })
 

@@ -26,7 +26,7 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
   const t = useMemo(() => totalsOfDay(rows), [rows])
   const withBank = bankWanted && rows.some((m) => m.detail)
   const cols = { withContractor, withBank, withNotes }
-  const span = 4 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
+  const span = 5 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
 
   async function excel() {
     setBusy(true)
@@ -89,6 +89,7 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
                 <tr>
                   <th className="w-seq">رقم</th>
                   <th>النوع</th>
+                  <th>البند</th>
                   <th>البيان</th>
                   <th>المشروع</th>
                   {withContractor && <th>المقاول / العهدة</th>}
@@ -105,6 +106,7 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
                       <span className={`tag tag-${TAG[m.kind]}`}>{KIND_LABEL[m.kind]}</span>
                       {m.fromAdvance && <span className="count"> من عهدة</span>}
                     </td>
+                    <td>{m.category}</td>
                     <td>{m.title}</td>
                     <td>{m.project}</td>
                     {withContractor && <td>{m.party}</td>}

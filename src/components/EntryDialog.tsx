@@ -96,7 +96,7 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
     const value = Number(amount)
     const isExpense = kind === 'expense'
     if (isExpense && !category) return setError('اختار البند')
-    if (isExpense && !itemName.trim()) return setError('اكتب اسم المصروف')
+    if (isExpense && !itemName.trim()) return setError('اكتب البيان')
     if (!isExpense && !incomeLabel.trim()) return setError('اكتب بيان الوارد')
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     setSaving(true)
@@ -179,12 +179,12 @@ export default function EntryDialog({ projectId, projectName, projects, advanceI
               onCreate={createCategory}
             />
             <label className="field">
-              اسم المصروف
+              البيان
               <input
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
                 list="item-names"
-                placeholder={categoryName ? 'اكتب اسم المصروف' : 'اختار البند الأول'}
+                placeholder={categoryName ? 'اكتب البيان' : 'اختار البند الأول'}
                 disabled={!categoryName}
                 required
               />

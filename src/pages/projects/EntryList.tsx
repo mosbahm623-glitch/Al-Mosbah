@@ -73,7 +73,7 @@ export default function EntryList({ entries, canEdit, onEdit }: Props) {
                   <th>التاريخ</th>
                   <th>النوع</th>
                   <th>البند</th>
-                  <th>اسم المصروف</th>
+                  <th>البيان</th>
                   <th>المقاول</th>
                   <th>البنك</th>
                   <th>سجّله</th>

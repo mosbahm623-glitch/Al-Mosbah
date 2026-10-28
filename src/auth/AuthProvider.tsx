@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { allows, type Level, type Module, type Permissions } from './permissions'
@@ -21,6 +21,26 @@ type AuthState = {
   refreshProfile: () => Promise<void>
 }
 
+const CACHE_KEY = 'mosbah-auth-cache'
+type Cached = { uid: string; profile: Profile; permissions: Permissions }
+// Only speeds up the first paint; the database rules still decide what the user may see or change.
+function readCache(uid: string): Cached | null {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null') as Cached | null
+    return c && c.uid === uid && c.profile?.is_active ? c : null
+  } catch {
+    return null
+  }
+}
+function writeCache(c: Cached | null) {
+  try {
+    if (c) localStorage.setItem(CACHE_KEY, JSON.stringify(c))
+    else localStorage.removeItem(CACHE_KEY)
+  } catch {
+    /* private mode: just no cache */
+  }
+}
+
 const AuthContext = createContext<AuthState | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -29,20 +49,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [permissions, setPermissions] = useState<Permissions>({})
 
+  // the user whose profile is loaded (or loading): stops the double fetch at start-up and on token refreshes
+  const loadedFor = useRef<string | null>(null)
+
   const loadProfile = useCallback(async (userId: string | null) => {
+    loadedFor.current = userId
     if (!userId) {
       setProfile(null)
       setPermissions({})
+      writeCache(null)
       return
     }
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, role, is_active')
-      .eq('id', userId)
-      .maybeSingle()
-    setProfile((data as Profile | null) ?? null)
-    const { data: rows } = await supabase.from('user_permissions').select('module,level').eq('user_id', userId)
-    setPermissions(Object.fromEntries((rows ?? []).map((r) => [r.module, r.level])) as Permissions)
+    const [p, r] = await Promise.all([
+      supabase.from('profiles').select('id, full_name, role, is_active').eq('id', userId).maybeSingle(),
+      supabase.from('user_permissions').select('module,level').eq('user_id', userId),
+    ])
+    const prof = (p.data as Profile | null) ?? null
+    const perms = Object.fromEntries((r.data ?? []).map((x) => [x.module, x.level])) as Permissions
+    setProfile(prof)
+    setPermissions(perms)
+    writeCache(prof ? { uid: userId, profile: prof, permissions: perms } : null)
   }, [])
 
   useEffect(() => {
@@ -50,13 +76,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return
       setSession(data.session)
-      await loadProfile(data.session?.user.id ?? null)
+      const uid = data.session?.user.id ?? null
+      const cached = uid ? readCache(uid) : null
+      if (cached) {
+        // show the app at once from the last known profile; the fresh one replaces it a moment later
+        setProfile(cached.profile)
+        setPermissions(cached.permissions)
+        setLoading(false)
+        void loadProfile(uid)
+        return
+      }
+      await loadProfile(uid)
       if (active) setLoading(false)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next)
+      // start-up is handled by getSession above
+      if (_event === 'INITIAL_SESSION') return
+      const uid = next?.user.id ?? null
+      if (uid === loadedFor.current) return
       // Defer the query: supabase-js must not be called inside this callback.
-      setTimeout(() => void loadProfile(next?.user.id ?? null), 0)
+      setTimeout(() => void loadProfile(uid), 0)
     })
     return () => {
       active = false

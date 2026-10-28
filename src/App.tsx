@@ -1,21 +1,22 @@
+import { lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
-import Projects from './pages/projects/Projects'
-import ProjectDetail from './pages/projects/ProjectDetail'
-import ProjectReport from './pages/projects/ProjectReport'
-import Advances from './pages/advances/Advances'
-import AdvanceDetail from './pages/advances/AdvanceDetail'
-import AdvanceReport from './pages/advances/AdvanceReport'
+const Projects = lazy(() => import('./pages/projects/Projects'))
+const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
+const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
+const Advances = lazy(() => import('./pages/advances/Advances'))
+const AdvanceDetail = lazy(() => import('./pages/advances/AdvanceDetail'))
+const AdvanceReport = lazy(() => import('./pages/advances/AdvanceReport'))
 import NoAccess from './pages/NoAccess'
-import Users from './pages/users/Users'
-import Banks from './pages/banks/Banks'
-import BankDetail from './pages/banks/BankDetail'
-import Approvals from './pages/approvals/Approvals'
-import Reports from './pages/reports/Reports'
-import Recent from './pages/reports/Recent'
+const Users = lazy(() => import('./pages/users/Users'))
+const Banks = lazy(() => import('./pages/banks/Banks'))
+const BankDetail = lazy(() => import('./pages/banks/BankDetail'))
+const Approvals = lazy(() => import('./pages/approvals/Approvals'))
+const Reports = lazy(() => import('./pages/reports/Reports'))
+const Recent = lazy(() => import('./pages/reports/Recent'))
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -66,7 +67,9 @@ function Gate() {
   if (!profile?.is_active) return <Pending />
   return (
     <Layout>
-      <Content />
+      <Suspense fallback={<p className="muted">جارٍ التحميل...</p>}>
+        <Content />
+      </Suspense>
     </Layout>
   )
 }

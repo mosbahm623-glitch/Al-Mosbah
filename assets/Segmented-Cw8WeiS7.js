@@ -1,1 +1,0 @@
-import{c as e}from"./useAsync-ztO_oNxd.js";var t=e();function n({label:e,value:n,options:r,onChange:i}){return(0,t.jsx)(`div`,{className:`seg`,role:`group`,"aria-label":e,children:r.map(e=>(0,t.jsx)(`button`,{type:`button`,className:e.value===n?`seg-on`:``,"aria-pressed":e.value===n,onClick:()=>i(e.value),children:e.label},e.value))})}export{n as t};

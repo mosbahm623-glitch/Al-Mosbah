@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
+import { ArrowRight, FileSpreadsheet, MessageCircle, Printer } from 'lucide-react'
 import { money, todayText, TYPE_LABEL } from '../../lib/format'
 import { useProjectData } from '../../lib/useProjectData'
 import { exportProjectExcel } from '../../lib/exportProjectExcel'
+import { reportSummaryText, whatsappLink } from '../../lib/whatsapp'
 import { isOver, percentOf, type Entry } from '../../lib/projects'
 import { Kpis, Signatures } from '../../components/PaperExtras'
 import DataGrid from '../../components/DataGrid'
@@ -143,6 +144,21 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
             <FileSpreadsheet size={18} aria-hidden="true" />
             {busy ? 'جارٍ التجهيز...' : 'Excel'}
           </button>
+          <a
+            className="btn btn-ghost btn-icon"
+            href={whatsappLink(
+              reportSummaryText(project.name, [
+                { label: 'الوارد', value: money(incomeTotal) },
+                { label: 'المصروف', value: money(project.expenses) },
+                { label: 'الرصيد', value: money(balance) },
+              ]),
+            )}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <MessageCircle size={18} aria-hidden="true" />
+            واتساب
+          </a>
         </div>
       </div>
       {failed && <p className="msg msg-error no-print">ملف الإكسل ما اتجهزش، جرّب تاني</p>}

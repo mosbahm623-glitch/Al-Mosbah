@@ -1,10 +1,14 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Al-Mosbah/',
+  // the tests only touch pure calculations; this keeps the Supabase client from refusing to start without a real .env.local
+  test: {
+    env: { VITE_SUPABASE_URL: 'http://localhost:54321', VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key' },
+  },
   plugins: [
     react(),
     VitePWA({

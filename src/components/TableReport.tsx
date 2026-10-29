@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { FileSpreadsheet, Printer } from 'lucide-react'
+import { FileSpreadsheet, MessageCircle, Printer } from 'lucide-react'
 import { todayText } from '../lib/format'
 import type { Kpi, Section } from '../lib/tableTypes'
 import { exportTableExcel } from '../lib/exportTableExcel'
+import { reportSummaryText, whatsappLink } from '../lib/whatsapp'
 import { usePreparedBy } from '../auth/usePreparedBy'
 import { Kpis, Signatures } from './PaperExtras'
 import DataGrid from './DataGrid'
@@ -48,6 +49,16 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
             <FileSpreadsheet size={18} aria-hidden="true" />
             {busy ? 'جارٍ التجهيز...' : 'Excel'}
           </button>
+          <a
+            className="btn btn-ghost btn-icon"
+            href={whatsappLink(reportSummaryText(title, [...meta, ...(kpis ?? []).map((k) => ({ label: k.label, value: k.value }))]))}
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled={empty}
+          >
+            <MessageCircle size={18} aria-hidden="true" />
+            واتساب
+          </a>
         </div>
       </div>
       {failed && <p className="msg msg-error no-print">ملف الإكسل ما اتجهزش، جرّب تاني</p>}

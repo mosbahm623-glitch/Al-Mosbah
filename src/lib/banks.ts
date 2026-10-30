@@ -23,6 +23,12 @@ export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 
 export const fetchBankSummaries = () => supabase.rpc('bank_summaries')
 export const fetchBankMovements = (bankId: string) => supabase.rpc('bank_movements', { p_bank: bankId })
 
+export type BankInput = { name: string; opening_balance: number }
+
+/** A new bank account, or (with an id) an edit of an existing one. */
+export const saveBank = (row: BankInput, id?: string) =>
+  id ? supabase.from('bank_accounts').update(row).eq('id', id) : supabase.from('bank_accounts').insert(row)
+
 /** Per-project in / out of one bank. */
 export function byProject(rows: BankMovement[]) {
   const map = new Map<string, { id: string; name: string; income: number; expenses: number }>()

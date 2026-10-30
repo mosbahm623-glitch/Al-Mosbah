@@ -4,20 +4,8 @@ import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
-import { supabase } from '../lib/supabase'
+import { fetchMyEntries, type MyEntry } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
-
-type Mine = {
-  id: string
-  seq: number
-  kind: 'income' | 'expense'
-  category: string
-  item: string | null
-  amount: number
-  entry_date: string
-  status: string
-  project: { name: string } | null
-}
 
 const STATUS: Record<string, string> = {
   pending: 'مستنّي موافقة',
@@ -31,18 +19,8 @@ export default function QuickEntry() {
   const { profile } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const uid = profile?.id
-  const fetchMine = useCallback(
-    () =>
-      supabase
-        .from('entries')
-        .select('id,seq,kind,category,item,amount,entry_date,status,project:projects(name)')
-        .eq('created_by', uid ?? '')
-        .order('seq', { ascending: false })
-        .limit(8)
-        .returns<Mine[]>(),
-    [uid],
-  )
-  const mine = useAsync<Mine[]>(fetchMine)
+  const fetchMine = useCallback(() => fetchMyEntries(uid ?? ''), [uid])
+  const mine = useAsync<MyEntry[]>(fetchMine)
   const [tab, setTab] = useState<'new' | 'mine'>('new')
   const active = (projects.data ?? []).filter((p) => p.status === 'active')
 

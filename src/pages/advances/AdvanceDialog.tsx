@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
-import { supabase } from '../../lib/supabase'
-import type { AdvanceSummary } from '../../lib/advances'
+import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances'
 
 type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
 
@@ -24,19 +23,17 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
     setError(null)
     const row = { holder_name: holder.trim(), notes: notes.trim() || null }
     if (advance) {
-      const { error: err } = await supabase.from('advances').update(row).eq('id', advance.id)
+      const { error: err } = await updateAdvance(advance.id, row)
       setSaving(false)
       if (err) return setError('ما اتحفظش، جرّب تاني')
     } else {
-      const { data, error: err } = await supabase.from('advances').insert(row).select('id').single()
+      const { data, error: err } = await createAdvance(row)
       if (err || !data) {
         setSaving(false)
         return setError('العهدة ما اتحفظتش، جرّب تاني')
       }
       if (amount > 0) {
-        const { error: instErr } = await supabase
-          .from('advance_installments')
-          .insert({ advance_id: data.id, amount, paid_on: date })
+        const { error: instErr } = await addInstallment(data.id, amount, date)
         if (instErr) {
           setSaving(false)
           onSaved()

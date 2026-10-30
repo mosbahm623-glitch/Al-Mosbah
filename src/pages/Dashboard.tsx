@@ -1,5 +1,5 @@
 import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { fetchDashboardSummary } from '../lib/projects'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import BackupPanel from '../components/BackupPanel'
@@ -18,10 +18,8 @@ type Summary = {
   budget_rows: BudgetRow[]
 }
 
-const fetchSummary = () => supabase.rpc('dashboard_summary')
-
 export default function Dashboard() {
-  const { data, failed, loading, reload } = useAsync<Summary>(fetchSummary)
+  const { data, failed, loading, reload } = useAsync<Summary>(fetchDashboardSummary)
   const error = failed ? 'مقدرناش نحمّل الأرقام، جرّب تاني' : null
 
   return (

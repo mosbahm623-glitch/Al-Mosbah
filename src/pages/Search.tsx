@@ -4,61 +4,15 @@ import { useAuth } from '../auth/AuthProvider'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
-import { ENTRY_COLUMNS, type Entry } from '../lib/projects'
-import { supabase } from '../lib/supabase'
+import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/search'
 import { useAsync } from '../lib/useAsync'
-
-type Hit = Entry & { project_id: string; project: { name: string } | null }
 
 const subscribe = (cb: () => void) => {
   window.addEventListener('hashchange', cb)
   return () => window.removeEventListener('hashchange', cb)
 }
 const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('q')?.trim() ?? ''
-
-const SELECT = `${ENTRY_COLUMNS},project_id,project:projects(name)`
-const LIMIT = 100
-// % _ and , have a meaning inside a PostgREST filter
-const clean = (q: string) => q.replace(/[%_,()*\\]/g, ' ').trim()
 const STATUS = { pending: 'معلّق', approved: 'مقبول', rejected: 'مرفوض', deleted: 'محذوف' } as const
-
-/** Entries by number, البند, البيان, project or contractor name. */
-async function search(q: string) {
-  const like = `%${clean(q)}%`
-  const num = /^#?\d+$/.test(q) ? Number(q.replace('#', '')) : null
-  const byText = supabase
-    .from('entries')
-    .select(SELECT)
-    .or(`category.ilike.${like},item.ilike.${like},notes.ilike.${like}`)
-    .limit(LIMIT)
-    .returns<Hit[]>()
-  const [text, projects, contractors, seq] = await Promise.all([
-    byText,
-    supabase.from('projects').select('id').ilike('name', like).limit(50),
-    supabase.from('contractors').select('id').ilike('name', like).limit(50),
-    num !== null && num <= 2147483647
-      ? supabase.from('entries').select(SELECT).eq('seq', num).returns<Hit[]>()
-      : Promise.resolve({ data: [] as Hit[], error: null }),
-  ])
-  if (text.error || projects.error || contractors.error || seq.error) return { data: null, error: true }
-  const projectIds = (projects.data ?? []).map((p) => p.id)
-  const contractorIds = (contractors.data ?? []).map((c) => c.id)
-  const [byProject, byContractor] = await Promise.all([
-    projectIds.length
-      ? supabase.from('entries').select(SELECT).in('project_id', projectIds).limit(LIMIT).returns<Hit[]>()
-      : Promise.resolve({ data: [] as Hit[], error: null }),
-    contractorIds.length
-      ? supabase.from('entries').select(SELECT).in('contractor_id', contractorIds).limit(LIMIT).returns<Hit[]>()
-      : Promise.resolve({ data: [] as Hit[], error: null }),
-  ])
-  if (byProject.error || byContractor.error) return { data: null, error: true }
-  const merged = new Map<string, Hit>()
-  // a number match comes first, then the rest, newest number first
-  for (const h of [...(seq.data ?? []), ...(text.data ?? []), ...(byProject.data ?? []), ...(byContractor.data ?? [])])
-    merged.set(h.id, h)
-  const seqFirst = (h: Hit) => (h.seq === num ? 1 : 0)
-  return { data: [...merged.values()].sort((a, b) => seqFirst(b) - seqFirst(a) || b.seq - a.seq), error: false }
-}
 
 export default function Search() {
   const q = useSyncExternalStore(subscribe, readQuery, () => '')
@@ -68,7 +22,7 @@ export default function Search() {
 
 function SearchView({ q }: { q: string }) {
   const [draft, setDraft] = useState(q)
-  const load = useCallback(async () => (q ? search(q) : { data: [] as Hit[], error: false }), [q])
+  const load = useCallback(async () => (q ? searchEntries(q) : { data: [] as Hit[], error: false }), [q])
   const { data, failed, loading, reload } = useAsync<Hit[]>(load)
   const { can, isStaff: isAdmin } = useAuth()
   const canEdit = can('projects', 'edit')
@@ -109,7 +63,7 @@ function SearchView({ q }: { q: string }) {
       {rows.length > 0 && (
         <section className="panel">
           <p className="muted small search-count">
-            {rows.length} نتيجة{rows.length >= LIMIT ? ' (أول ' + LIMIT + ' بس، ضيّق البحث)' : ''}
+            {rows.length} نتيجة{rows.length >= SEARCH_LIMIT ? ' (أول ' + SEARCH_LIMIT + ' بس، ضيّق البحث)' : ''}
           </p>
           <div className="table-wrap">
             <table className="table">

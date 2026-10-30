@@ -36,6 +36,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Architecture check
+        run: npm run architecture:check
+
+      - name: Dead code check
+        run: npm run knip
+
       - name: Tests
         run: npm test
 

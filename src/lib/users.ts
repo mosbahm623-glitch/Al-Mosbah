@@ -72,3 +72,24 @@ export async function createUser(input: { full_name: string; email: string; pass
   }
   return (code && CREATE_ERRORS[code]) || 'ما قدرناش ننشئ المستخدم، جرّب تاني'
 }
+
+export const updateRole = (userId: string, role: UserRow['role'], isActive: boolean) =>
+  supabase.from('profiles').update({ role, is_active: isActive }).eq('id', userId)
+
+/** Replaces all page permissions of one user. Both results are returned so the caller can tell which step failed. */
+export async function replacePermissions(userId: string, rows: { user_id: string; module: Module; level: Level }[]) {
+  const cleared = await supabase.from('user_permissions').delete().eq('user_id', userId)
+  const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
+  return { cleared, saved }
+}
+
+/** Replaces the custodies one user may see. */
+export async function replaceAdvanceAccess(userId: string, advanceIds: string[]) {
+  const cleared = await supabase.from('user_advance_access').delete().eq('user_id', userId)
+  const saved = advanceIds.length
+    ? await supabase
+        .from('user_advance_access')
+        .insert(advanceIds.map((advance_id) => ({ user_id: userId, advance_id })))
+    : { error: null }
+  return { cleared, saved }
+}

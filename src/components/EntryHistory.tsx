@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { supabase } from '../lib/supabase'
+import { fetchEntryHistory } from '../lib/entries'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 
@@ -53,7 +53,7 @@ const diff = (c: Change) =>
 
 /** Admin only: who did what to this entry, oldest first. */
 export default function EntryHistory({ entryId }: { entryId: string }) {
-  const { data } = useAsync<Change[]>(useCallback(() => supabase.rpc('entry_history_of', { p_id: entryId }), [entryId]))
+  const { data } = useAsync<Change[]>(useCallback(() => fetchEntryHistory(entryId), [entryId]))
   if (!data || data.length === 0) return null
   return (
     <details className="span-2 entry-history">

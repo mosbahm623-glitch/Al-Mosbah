@@ -2,29 +2,10 @@ import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell } from '../../lib/tableTypes'
 import { money, periodText, todayISO } from '../../lib/format'
-import { fetchPaged } from '../../lib/paged'
+import { fetchContractorLedger, type LedgerTxn as Txn, type Spent } from '../../lib/contractors'
 import { inRange, runLedger } from '../../lib/reportBuilders'
-import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
-
-type Txn = {
-  id: string
-  kind: 'due' | 'payment'
-  amount: number
-  txn_date: string
-  notes: string | null
-  project: { name: string } | null
-}
-type Spent = {
-  id: string
-  seq: number
-  category: string
-  item: string | null
-  amount: number
-  entry_date: string
-  project: { name: string } | null
-}
 
 /** What we owe one contractor (dues − payments, with a running balance) and what was spent under his name. */
 export default function ContractorStatement({
@@ -39,30 +20,8 @@ export default function ContractorStatement({
   to: string
 }) {
   const load = useCallback(async () => {
-    const [txns, spent] = await Promise.all([
-      fetchPaged<Txn>((a, b) =>
-        supabase
-          .from('contractor_transactions')
-          .select('id,kind,amount,txn_date,notes,project:projects(name)')
-          .eq('contractor_id', id)
-          .order('txn_date')
-          .order('id')
-          .range(a, b)
-          .returns<Txn[]>(),
-      ),
-      fetchPaged<Spent>((a, b) =>
-        supabase
-          .from('entries')
-          .select('id,seq,category,item,amount,entry_date,project:projects(name)')
-          .eq('contractor_id', id)
-          .eq('status', 'approved')
-          .order('entry_date')
-          .order('id')
-          .range(a, b)
-          .returns<Spent[]>(),
-      ),
-    ])
-    return { data: txns && spent ? { txns, spent } : null, error: !txns || !spent }
+    const ledger = await fetchContractorLedger(id)
+    return { data: ledger, error: ledger === null }
   }, [id])
   const { data, failed } = useAsync<{ txns: Txn[]; spent: Spent[] }>(load)
 

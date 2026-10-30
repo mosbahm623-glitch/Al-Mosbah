@@ -18,7 +18,14 @@ const tables = (t: Record<string, unknown>) =>
   from.mockImplementation(((name: string) => query(t[name]).query) as never)
 
 describe('fetchUsers', () => {
-  const profile = (id: string) => ({ id, full_name: id, email: `${id}@x.com`, role: 'user', is_active: true })
+  const profile = (id: string) => ({
+    id,
+    full_name: id,
+    email: `${id}@x.com`,
+    role: 'user',
+    is_active: true,
+    notify_low_balance: false,
+  })
 
   it('attaches each user’s page permissions and custody access', async () => {
     tables({

@@ -27,7 +27,7 @@ import {
   type EntryInput,
 } from '../entries'
 import { fetchDashboardSummary, saveProject } from '../projects'
-import { replaceAdvanceAccess, replacePermissions, updateRole } from '../users'
+import { replaceAdvanceAccess, replacePermissions, setLowBalanceAlert, updateRole } from '../users'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)
@@ -265,6 +265,13 @@ describe('user access writes', () => {
     await updateRole('u1', 'owner', false)
     expect(used[0].table).toBe('profiles')
     expect(callsOn()[0]).toEqual(['update', [{ role: 'owner', is_active: false }]])
+    expect(callsOn()[1]).toEqual(['eq', ['id', 'u1']])
+  })
+  it('turns the low-balance alert on or off for one account only', async () => {
+    plan({})
+    await setLowBalanceAlert('u1', true)
+    expect(used[0].table).toBe('profiles')
+    expect(callsOn()[0]).toEqual(['update', [{ notify_low_balance: true }]])
     expect(callsOn()[1]).toEqual(['eq', ['id', 'u1']])
   })
   it('clears old permissions first, then inserts the new ones', async () => {

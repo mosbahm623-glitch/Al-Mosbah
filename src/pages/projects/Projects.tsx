@@ -60,7 +60,13 @@ export default function Projects() {
       <div className="toolbar">
         <label className="search-field">
           <Search size={18} aria-hidden="true" />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المشروع" aria-label="ابحث باسم المشروع" />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ابحث باسم المشروع"
+            aria-label="ابحث باسم المشروع"
+          />
         </label>
         <Segmented label="الحالة" value={status} options={STATUS} onChange={setStatus} />
         <Segmented label="النوع" value={type} options={TYPES} onChange={setType} />
@@ -97,8 +103,14 @@ export default function Projects() {
                     const bal = p.income - p.expenses
                     return (
                       <tr key={p.id}>
-                        <td className="strong"><a className="row-link" href={`#/projects/${p.id}`}>{p.name}</a></td>
-                        <td><span className="chip chip-neutral">{TYPE_LABEL[p.type]}</span></td>
+                        <td className="strong">
+                          <a className="row-link" href={`#/projects/${p.id}`}>
+                            {p.name}
+                          </a>
+                        </td>
+                        <td>
+                          <span className="chip chip-neutral">{TYPE_LABEL[p.type]}</span>
+                        </td>
                         <td className="num">{money(p.budget)}</td>
                         <td className="num">{money(p.income)}</td>
                         <td className="num">{money(p.expenses)}</td>
@@ -113,14 +125,18 @@ export default function Projects() {
                             <span className="muted small">بدون ميزانية</span>
                           )}
                         </td>
-                        <td><StatusChip p={p} /></td>
+                        <td>
+                          <StatusChip p={p} />
+                        </td>
                       </tr>
                     )
                   })}
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td className="strong" colSpan={2}>الإجمالي</td>
+                    <td className="strong" colSpan={2}>
+                      الإجمالي
+                    </td>
                     <td className="num strong">{money(total((p) => p.budget))}</td>
                     <td className="num strong">{money(total((p) => p.income))}</td>
                     <td className="num strong">{money(total((p) => p.expenses))}</td>
@@ -144,8 +160,12 @@ export default function Projects() {
                   <span className="chip chip-neutral">{TYPE_LABEL[p.type]}</span>
                   {p.budget > 0 && <Progress percent={percentOf(p)} over={isOver(p)} />}
                   <div className="proj-card-line muted small">
-                    <span>مصروف {money(p.expenses)} من {money(p.budget)}</span>
-                    {p.budget > 0 && <span className={isOver(p) ? 'tone-text-err strong' : 'strong'}>{percentOf(p)}%</span>}
+                    <span>
+                      مصروف {money(p.expenses)} من {money(p.budget)}
+                    </span>
+                    {p.budget > 0 && (
+                      <span className={isOver(p) ? 'tone-text-err strong' : 'strong'}>{percentOf(p)}%</span>
+                    )}
                   </div>
                   <div className="proj-card-bal">
                     <span className="muted">الرصيد</span>

@@ -13,7 +13,11 @@ type Row = { id: string; category: string; amount: number; project: { type: Proj
 export default function CategoryReport({ from, to, type }: { from: string; to: string; type: 'all' | ProjectType }) {
   const load = useCallback(async () => {
     const rows = await fetchPaged<Row>((a, b) => {
-      let q = supabase.from('entries').select('id,category,amount,project:projects(type)').eq('kind', 'expense').eq('status', 'approved')
+      let q = supabase
+        .from('entries')
+        .select('id,category,amount,project:projects(type)')
+        .eq('kind', 'expense')
+        .eq('status', 'approved')
       if (from) q = q.gte('entry_date', from)
       if (to) q = q.lte('entry_date', to)
       return q.order('id').range(a, b).returns<Row[]>()
@@ -22,7 +26,10 @@ export default function CategoryReport({ from, to, type }: { from: string; to: s
   }, [from, to])
   const { data, failed } = useAsync<Row[]>(load)
 
-  const rows = useMemo(() => categoryTotals((data ?? []).filter((r) => type === 'all' || r.project?.type === type)), [data, type])
+  const rows = useMemo(
+    () => categoryTotals((data ?? []).filter((r) => type === 'all' || r.project?.type === type)),
+    [data, type],
+  )
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>

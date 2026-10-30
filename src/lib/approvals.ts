@@ -23,7 +23,12 @@ const COLUMNS =
   'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchByStatus = (status: 'pending' | 'rejected') =>
-  supabase.from('entries').select(COLUMNS).eq('status', status).order('created_at', { ascending: true }).returns<PendingEntry[]>()
+  supabase
+    .from('entries')
+    .select(COLUMNS)
+    .eq('status', status)
+    .order('created_at', { ascending: true })
+    .returns<PendingEntry[]>()
 
 /**
  * Approve or reject entries as they were shown (same rev). Returns how many went through and how many were
@@ -69,4 +74,5 @@ export async function restoreEntry(id: string) {
   return !error && data === true
 }
 
-export const fetchProjectDeleted = (projectId: string) => supabase.rpc('project_deleted_entries', { p_project: projectId })
+export const fetchProjectDeleted = (projectId: string) =>
+  supabase.rpc('project_deleted_entries', { p_project: projectId })

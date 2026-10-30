@@ -1,7 +1,18 @@
 import { supabase } from './supabase'
 import { notifyApprovalsChanged, notifyDataChanged } from './events'
 
-const TABLES = ['entries', 'advance_installments', 'advance_returns', 'contractor_transactions', 'projects', 'advances', 'bank_accounts', 'contractors', 'data_pings', 'notifications']
+const TABLES = [
+  'entries',
+  'advance_installments',
+  'advance_returns',
+  'contractor_transactions',
+  'projects',
+  'advances',
+  'bank_accounts',
+  'contractors',
+  'data_pings',
+  'notifications',
+]
 
 /** Listens to database changes and tells every open page to refresh itself. Returns the function that stops it. */
 export function startLive(): () => void {

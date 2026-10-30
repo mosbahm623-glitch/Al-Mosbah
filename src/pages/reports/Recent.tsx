@@ -82,7 +82,9 @@ export default function Recent() {
                   const dir = direction(m)
                   return (
                     <tr key={m.key}>
-                      <td className="num muted small">{dayText(m.at)} {timeText(m.at)}</td>
+                      <td className="num muted small">
+                        {dayText(m.at)} {timeText(m.at)}
+                      </td>
                       <td className="num">{dateText(m.date)}</td>
                       <td>
                         <span className="chip chip-neutral">{KIND_LABEL[m.kind]}</span>
@@ -94,7 +96,10 @@ export default function Recent() {
                       <td className="strong">{m.title}</td>
                       <td>{m.project}</td>
                       <td>{m.party}</td>
-                      <td className={`num strong ${TONE[dir]}`}>{SIGN[dir]}{money(m.amount)}</td>
+                      <td className={`num strong ${TONE[dir]}`}>
+                        {SIGN[dir]}
+                        {money(m.amount)}
+                      </td>
                     </tr>
                   )
                 })}

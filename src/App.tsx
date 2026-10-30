@@ -33,7 +33,8 @@ function Content() {
 
   if (route === 'notifications') return <Notifications />
   if (route === 'quick-entry') return isOwner ? <QuickEntry /> : <ComingSoon title="الصفحة مش موجودة" />
-  if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff)) return <ComingSoon title="الصفحة مش موجودة" />
+  if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff))
+    return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />
   if (route === 'approvals') return <Approvals />

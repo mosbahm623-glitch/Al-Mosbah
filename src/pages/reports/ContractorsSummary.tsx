@@ -9,12 +9,16 @@ import { toCents } from '../../lib/money'
 
 type Txn = { kind: 'due' | 'payment'; amount: number; txn_date: string; contractor: { name: string } | null }
 
-
 /** Every contractor on one page: balance before the period, dues, payments and what is left to pay. */
 export default function ContractorsSummary({ from, to }: { from: string; to: string }) {
   const load = useCallback(async () => {
     const txns = await fetchPaged<Txn>((a, b) =>
-      supabase.from('contractor_transactions').select('kind,amount,txn_date,contractor_id,contractor:contractors(name)').order('id').range(a, b).returns<Txn[]>(),
+      supabase
+        .from('contractor_transactions')
+        .select('kind,amount,txn_date,contractor_id,contractor:contractors(name)')
+        .order('id')
+        .range(a, b)
+        .returns<Txn[]>(),
     )
     return { data: txns, error: !txns }
   }, [])
@@ -34,7 +38,13 @@ export default function ContractorsSummary({ from, to }: { from: string; to: str
       by.set(name, r)
     }
     const rows = [...by.entries()]
-      .map(([name, r]) => ({ name, opening: r.opening / 100, dues: r.dues / 100, paid: r.paid / 100, closing: (r.opening + r.dues - r.paid) / 100 }))
+      .map(([name, r]) => ({
+        name,
+        opening: r.opening / 100,
+        dues: r.dues / 100,
+        paid: r.paid / 100,
+        closing: (r.opening + r.dues - r.paid) / 100,
+      }))
       .filter((r) => r.opening !== 0 || r.dues !== 0 || r.paid !== 0)
       .sort((a, b) => b.closing - a.closing)
     const sum = (k: 'opening' | 'dues' | 'paid' | 'closing') => rows.reduce((s, r) => s + toCents(r[k]), 0) / 100
@@ -57,7 +67,13 @@ export default function ContractorsSummary({ from, to }: { from: string; to: str
       ]}
       sections={[
         {
-          cols: [{ h: 'المقاول' }, { h: 'رصيد قبل الفترة', kind: 'money' }, { h: 'مستحق', kind: 'money' }, { h: 'مدفوع', kind: 'money' }, { h: 'المتبقي', kind: 'money' }],
+          cols: [
+            { h: 'المقاول' },
+            { h: 'رصيد قبل الفترة', kind: 'money' },
+            { h: 'مستحق', kind: 'money' },
+            { h: 'مدفوع', kind: 'money' },
+            { h: 'المتبقي', kind: 'money' },
+          ],
           rows: view.rows.map((r): Cell[] => [r.name, r.opening, r.dues, r.paid, r.closing]),
           footer: ['الإجمالي', view.opening, view.dues, view.paid, view.closing],
           empty: 'مفيش حسابات مقاولين في الفترة دي.',

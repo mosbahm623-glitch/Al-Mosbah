@@ -47,12 +47,38 @@ export default function Dashboard() {
       {data && (
         <>
           <section className="tiles" aria-label="المؤشرات">
-            <Tile label="صافي النقدية" value={money(data.net_cash)} unit="ج.م" icon={Banknote} tone={data.net_cash < 0 ? 'err' : 'ok'} big />
+            <Tile
+              label="صافي النقدية"
+              value={money(data.net_cash)}
+              unit="ج.م"
+              icon={Banknote}
+              tone={data.net_cash < 0 ? 'err' : 'ok'}
+              big
+            />
             <Tile label="إجمالي الوارد" value={money(data.total_income)} unit="ج.م" icon={TrendingUp} tone="blue" />
-            <Tile label="إجمالي المصاريف" value={money(data.total_expenses)} unit="ج.م" icon={TrendingDown} tone="err" />
-            <Tile label="العهد المتبقية" value={money(data.advances_balance)} unit="ج.م" icon={HandCoins} tone="neutral" sub={`من إجمالي ${money(data.total_advances)} ج.م`} />
+            <Tile
+              label="إجمالي المصاريف"
+              value={money(data.total_expenses)}
+              unit="ج.م"
+              icon={TrendingDown}
+              tone="err"
+            />
+            <Tile
+              label="العهد المتبقية"
+              value={money(data.advances_balance)}
+              unit="ج.م"
+              icon={HandCoins}
+              tone="neutral"
+              sub={`من إجمالي ${money(data.total_advances)} ج.م`}
+            />
             <Tile label="مستحقات المقاولين" value={money(data.contractor_dues)} unit="ج.م" icon={HardHat} tone="warn" />
-            <Tile label="المشاريع النشطة" value={money(data.active_projects)} unit="مشروع" icon={FolderKanban} tone="neutral" />
+            <Tile
+              label="المشاريع النشطة"
+              value={money(data.active_projects)}
+              unit="مشروع"
+              icon={FolderKanban}
+              tone="neutral"
+            />
           </section>
 
           <section className="panel">

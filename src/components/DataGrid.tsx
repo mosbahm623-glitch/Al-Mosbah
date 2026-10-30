@@ -17,7 +17,8 @@ export default function DataGrid({ section }: { section: Section }) {
   const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     let out = rows.map((r, i) => ({ r, i }))
-    if (needle) out = out.filter(({ r }) => r.some((v, ci) => showCell(cols[ci]?.kind, v).toLowerCase().includes(needle)))
+    if (needle)
+      out = out.filter(({ r }) => r.some((v, ci) => showCell(cols[ci]?.kind, v).toLowerCase().includes(needle)))
     if (sort) {
       const { col, dir } = sort
       const k = dir === 'asc' ? 1 : -1
@@ -26,7 +27,10 @@ export default function DataGrid({ section }: { section: Section }) {
         const y = b.r[col]
         if (x === null || x === '') return y === null || y === '' ? a.i - b.i : 1
         if (y === null || y === '') return -1
-        const c = typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'ar', { numeric: true })
+        const c =
+          typeof x === 'number' && typeof y === 'number'
+            ? x - y
+            : String(x).localeCompare(String(y), 'ar', { numeric: true })
         return (c || a.i - b.i) * k
       })
     }
@@ -40,7 +44,12 @@ export default function DataGrid({ section }: { section: Section }) {
   const filtered = shown.length !== rows.length
   const tools = rows.length >= MIN_ROWS_FOR_TOOLS
   // the footer's own figures are the totals; while filtering, the shown rows get their own sums in the same columns
-  const shownSums = filtered && footer ? footer.map((v, ci) => (ci > 0 && typeof v === 'number' ? shown.reduce((t, r) => t + toCents(Number(r[ci]) || 0), 0) / 100 : null)) : null
+  const shownSums =
+    filtered && footer
+      ? footer.map((v, ci) =>
+          ci > 0 && typeof v === 'number' ? shown.reduce((t, r) => t + toCents(Number(r[ci]) || 0), 0) / 100 : null,
+        )
+      : null
   const span = footer ? footerSpan(footer, cols.length) : 1
 
   return (
@@ -51,10 +60,19 @@ export default function DataGrid({ section }: { section: Section }) {
           {tools && (
             <label className="grid-filter">
               <Search size={16} aria-hidden="true" />
-              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث في الجدول" aria-label="بحث في الجدول" autoComplete="off" />
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="بحث في الجدول"
+                aria-label="بحث في الجدول"
+                autoComplete="off"
+              />
             </label>
           )}
-          <span className="grid-count muted small">{filtered ? `${shown.length} من ${rows.length}` : `${rows.length}`} صف</span>
+          <span className="grid-count muted small">
+            {filtered ? `${shown.length} من ${rows.length}` : `${rows.length}`} صف
+          </span>
         </div>
       )}
       {rows.length === 0 ? (
@@ -67,10 +85,22 @@ export default function DataGrid({ section }: { section: Section }) {
                 {cols.map((c, ci) => {
                   const on = sort?.col === ci
                   return (
-                    <th key={c.h} className={isNumericCol(c) ? 'num' : ''} aria-sort={on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                    <th
+                      key={c.h}
+                      className={isNumericCol(c) ? 'num' : ''}
+                      aria-sort={on ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    >
                       <button type="button" onClick={() => toggle(ci)} title="ترتيب">
                         {c.h}
-                        {on ? sort.dir === 'asc' ? <ArrowUp size={13} aria-hidden="true" /> : <ArrowDown size={13} aria-hidden="true" /> : <ChevronsUpDown size={13} className="dim" aria-hidden="true" />}
+                        {on ? (
+                          sort.dir === 'asc' ? (
+                            <ArrowUp size={13} aria-hidden="true" />
+                          ) : (
+                            <ArrowDown size={13} aria-hidden="true" />
+                          )
+                        ) : (
+                          <ChevronsUpDown size={13} className="dim" aria-hidden="true" />
+                        )}
                       </button>
                     </th>
                   )
@@ -80,14 +110,23 @@ export default function DataGrid({ section }: { section: Section }) {
             <tbody>
               {shown.length === 0 && (
                 <tr>
-                  <td colSpan={cols.length} className="grid-none">مفيش نتايج للبحث ده.</td>
+                  <td colSpan={cols.length} className="grid-none">
+                    مفيش نتايج للبحث ده.
+                  </td>
                 </tr>
               )}
               {shown.map((r, ri) => (
                 <tr key={ri}>
                   {r.map((v, ci) => (
-                    <td key={ci} className={`${isNumericCol(cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && cols[ci].kind === 'money' ? 'neg' : ''}`}>
-                      {pillOf(cols[ci], v) ? <span className={`tag tag-${pillOf(cols[ci], v)}`}>{showCell(cols[ci].kind, v)}</span> : showCell(cols[ci].kind, v)}
+                    <td
+                      key={ci}
+                      className={`${isNumericCol(cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && cols[ci].kind === 'money' ? 'neg' : ''}`}
+                    >
+                      {pillOf(cols[ci], v) ? (
+                        <span className={`tag tag-${pillOf(cols[ci], v)}`}>{showCell(cols[ci].kind, v)}</span>
+                      ) : (
+                        showCell(cols[ci].kind, v)
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -99,14 +138,18 @@ export default function DataGrid({ section }: { section: Section }) {
                   <tr className="grid-sub">
                     <td colSpan={span}>إجمالي المعروض ({shown.length})</td>
                     {shownSums.slice(span).map((v, k) => (
-                      <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>{v === null ? '' : showCell(cols[span + k].kind, v)}</td>
+                      <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>
+                        {v === null ? '' : showCell(cols[span + k].kind, v)}
+                      </td>
                     ))}
                   </tr>
                 )}
                 <tr>
                   <td colSpan={span}>{footer[0]}</td>
                   {footer.slice(span).map((v, k) => (
-                    <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>{showCell(cols[span + k].kind, v)}</td>
+                    <td key={k} className={isNumericCol(cols[span + k]) ? 'num' : ''}>
+                      {showCell(cols[span + k].kind, v)}
+                    </td>
                   ))}
                 </tr>
               </tfoot>

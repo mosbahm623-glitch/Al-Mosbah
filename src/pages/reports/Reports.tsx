@@ -19,7 +19,18 @@ import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
 import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
 
-type ReportType = 'journal' | 'period' | 'project' | 'category' | 'budget' | 'advance' | 'contractor' | 'contractors' | 'bank' | 'pending' | 'approvals'
+type ReportType =
+  | 'journal'
+  | 'period'
+  | 'project'
+  | 'category'
+  | 'budget'
+  | 'advance'
+  | 'contractor'
+  | 'contractors'
+  | 'bank'
+  | 'pending'
+  | 'approvals'
 
 const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[] = [
   {
@@ -55,8 +66,8 @@ const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[]
   },
 ]
 
-
-const hasPeriod = (t: ReportType) => t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
+const hasPeriod = (t: ReportType) =>
+  t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
 const hasColumns = (t: ReportType) => t === 'journal' || t === 'project' || t === 'advance' || t === 'period'
 
 export default function Reports() {
@@ -117,13 +128,34 @@ export default function Reports() {
         type === 'pending' ? [pendingStatus, creatorId] : '',
         hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes] : '',
       ]),
-    [type, target, from, to, projectId, kindFilter, budgetMode, pendingStatus, creatorId, withContractor, withBank, withNotes],
+    [
+      type,
+      target,
+      from,
+      to,
+      projectId,
+      kindFilter,
+      budgetMode,
+      pendingStatus,
+      creatorId,
+      withContractor,
+      withBank,
+      withNotes,
+    ],
   )
   const visible = shown?.key === key && Boolean(target) && rangeOk
   const cols = { withContractor, withBank, withNotes }
   const n = shown?.n ?? 0
 
-  const select = (label: string, value: string, set: (v: string) => void, options: Named[] | undefined, loading: boolean, emptyText: string, all?: string) => (
+  const select = (
+    label: string,
+    value: string,
+    set: (v: string) => void,
+    options: Named[] | undefined,
+    loading: boolean,
+    emptyText: string,
+    all?: string,
+  ) => (
     <label className="field">
       {label}
       <select value={value} onChange={(e) => set(e.target.value)} disabled={!options?.length}>
@@ -167,15 +199,64 @@ export default function Reports() {
           {(type === 'journal' || type === 'approvals') && (
             <label className="field">
               التاريخ
-              <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} />
+              <input
+                type="date"
+                value={day}
+                max={todayISO()}
+                onChange={(e) => e.target.value && setDay(e.target.value)}
+              />
             </label>
           )}
 
-          {type === 'project' && select('المشروع', pickedProject, setProjectId, projects.data?.map((p) => ({ id: p.id, name: p.name })), projects.loading, 'مفيش مشاريع')}
-          {type === 'period' && select('المشروع', projectId, setProjectId, projects.data?.map((p) => ({ id: p.id, name: p.name })), projects.loading, 'مفيش مشاريع', 'كل المشاريع')}
-          {type === 'advance' && select('العهدة', pickedAdvance, setAdvanceId, advances.data?.map((a) => ({ id: a.id, name: a.holder_name + (a.status === 'closed' ? ' (مقفولة)' : '') })), advances.loading, 'مفيش عهد')}
-          {type === 'contractor' && select('المقاول', pickedContractor, setContractorId, contractors.data ?? undefined, contractors.loading, 'مفيش مقاولين')}
-          {type === 'bank' && select('البنك', pickedBank, setBankId, banks.data?.map((b) => ({ id: b.id, name: b.name })), banks.loading, 'مفيش بنوك')}
+          {type === 'project' &&
+            select(
+              'المشروع',
+              pickedProject,
+              setProjectId,
+              projects.data?.map((p) => ({ id: p.id, name: p.name })),
+              projects.loading,
+              'مفيش مشاريع',
+            )}
+          {type === 'period' &&
+            select(
+              'المشروع',
+              projectId,
+              setProjectId,
+              projects.data?.map((p) => ({ id: p.id, name: p.name })),
+              projects.loading,
+              'مفيش مشاريع',
+              'كل المشاريع',
+            )}
+          {type === 'advance' &&
+            select(
+              'العهدة',
+              pickedAdvance,
+              setAdvanceId,
+              advances.data?.map((a) => ({
+                id: a.id,
+                name: a.holder_name + (a.status === 'closed' ? ' (مقفولة)' : ''),
+              })),
+              advances.loading,
+              'مفيش عهد',
+            )}
+          {type === 'contractor' &&
+            select(
+              'المقاول',
+              pickedContractor,
+              setContractorId,
+              contractors.data ?? undefined,
+              contractors.loading,
+              'مفيش مقاولين',
+            )}
+          {type === 'bank' &&
+            select(
+              'البنك',
+              pickedBank,
+              setBankId,
+              banks.data?.map((b) => ({ id: b.id, name: b.name })),
+              banks.loading,
+              'مفيش بنوك',
+            )}
 
           {type === 'category' && (
             <label className="field">
@@ -214,7 +295,9 @@ export default function Reports() {
               <select value={creatorId} onChange={(e) => setCreatorId(e.target.value)}>
                 <option value="">كل الأسماء</option>
                 {(people.data ?? []).map((u) => (
-                  <option key={u.id} value={u.id}>{u.full_name || 'بدون اسم'}</option>
+                  <option key={u.id} value={u.id}>
+                    {u.full_name || 'بدون اسم'}
+                  </option>
                 ))}
               </select>
             </label>
@@ -228,7 +311,13 @@ export default function Reports() {
               </label>
               <label className="field">
                 إلى تاريخ
-                <input type="date" value={to} min={from || undefined} max={todayISO()} onChange={(e) => setTo(e.target.value)} />
+                <input
+                  type="date"
+                  value={to}
+                  min={from || undefined}
+                  max={todayISO()}
+                  onChange={(e) => setTo(e.target.value)}
+                />
               </label>
             </div>
           )}
@@ -255,7 +344,11 @@ export default function Reports() {
             </fieldset>
           )}
 
-          <button className="btn btn-primary" disabled={!target || !rangeOk} onClick={() => setShown({ key, n: n + 1 })}>
+          <button
+            className="btn btn-primary"
+            disabled={!target || !rangeOk}
+            onClick={() => setShown({ key, n: n + 1 })}
+          >
             عرض التقرير
           </button>
         </section>
@@ -269,18 +362,40 @@ export default function Reports() {
           {visible && type === 'journal' && <Journal key={n} day={day} {...cols} />}
           {visible && type === 'approvals' && <ApprovalsReport key={n} day={day} />}
           {visible && type === 'period' && (
-            <PeriodReport key={n} from={from} to={to} projectId={projectId} projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''} {...cols} />
+            <PeriodReport
+              key={n}
+              from={from}
+              to={to}
+              projectId={projectId}
+              projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''}
+              {...cols}
+            />
           )}
           {visible && type === 'project' && <ProjectReport key={n} id={pickedProject} embedded={cols} />}
           {visible && type === 'category' && <CategoryReport key={n} from={from} to={to} type={kindFilter} />}
           {visible && type === 'budget' && <BudgetReport key={n} mode={budgetMode} />}
           {visible && type === 'advance' && <AdvanceReport key={n} id={pickedAdvance} embedded={cols} />}
           {visible && type === 'contractor' && (
-            <ContractorStatement key={n} id={pickedContractor} name={contractors.data?.find((c) => c.id === pickedContractor)?.name ?? ''} from={from} to={to} />
+            <ContractorStatement
+              key={n}
+              id={pickedContractor}
+              name={contractors.data?.find((c) => c.id === pickedContractor)?.name ?? ''}
+              from={from}
+              to={to}
+            />
           )}
           {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} />}
-          {visible && type === 'bank' && bank && <BankStatement key={n} id={bank.id} name={bank.name} opening={bank.opening_balance} from={from} to={to} />}
-          {visible && type === 'pending' && <PendingReport key={n} status={pendingStatus} creatorId={creatorId} creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''} />}
+          {visible && type === 'bank' && bank && (
+            <BankStatement key={n} id={bank.id} name={bank.name} opening={bank.opening_balance} from={from} to={to} />
+          )}
+          {visible && type === 'pending' && (
+            <PendingReport
+              key={n}
+              status={pendingStatus}
+              creatorId={creatorId}
+              creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''}
+            />
+          )}
         </div>
       </div>
     </div>

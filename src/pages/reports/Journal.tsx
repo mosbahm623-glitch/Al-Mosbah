@@ -12,12 +12,21 @@ import { usePreparedBy } from '../../auth/usePreparedBy'
 import type { ReportColumns } from '../../lib/reportColumns'
 
 const PILL: Record<string, Tone> = {
-  [KIND_LABEL.income]: 'ok', [KIND_LABEL.expense]: 'err', [KIND_LABEL.installment]: 'warn',
-  [KIND_LABEL.return]: 'blue', [KIND_LABEL.due]: 'blue', [KIND_LABEL.payment]: 'blue',
+  [KIND_LABEL.income]: 'ok',
+  [KIND_LABEL.expense]: 'err',
+  [KIND_LABEL.installment]: 'warn',
+  [KIND_LABEL.return]: 'blue',
+  [KIND_LABEL.due]: 'blue',
+  [KIND_LABEL.payment]: 'blue',
 }
 
 /** One day's journal: every approved movement of that day, with totals per kind. Shown inside the reports page. */
-export default function Journal({ day, withContractor, withBank: bankWanted, withNotes }: { day: string } & ReportColumns) {
+export default function Journal({
+  day,
+  withContractor,
+  withBank: bankWanted,
+  withNotes,
+}: { day: string } & ReportColumns) {
   const fetchDay = useCallback(async () => {
     const rows = await fetchMovements({ from: day, to: day })
     return { data: rows, error: rows === null }
@@ -28,7 +37,10 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
   const [exportFailed, setExportFailed] = useState(false)
 
   // oldest first, the way a paper journal is read
-  const rows = useMemo(() => [...(data ?? [])].sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)), [data])
+  const rows = useMemo(
+    () => [...(data ?? [])].sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)),
+    [data],
+  )
   const t = useMemo(() => totalsOfDay(rows), [rows])
   const withBank = bankWanted && rows.some((m) => m.detail)
   const cols = { withContractor, withBank, withNotes }
@@ -47,15 +59,26 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
 
   const section: Section = {
     cols: [
-      { h: 'رقم', kind: 'int' }, { h: 'النوع', pill: (v) => PILL[String(v).split(' (')[0]] }, { h: 'البند' }, { h: 'البيان' }, { h: 'المشروع' },
+      { h: 'رقم', kind: 'int' },
+      { h: 'النوع', pill: (v) => PILL[String(v).split(' (')[0]] },
+      { h: 'البند' },
+      { h: 'البيان' },
+      { h: 'المشروع' },
       ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
       ...(withBank ? [{ h: 'البنك' }] : []),
       ...(withNotes ? [{ h: 'ملاحظات' }] : []),
       { h: 'المبلغ', kind: 'money' as const },
     ],
     rows: rows.map((m) => [
-      m.seq, KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : ''), m.category, m.title, m.project,
-      ...(withContractor ? [m.party] : []), ...(withBank ? [m.detail] : []), ...(withNotes ? [m.notes] : []), m.amount,
+      m.seq,
+      KIND_LABEL[m.kind] + (m.fromAdvance ? ' (من عهدة)' : ''),
+      m.category,
+      m.title,
+      m.project,
+      ...(withContractor ? [m.party] : []),
+      ...(withBank ? [m.detail] : []),
+      ...(withNotes ? [m.notes] : []),
+      m.amount,
     ]),
     footer: [`عدد الحركات: ${t.count}`, ...Array(span).fill(null)],
   }
@@ -86,8 +109,16 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
             <h1>يومية {dateText(day)}</h1>
           </div>
           <dl className="paper-meta">
-            <div><dt>عدد الحركات</dt><dd>{t.count}</dd></div>
-            {preparedBy && <div><dt>أعدّه</dt><dd>{preparedBy}</dd></div>}
+            <div>
+              <dt>عدد الحركات</dt>
+              <dd>{t.count}</dd>
+            </div>
+            {preparedBy && (
+              <div>
+                <dt>أعدّه</dt>
+                <dd>{preparedBy}</dd>
+              </div>
+            )}
           </dl>
         </header>
 
@@ -110,7 +141,9 @@ export default function Journal({ day, withContractor, withBank: bankWanted, wit
             </div>
             <PrintTables sections={[section]} ledger />
             {t.expense !== t.cashExpense && (
-              <p className="muted small">من المصروف {money(t.expense - t.cashExpense)} اتدفع من عهد، فمتحسبش تاني مع دفعات العهد.</p>
+              <p className="muted small">
+                من المصروف {money(t.expense - t.cashExpense)} اتدفع من عهد، فمتحسبش تاني مع دفعات العهد.
+              </p>
             )}
           </>
         )}

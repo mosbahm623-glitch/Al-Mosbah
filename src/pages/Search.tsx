@@ -26,24 +26,36 @@ const STATUS = { pending: 'معلّق', approved: 'مقبول', rejected: 'مر�
 async function search(q: string) {
   const like = `%${clean(q)}%`
   const num = /^#?\d+$/.test(q) ? Number(q.replace('#', '')) : null
-  const byText = supabase.from('entries').select(SELECT).or(`category.ilike.${like},item.ilike.${like},notes.ilike.${like}`).limit(LIMIT).returns<Hit[]>()
+  const byText = supabase
+    .from('entries')
+    .select(SELECT)
+    .or(`category.ilike.${like},item.ilike.${like},notes.ilike.${like}`)
+    .limit(LIMIT)
+    .returns<Hit[]>()
   const [text, projects, contractors, seq] = await Promise.all([
     byText,
     supabase.from('projects').select('id').ilike('name', like).limit(50),
     supabase.from('contractors').select('id').ilike('name', like).limit(50),
-    num !== null && num <= 2147483647 ? supabase.from('entries').select(SELECT).eq('seq', num).returns<Hit[]>() : Promise.resolve({ data: [] as Hit[], error: null }),
+    num !== null && num <= 2147483647
+      ? supabase.from('entries').select(SELECT).eq('seq', num).returns<Hit[]>()
+      : Promise.resolve({ data: [] as Hit[], error: null }),
   ])
   if (text.error || projects.error || contractors.error || seq.error) return { data: null, error: true }
   const projectIds = (projects.data ?? []).map((p) => p.id)
   const contractorIds = (contractors.data ?? []).map((c) => c.id)
   const [byProject, byContractor] = await Promise.all([
-    projectIds.length ? supabase.from('entries').select(SELECT).in('project_id', projectIds).limit(LIMIT).returns<Hit[]>() : Promise.resolve({ data: [] as Hit[], error: null }),
-    contractorIds.length ? supabase.from('entries').select(SELECT).in('contractor_id', contractorIds).limit(LIMIT).returns<Hit[]>() : Promise.resolve({ data: [] as Hit[], error: null }),
+    projectIds.length
+      ? supabase.from('entries').select(SELECT).in('project_id', projectIds).limit(LIMIT).returns<Hit[]>()
+      : Promise.resolve({ data: [] as Hit[], error: null }),
+    contractorIds.length
+      ? supabase.from('entries').select(SELECT).in('contractor_id', contractorIds).limit(LIMIT).returns<Hit[]>()
+      : Promise.resolve({ data: [] as Hit[], error: null }),
   ])
   if (byProject.error || byContractor.error) return { data: null, error: true }
   const merged = new Map<string, Hit>()
   // a number match comes first, then the rest, newest number first
-  for (const h of [...(seq.data ?? []), ...(text.data ?? []), ...(byProject.data ?? []), ...(byContractor.data ?? [])]) merged.set(h.id, h)
+  for (const h of [...(seq.data ?? []), ...(text.data ?? []), ...(byProject.data ?? []), ...(byContractor.data ?? [])])
+    merged.set(h.id, h)
   const seqFirst = (h: Hit) => (h.seq === num ? 1 : 0)
   return { data: [...merged.values()].sort((a, b) => seqFirst(b) - seqFirst(a) || b.seq - a.seq), error: false }
 }
@@ -75,9 +87,18 @@ function SearchView({ q }: { q: string }) {
       <form className="toolbar" onSubmit={submit} role="search">
         <label className="search-box">
           <SearchIcon size={18} aria-hidden="true" />
-          <input type="search" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="مثلاً: 413 أو كهرباء أو اسم مقاول" aria-label="بحث في القيود" autoComplete="off" />
+          <input
+            type="search"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="مثلاً: 413 أو كهرباء أو اسم مقاول"
+            aria-label="بحث في القيود"
+            autoComplete="off"
+          />
         </label>
-        <button className="btn btn-primary" type="submit">بحث</button>
+        <button className="btn btn-primary" type="submit">
+          بحث
+        </button>
       </form>
 
       {failed && <p className="msg msg-error">البحث ما نفعش، جرّب تاني</p>}
@@ -87,7 +108,9 @@ function SearchView({ q }: { q: string }) {
 
       {rows.length > 0 && (
         <section className="panel">
-          <p className="muted small search-count">{rows.length} نتيجة{rows.length >= LIMIT ? ' (أول ' + LIMIT + ' بس، ضيّق البحث)' : ''}</p>
+          <p className="muted small search-count">
+            {rows.length} نتيجة{rows.length >= LIMIT ? ' (أول ' + LIMIT + ' بس، ضيّق البحث)' : ''}
+          </p>
           <div className="table-wrap">
             <table className="table">
               <thead>
@@ -101,25 +124,48 @@ function SearchView({ q }: { q: string }) {
                   <th>المقاول</th>
                   <th>الحالة</th>
                   <th>المبلغ</th>
-                  {canEdit && <th><span className="sr-only">إجراءات</span></th>}
+                  {canEdit && (
+                    <th>
+                      <span className="sr-only">إجراءات</span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((e) => (
                   <tr key={e.id}>
-                    <td className="num"><a href={`#/projects/${e.project_id}`}>{e.seq}</a></td>
+                    <td className="num">
+                      <a href={`#/projects/${e.project_id}`}>{e.seq}</a>
+                    </td>
                     <td className="num">{dateText(e.entry_date)}</td>
-                    <td><a href={`#/projects/${e.project_id}`}>{e.project?.name}</a></td>
-                    <td>{e.kind === 'income' ? 'وارد' : 'مصروف'}{e.advance_id && <span className="muted small"> من عهدة</span>}</td>
+                    <td>
+                      <a href={`#/projects/${e.project_id}`}>{e.project?.name}</a>
+                    </td>
+                    <td>
+                      {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                      {e.advance_id && <span className="muted small"> من عهدة</span>}
+                    </td>
                     <td>{e.category}</td>
                     <td className="strong">{e.item}</td>
                     <td>{e.contractor?.name}</td>
-                    <td><span className={`chip ${e.status === 'approved' ? 'chip-neutral' : e.status === 'pending' ? 'chip-warn' : 'chip-err'}`}>{STATUS[e.status]}</span></td>
+                    <td>
+                      <span
+                        className={`chip ${e.status === 'approved' ? 'chip-neutral' : e.status === 'pending' ? 'chip-warn' : 'chip-err'}`}
+                      >
+                        {STATUS[e.status]}
+                      </span>
+                    </td>
                     <td className="num strong">{money(e.amount)}</td>
                     {canEdit && (
                       <td>
                         {(isAdmin || e.status !== 'approved') && (
-                          <button type="button" className="icon-btn" aria-label={`تعديل أو مسح القيد ${e.seq}`} title="تعديل / مسح" onClick={() => setEditing(e)}>
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            aria-label={`تعديل أو مسح القيد ${e.seq}`}
+                            title="تعديل / مسح"
+                            onClick={() => setEditing(e)}
+                          >
                             <Pencil size={17} />
                           </button>
                         )}
@@ -134,7 +180,13 @@ function SearchView({ q }: { q: string }) {
       )}
 
       {editing && (
-        <EntryDialog projectId={editing.project_id} projectName={editing.project?.name ?? ''} entry={editing} onClose={() => setEditing(null)} onSaved={reload} />
+        <EntryDialog
+          projectId={editing.project_id}
+          projectName={editing.project?.name ?? ''}
+          entry={editing}
+          onClose={() => setEditing(null)}
+          onSaved={reload}
+        />
       )}
     </div>
   )

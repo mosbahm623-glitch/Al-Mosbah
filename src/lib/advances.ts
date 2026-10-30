@@ -15,7 +15,8 @@ export type Installment = { id: string; amount: number; paid_on: string }
 export type AdvanceReturn = { id: string; amount: number; returned_on: string; notes: string | null }
 
 /** What the holder still has: received − spent − returned (negative = the company owes him). */
-export const advanceBalance = (a: Pick<AdvanceSummary, 'given' | 'spent' | 'returned'>) => a.given - a.spent - a.returned
+export const advanceBalance = (a: Pick<AdvanceSummary, 'given' | 'spent' | 'returned'>) =>
+  a.given - a.spent - a.returned
 
 export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries')
 

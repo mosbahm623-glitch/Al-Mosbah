@@ -41,17 +41,45 @@ export default function DeletedList() {
                     <span className="dot" />
                     {e.kind === 'income' ? 'وارد' : 'مصروف'}
                   </span>
-                  <span className="muted small">قيد #{e.seq} · {dateText(e.entry_date)}</span>
+                  <span className="muted small">
+                    قيد #{e.seq} · {dateText(e.entry_date)}
+                  </span>
                 </div>
                 <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
                 <p className="appr-project">{e.project}</p>
                 <dl className="appr-meta">
-                  {e.contractor && <div><dt>المقاول</dt><dd>{e.contractor}</dd></div>}
-                  {e.notes && <div><dt>ملاحظات</dt><dd>{e.notes}</dd></div>}
-                  <div><dt>سجّله</dt><dd>{e.created_by_name ?? '—'}</dd></div>
-                  <div><dt>اتمسح بواسطة</dt><dd>{e.deleted_by_name ?? '—'} · {when(e.deleted_at)}</dd></div>
-                  {e.delete_reason && <div><dt>السبب</dt><dd>{e.delete_reason}</dd></div>}
-                  <div><dt>كان</dt><dd>{STATUS[e.status_before_delete ?? ''] ?? '—'}</dd></div>
+                  {e.contractor && (
+                    <div>
+                      <dt>المقاول</dt>
+                      <dd>{e.contractor}</dd>
+                    </div>
+                  )}
+                  {e.notes && (
+                    <div>
+                      <dt>ملاحظات</dt>
+                      <dd>{e.notes}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>سجّله</dt>
+                    <dd>{e.created_by_name ?? '—'}</dd>
+                  </div>
+                  <div>
+                    <dt>اتمسح بواسطة</dt>
+                    <dd>
+                      {e.deleted_by_name ?? '—'} · {when(e.deleted_at)}
+                    </dd>
+                  </div>
+                  {e.delete_reason && (
+                    <div>
+                      <dt>السبب</dt>
+                      <dd>{e.delete_reason}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>كان</dt>
+                    <dd>{STATUS[e.status_before_delete ?? ''] ?? '—'}</dd>
+                  </div>
                 </dl>
               </div>
               <div className="appr-side">
@@ -61,7 +89,12 @@ export default function DeletedList() {
                   <small>ج.م</small>
                 </div>
                 <div className="appr-actions">
-                  <button className="btn btn-icon" disabled={busy === e.id} onClick={() => void restore(e.id)} aria-label={`استرجاع القيد ${e.seq}`}>
+                  <button
+                    className="btn btn-icon"
+                    disabled={busy === e.id}
+                    onClick={() => void restore(e.id)}
+                    aria-label={`استرجاع القيد ${e.seq}`}
+                  >
                     <RotateCcw size={17} aria-hidden="true" />
                     استرجاع
                   </button>

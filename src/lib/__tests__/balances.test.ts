@@ -5,8 +5,18 @@ import { bankBalance, byProject, type BankMovement } from '../banks'
 import { dateText, money } from '../format'
 
 const move = (over: Partial<BankMovement>): BankMovement => ({
-  id: '1', seq: 1, kind: 'expense', entry_date: '2026-10-01', category: 'c', item: null, notes: null,
-  amount: 100, project_id: 'p1', project_name: 'فيلا', contractor: null, ...over,
+  id: '1',
+  seq: 1,
+  kind: 'expense',
+  entry_date: '2026-10-01',
+  category: 'c',
+  item: null,
+  notes: null,
+  amount: 100,
+  project_id: 'p1',
+  project_name: 'فيلا',
+  contractor: null,
+  ...over,
 })
 
 describe('advanceBalance', () => {

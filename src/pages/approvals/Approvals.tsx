@@ -23,7 +23,13 @@ export default function Approvals() {
   const tabs = isAdmin ? TABS : TABS.filter((t) => t.value !== 'deleted')
   const other = tab === 'decided' || tab === 'deleted'
   const list = useAsync<PendingEntry[]>(
-    useCallback(() => (tab === 'decided' || tab === 'deleted' ? Promise.resolve({ data: [] as PendingEntry[], error: null }) : fetchByStatus(tab)), [tab]),
+    useCallback(
+      () =>
+        tab === 'decided' || tab === 'deleted'
+          ? Promise.resolve({ data: [] as PendingEntry[], error: null })
+          : fetchByStatus(tab),
+      [tab],
+    ),
   )
   const [day, setDay] = useState(todayISO)
   const [busy, setBusy] = useState(false)
@@ -33,10 +39,14 @@ export default function Approvals() {
   async function act(items: PendingEntry[], status: 'approved' | 'rejected') {
     setBusy(true)
     setError(null)
-    const r = await decide(items.map((i) => ({ id: i.id, rev: i.rev })), status)
+    const r = await decide(
+      items.map((i) => ({ id: i.id, rev: i.rev })),
+      status,
+    )
     setBusy(false)
     if (r.failed) setError('ما اتنفّذش، جرّب تاني')
-    else if (r.skipped > 0) setError(`${r.skipped} قيد اتغيّر من حد تاني من وقت ما فتحت الصفحة، اتحدّثت القايمة، راجعه وبعدين وافق`)
+    else if (r.skipped > 0)
+      setError(`${r.skipped} قيد اتغيّر من حد تاني من وقت ما فتحت الصفحة، اتحدّثت القايمة، راجعه وبعدين وافق`)
     if (r.done > 0) notifyApprovalsChanged()
     list.reload()
   }
@@ -61,7 +71,12 @@ export default function Approvals() {
         {tab === 'deleted' ? null : tab === 'decided' ? (
           <label className="field toolbar-note">
             اليوم
-            <input type="date" value={day} max={todayISO()} onChange={(e) => e.target.value && setDay(e.target.value)} />
+            <input
+              type="date"
+              value={day}
+              max={todayISO()}
+              onChange={(e) => e.target.value && setDay(e.target.value)}
+            />
           </label>
         ) : (
           <span className="toolbar-note muted small">{rows.length} قيد</span>
@@ -74,7 +89,9 @@ export default function Approvals() {
       {error && <p className="msg msg-error">{error}</p>}
       {!other && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
       {!other && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
-      {!other && list.data && rows.length === 0 && <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>}
+      {!other && list.data && rows.length === 0 && (
+        <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>
+      )}
 
       {rows.length > 0 && (
         <div className="appr-list">
@@ -87,15 +104,35 @@ export default function Approvals() {
                     {e.kind === 'income' ? 'وارد' : 'مصروف'}
                   </span>
                   {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
-                  <span className="muted small">قيد #{e.seq} · {dateText(e.entry_date)}</span>
+                  <span className="muted small">
+                    قيد #{e.seq} · {dateText(e.entry_date)}
+                  </span>
                 </div>
                 <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
                 <p className="appr-project">{e.project?.name}</p>
                 <dl className="appr-meta">
-                  {e.contractor && <div><dt>المقاول</dt><dd>{e.contractor.name}</dd></div>}
-                  {e.bank && <div><dt>البنك</dt><dd>{e.bank.name}</dd></div>}
-                  {e.notes && <div><dt>ملاحظات</dt><dd>{e.notes}</dd></div>}
-                  <div><dt>سجّله</dt><dd>{e.creator?.full_name ?? '—'}</dd></div>
+                  {e.contractor && (
+                    <div>
+                      <dt>المقاول</dt>
+                      <dd>{e.contractor.name}</dd>
+                    </div>
+                  )}
+                  {e.bank && (
+                    <div>
+                      <dt>البنك</dt>
+                      <dd>{e.bank.name}</dd>
+                    </div>
+                  )}
+                  {e.notes && (
+                    <div>
+                      <dt>ملاحظات</dt>
+                      <dd>{e.notes}</dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>سجّله</dt>
+                    <dd>{e.creator?.full_name ?? '—'}</dd>
+                  </div>
                 </dl>
               </div>
               <div className="appr-side">
@@ -105,12 +142,22 @@ export default function Approvals() {
                   <small>ج.م</small>
                 </div>
                 <div className="appr-actions">
-                  <button className="btn btn-icon" disabled={busy} onClick={() => void act([e], 'approved')} aria-label={`موافقة على القيد ${e.seq}`}>
+                  <button
+                    className="btn btn-icon"
+                    disabled={busy}
+                    onClick={() => void act([e], 'approved')}
+                    aria-label={`موافقة على القيد ${e.seq}`}
+                  >
                     <Check size={17} aria-hidden="true" />
                     موافقة
                   </button>
                   {tab === 'pending' && (
-                    <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void act([e], 'rejected')} aria-label={`رفض القيد ${e.seq}`}>
+                    <button
+                      className="btn btn-ghost btn-icon"
+                      disabled={busy}
+                      onClick={() => void act([e], 'rejected')}
+                      aria-label={`رفض القيد ${e.seq}`}
+                    >
                       <X size={17} aria-hidden="true" />
                       رفض
                     </button>

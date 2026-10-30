@@ -16,7 +16,13 @@ type Props = {
 }
 
 const CONFIG = {
-  installment: { table: 'advance_installments', dateColumn: 'paid_on', add: 'دفعة جديدة', edit: 'تعديل الدفعة', notes: false },
+  installment: {
+    table: 'advance_installments',
+    dateColumn: 'paid_on',
+    add: 'دفعة جديدة',
+    edit: 'تعديل الدفعة',
+    notes: false,
+  },
   return: { table: 'advance_returns', dateColumn: 'returned_on', add: 'رد عهدة', edit: 'تعديل المرتجع', notes: true },
 } as const
 
@@ -37,7 +43,10 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
     setError(null)
     const values = { amount: value, [cfg.dateColumn]: date, ...(cfg.notes ? { notes: notes.trim() || null } : {}) }
     const { error: err } = row
-      ? await supabase.from(cfg.table).update(values as never).eq('id', row.id)
+      ? await supabase
+          .from(cfg.table)
+          .update(values as never)
+          .eq('id', row.id)
       : await supabase.from(cfg.table).insert({ ...values, advance_id: advanceId } as never)
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')

@@ -2,10 +2,20 @@ import type { Entry, ProjectSummary } from './projects'
 import { TYPE_LABEL, todayISO, todayText } from './format'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
-type Options = { project: ProjectSummary; entries: Entry[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
+type Options = {
+  project: ProjectSummary
+  entries: Entry[]
+  withContractor: boolean
+  withBank: boolean
+  withNotes: boolean
+}
 
 const sheetName = (name: string, used: Set<string>) => {
-  const base = name.replace(/[\\/*?:[\]]/g, ' ').trim().slice(0, 28) || 'بند'
+  const base =
+    name
+      .replace(/[\\/*?:[\]]/g, ' ')
+      .trim()
+      .slice(0, 28) || 'بند'
   let out = base
   for (let i = 2; used.has(out); i++) out = `${base} ${i}`
   used.add(out)
@@ -13,7 +23,13 @@ const sheetName = (name: string, used: Set<string>) => {
 }
 
 /** Builds the workbook in the browser and downloads it. exceljs is loaded only when this runs. */
-export async function exportProjectExcel({ project, entries, withContractor, withBank: bankWanted, withNotes }: Options) {
+export async function exportProjectExcel({
+  project,
+  entries,
+  withContractor,
+  withBank: bankWanted,
+  withNotes,
+}: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'المصباح'
@@ -28,7 +44,14 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
 
   const setup = (ws: import('exceljs').Worksheet, headerRow: number) => {
     ws.views = [{ rightToLeft: true, state: 'frozen', ySplit: headerRow }]
-    ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: `${headerRow}:${headerRow}` }
+    ws.pageSetup = {
+      orientation: 'landscape',
+      paperSize: 9,
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 0,
+      printTitlesRow: `${headerRow}:${headerRow}`,
+    }
     ws.headerFooter.oddFooter = '&Cصفحة &P من &N'
   }
 
@@ -73,12 +96,19 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
     })
   }
   const last = all.rowCount
-  const totalRow = all.addRow(Array(amountCol - 1).fill('').concat([null]))
+  const totalRow = all.addRow(
+    Array(amountCol - 1)
+      .fill('')
+      .concat([null]),
+  )
   totalRow.getCell(1).value = 'الإجمالي (الصافي = وارد − مصروف)'
   all.mergeCells(totalRow.number, 1, totalRow.number, amountCol - 1)
   const L = all.getColumn(amountCol).letter
   const net = incomeTotal - expenseTotal
-  totalRow.getCell(amountCol).value = { formula: `SUMIF(C2:C${last},"وارد",${L}2:${L}${last})-SUMIF(C2:C${last},"مصروف",${L}2:${L}${last})`, result: net }
+  totalRow.getCell(amountCol).value = {
+    formula: `SUMIF(C2:C${last},"وارد",${L}2:${L}${last})-SUMIF(C2:C${last},"مصروف",${L}2:${L}${last})`,
+    result: net,
+  }
   totalRow.getCell(amountCol).numFmt = MONEY
   totalRow.eachCell((c) => {
     c.font = { bold: true, color: { argb: INK } }
@@ -108,7 +138,15 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
     header(ws.addRow(c2.map((c) => c.h)))
     const amt = c2.length
     for (const e of [...rows].sort((a, b) => a.seq - b.seq)) {
-      const r = ws.addRow([e.seq, toDate(e.entry_date), e.item ?? '', ...(withContractor ? [e.contractor?.name ?? ''] : []), ...(withBank ? [e.bank?.name ?? ''] : []), ...(withNotes ? [e.notes ?? ''] : []), e.amount])
+      const r = ws.addRow([
+        e.seq,
+        toDate(e.entry_date),
+        e.item ?? '',
+        ...(withContractor ? [e.contractor?.name ?? ''] : []),
+        ...(withBank ? [e.bank?.name ?? ''] : []),
+        ...(withNotes ? [e.notes ?? ''] : []),
+        e.amount,
+      ])
       r.getCell(2).numFmt = 'dd-mm-yyyy'
       r.getCell(amt).numFmt = MONEY
       r.eachCell((c) => {
@@ -160,9 +198,17 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   })
   const first = 3
   const rowOf = (label: string) => first + info.findIndex(([k]) => k === label)
-  const bal = sum.addRow(['الرصيد (وارد − مصروف)', { formula: `B${rowOf('إجمالي الوارد')}-B${rowOf('إجمالي المصروف')}`, result: net }])
+  const bal = sum.addRow([
+    'الرصيد (وارد − مصروف)',
+    { formula: `B${rowOf('إجمالي الوارد')}-B${rowOf('إجمالي المصروف')}`, result: net },
+  ])
   bal.getCell(2).numFmt = MONEY
-  const pct = sum.addRow(['نسبة استهلاك الميزانية', project.budget > 0 ? { formula: `B${rowOf('إجمالي المصروف')}/B${rowOf('الميزانية')}`, result: expenseTotal / project.budget } : '—'])
+  const pct = sum.addRow([
+    'نسبة استهلاك الميزانية',
+    project.budget > 0
+      ? { formula: `B${rowOf('إجمالي المصروف')}/B${rowOf('الميزانية')}`, result: expenseTotal / project.budget }
+      : '—',
+  ])
   if (project.budget > 0) pct.getCell(2).numFmt = '0%'
   for (const r of [bal, pct]) {
     r.font = { bold: true }
@@ -191,7 +237,12 @@ export async function exportProjectExcel({ project, entries, withContractor, wit
   }
   if (catTotals.length) {
     const end = sum.rowCount
-    const t = sum.addRow(['الإجمالي', { formula: `SUM(B${start}:B${end})`, result: expenseTotal }, { formula: `SUM(C${start}:C${end})`, result: expenses.length }, ''])
+    const t = sum.addRow([
+      'الإجمالي',
+      { formula: `SUM(B${start}:B${end})`, result: expenseTotal },
+      { formula: `SUM(C${start}:C${end})`, result: expenses.length },
+      '',
+    ])
     t.getCell(2).numFmt = MONEY
     t.eachCell((c) => {
       c.font = { bold: true }

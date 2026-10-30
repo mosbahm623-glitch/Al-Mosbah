@@ -2,8 +2,21 @@ import { describe, expect, it } from 'vitest'
 import { direction, shiftDay, sortMovements, totalsOfDay, type Movement } from '../movements'
 
 const m = (over: Partial<Movement>): Movement => ({
-  key: 'k', kind: 'expense', date: '2026-10-28', at: '2026-10-28T10:00:00Z', amount: 100, category: null, title: 't', project: null,
-  party: null, detail: null, notes: null, seq: null, fromAdvance: false, status: 'approved', ...over,
+  key: 'k',
+  kind: 'expense',
+  date: '2026-10-28',
+  at: '2026-10-28T10:00:00Z',
+  amount: 100,
+  category: null,
+  title: 't',
+  project: null,
+  party: null,
+  detail: null,
+  notes: null,
+  seq: null,
+  fromAdvance: false,
+  status: 'approved',
+  ...over,
 })
 
 describe('totalsOfDay', () => {
@@ -16,7 +29,15 @@ describe('totalsOfDay', () => {
       m({ kind: 'due', amount: 120 }),
       m({ kind: 'return', amount: 20 }),
     ])
-    expect(t).toMatchObject({ income: 1000, expense: 250.5, installment: 300, payment: 80, due: 120, return: 20, count: 6 })
+    expect(t).toMatchObject({
+      income: 1000,
+      expense: 250.5,
+      installment: 300,
+      payment: 80,
+      due: 120,
+      return: 20,
+      count: 6,
+    })
   })
   it('keeps expenses paid from a custody out of the cash expense', () => {
     const t = totalsOfDay([m({ amount: 100 }), m({ amount: 40, fromAdvance: true })])

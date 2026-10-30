@@ -8,10 +8,19 @@ import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 
 type Decided = {
-  id: string; seq: number; kind: 'income' | 'expense'; category: string; item: string | null; amount: number
-  entry_date: string; status: 'approved' | 'rejected'; decided_at: string
-  project: { name: string } | null; contractor: { name: string } | null
-  creator: { full_name: string | null } | null; decider: { full_name: string | null } | null
+  id: string
+  seq: number
+  kind: 'income' | 'expense'
+  category: string
+  item: string | null
+  amount: number
+  entry_date: string
+  status: 'approved' | 'rejected'
+  decided_at: string
+  project: { name: string } | null
+  contractor: { name: string } | null
+  creator: { full_name: string | null } | null
+  decider: { full_name: string | null } | null
 }
 
 const COLUMNS =

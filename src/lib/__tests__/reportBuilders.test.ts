@@ -3,7 +3,14 @@ import type { ProjectSummary } from '../projects'
 import { budgetRows, categoryTotals, inRange, runLedger } from '../reportBuilders'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
-  id: '1', name: 'p', budget: 1000, status: 'active', type: 'finishing', income: 0, expenses: 0, ...over,
+  id: '1',
+  name: 'p',
+  budget: 1000,
+  status: 'active',
+  type: 'finishing',
+  income: 0,
+  expenses: 0,
+  ...over,
 })
 
 describe('categoryTotals', () => {
@@ -19,7 +26,12 @@ describe('categoryTotals', () => {
     ])
   })
   it('has no floating point noise and handles an empty list', () => {
-    expect(categoryTotals([{ category: 'a', amount: 0.1 }, { category: 'a', amount: 0.2 }])[0].total).toBe(0.3)
+    expect(
+      categoryTotals([
+        { category: 'a', amount: 0.1 },
+        { category: 'a', amount: 0.2 },
+      ])[0].total,
+    ).toBe(0.3)
     expect(categoryTotals([])).toEqual([])
   })
 })
@@ -64,7 +76,17 @@ describe('runLedger', () => {
     expect(l.closing).toBe(1120)
   })
   it('is exact with fractions', () => {
-    expect(runLedger(0, [{ date: 'a', delta: 0.1 }, { date: 'b', delta: 0.2 }], '', '').closing).toBe(0.3)
+    expect(
+      runLedger(
+        0,
+        [
+          { date: 'a', delta: 0.1 },
+          { date: 'b', delta: 0.2 },
+        ],
+        '',
+        '',
+      ).closing,
+    ).toBe(0.3)
   })
 })
 

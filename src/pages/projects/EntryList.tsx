@@ -28,7 +28,9 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   // chips: total spent per بند (expenses only), biggest first
   const chips = useMemo(() => {
     const totals = new Map<string, number>()
-    for (const e of entries) if (e.kind === 'expense' && e.status === 'approved') totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
+    for (const e of entries)
+      if (e.kind === 'expense' && e.status === 'approved')
+        totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
   }, [entries])
   const expenseTotal = chips.reduce((s, [, v]) => s + v, 0)
@@ -45,7 +47,12 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
     <>
       {chips.length > 0 && (
         <div className="chips-row" role="group" aria-label="تصفية حسب البند">
-          <button type="button" className={`cat-chip ${category === null ? 'cat-chip-on' : ''}`} aria-pressed={category === null} onClick={() => setCategory(null)}>
+          <button
+            type="button"
+            className={`cat-chip ${category === null ? 'cat-chip-on' : ''}`}
+            aria-pressed={category === null}
+            onClick={() => setCategory(null)}
+          >
             الكل · {money(expenseTotal)}
           </button>
           {chips.map(([name, total]) => (
@@ -86,7 +93,11 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                   <th>سجّله</th>
                   <th>ملاحظات</th>
                   <th>المبلغ</th>
-                  {canEdit && <th><span className="sr-only">إجراءات</span></th>}
+                  {canEdit && (
+                    <th>
+                      <span className="sr-only">إجراءات</span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -101,11 +112,33 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       </span>
                     </td>
                     <td>{e.category}</td>
-                    <td className="strong">{e.item}
-                      {e.advance_id && <> <span className="chip chip-neutral">من عهدة</span></>}
-                      {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
-                      {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
-                      {e.status === 'deleted' && <> <span className="chip chip-neutral">محذوف</span>{e.deleteReason && <span className="small"> · السبب: {e.deleteReason}</span>}</>}
+                    <td className="strong">
+                      {e.item}
+                      {e.advance_id && (
+                        <>
+                          {' '}
+                          <span className="chip chip-neutral">من عهدة</span>
+                        </>
+                      )}
+                      {e.status === 'pending' && (
+                        <>
+                          {' '}
+                          <span className="chip chip-warn">قيد الموافقة</span>
+                        </>
+                      )}
+                      {e.status === 'rejected' && (
+                        <>
+                          {' '}
+                          <span className="chip chip-err">مرفوض</span>
+                        </>
+                      )}
+                      {e.status === 'deleted' && (
+                        <>
+                          {' '}
+                          <span className="chip chip-neutral">محذوف</span>
+                          {e.deleteReason && <span className="small"> · السبب: {e.deleteReason}</span>}
+                        </>
+                      )}
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.bank?.name}</td>
@@ -117,17 +150,28 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     </td>
                     {canEdit && (
                       <td>
-                        {e.status === 'deleted' ? (
-                          isAdmin && (
-                            <button type="button" className="icon-btn" aria-label={`استرجاع القيد ${e.seq}`} title="استرجاع" onClick={() => void restore(e.id)}>
-                              <RotateCcw size={17} />
-                            </button>
-                          )
-                        ) : (isStaff || e.status !== 'approved') && (
-                          <button type="button" className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => onEdit(e)}>
-                            <Pencil size={17} />
-                          </button>
-                        )}
+                        {e.status === 'deleted'
+                          ? isAdmin && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                aria-label={`استرجاع القيد ${e.seq}`}
+                                title="استرجاع"
+                                onClick={() => void restore(e.id)}
+                              >
+                                <RotateCcw size={17} />
+                              </button>
+                            )
+                          : (isStaff || e.status !== 'approved') && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                aria-label={`تعديل القيد ${e.seq}`}
+                                onClick={() => onEdit(e)}
+                              >
+                                <Pencil size={17} />
+                              </button>
+                            )}
                       </td>
                     )}
                   </tr>

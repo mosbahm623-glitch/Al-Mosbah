@@ -82,7 +82,16 @@ export default function Layout({ children }: { children: ReactNode }) {
         </button>
         <a className="brandmark" href="#/dashboard">
           <span className="logo" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z" />
             </svg>
           </span>
@@ -126,7 +135,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-          <a className="top-btn bell" href="#/notifications" aria-label={unread > 0 ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}>
+          <a
+            className="top-btn bell"
+            href="#/notifications"
+            aria-label={unread > 0 ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}
+          >
             <Bell size={20} />
             {unread > 0 && <span className="bell-badge">{unread > 99 ? '99+' : unread}</span>}
           </a>
@@ -150,7 +163,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside id="sidebar" className="sidebar" aria-label="القائمة الرئيسية" inert={!open}>
         <nav className="sidebar-nav">
           {NAV.map((group, i) => {
-            const items = group.items.filter((it) => (it.ownerOnly ? isOwner : it.adminOnly ? isAdmin : it.staffOnly ? isStaff : !it.module || can(it.module)))
+            const items = group.items.filter((it) =>
+              it.ownerOnly ? isOwner : it.adminOnly ? isAdmin : it.staffOnly ? isStaff : !it.module || can(it.module),
+            )
             if (items.length === 0) return null
             return (
               <div className="nav-group" key={i}>
@@ -158,17 +173,21 @@ export default function Layout({ children }: { children: ReactNode }) {
                 {items.map(({ path, label, icon: Icon }) => {
                   const active = route === path || route.startsWith(`${path}/`)
                   return (
-                  <a
-                    key={path}
-                    href={`#/${path}`}
-                    className={`nav-link ${active ? 'nav-active' : ''}`}
-                    aria-current={active ? 'page' : undefined}
-                    onClick={onNavigate}
-                  >
-                    <Icon size={19} aria-hidden="true" />
-                    <span>{label}</span>
-                    {path === 'approvals' && pending > 0 && <span className="nav-badge" aria-label={`${pending} قيد مستني الموافقة`}>{pending}</span>}
-                  </a>
+                    <a
+                      key={path}
+                      href={`#/${path}`}
+                      className={`nav-link ${active ? 'nav-active' : ''}`}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={onNavigate}
+                    >
+                      <Icon size={19} aria-hidden="true" />
+                      <span>{label}</span>
+                      {path === 'approvals' && pending > 0 && (
+                        <span className="nav-badge" aria-label={`${pending} قيد مستني الموافقة`}>
+                          {pending}
+                        </span>
+                      )}
+                    </a>
                   )
                 })}
               </div>

@@ -118,7 +118,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: profile?.role === 'admin',
       isOwner: profile?.role === 'owner',
       isStaff: profile?.role === 'admin' || profile?.role === 'owner',
-      can: (module, level = 'view') => allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
+      can: (module, level = 'view') =>
+        allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return error ? translateAuthError(error.message) : null
@@ -143,7 +144,8 @@ export function useAuth() {
 
 function translateAuthError(message: string): string {
   const m = message.toLowerCase()
-  if (m.includes('email address') && m.includes('invalid')) return 'الإيميل ده مش مقبول، استخدم إيميل حقيقي بيستقبل رسائل (Gmail مثلاً)'
+  if (m.includes('email address') && m.includes('invalid'))
+    return 'الإيميل ده مش مقبول، استخدم إيميل حقيقي بيستقبل رسائل (Gmail مثلاً)'
   if (m.includes('invalid login')) return 'الإيميل أو كلمة السر غلط'
   if (m.includes('email not confirmed')) return 'لازم تأكد الإيميل الأول من الرسالة اللي وصلتك'
   if (m.includes('already registered')) return 'الإيميل ده مسجّل قبل كده'

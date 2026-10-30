@@ -6,7 +6,11 @@ import { NEAR_LIMIT, budgetRows, type BudgetMode } from '../../lib/reportBuilder
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 
-const TITLE: Record<BudgetMode, string> = { all: 'متابعة الميزانيات', near: 'مشاريع قربت من الميزانية', over: 'مشاريع تجاوزت الميزانية' }
+const TITLE: Record<BudgetMode, string> = {
+  all: 'متابعة الميزانيات',
+  near: 'مشاريع قربت من الميزانية',
+  over: 'مشاريع تجاوزت الميزانية',
+}
 
 /** Budget against spending per project, most used first. */
 export default function BudgetReport({ mode }: { mode: BudgetMode }) {
@@ -50,7 +54,15 @@ export default function BudgetReport({ mode }: { mode: BudgetMode }) {
             r.remaining,
             `${r.percent}%`,
           ]),
-          footer: ['الإجمالي', null, null, budget, spent, (toCents(budget) - toCents(spent)) / 100, budget > 0 ? `${Math.round((spent / budget) * 100)}%` : null],
+          footer: [
+            'الإجمالي',
+            null,
+            null,
+            budget,
+            spent,
+            (toCents(budget) - toCents(spent)) / 100,
+            budget > 0 ? `${Math.round((spent / budget) * 100)}%` : null,
+          ],
           empty: mode === 'all' ? 'مفيش مشاريع ليها ميزانية.' : 'مفيش مشاريع بالحالة دي.',
         },
       ]}

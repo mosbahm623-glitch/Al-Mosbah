@@ -31,7 +31,8 @@ export function useProjectData(id: string) {
   const reloadDeleted = deleted.reload
 
   const all = useMemo(
-    () => (entries.data ? [...entries.data, ...(deleted.data ?? []).map(asEntry)].sort((a, b) => b.seq - a.seq) : undefined),
+    () =>
+      entries.data ? [...entries.data, ...(deleted.data ?? []).map(asEntry)].sort((a, b) => b.seq - a.seq) : undefined,
     [entries.data, deleted.data],
   )
 

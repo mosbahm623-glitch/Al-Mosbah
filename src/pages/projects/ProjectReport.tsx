@@ -11,7 +11,6 @@ import type { Section } from '../../lib/tableTypes'
 import type { ReportColumns } from '../../lib/reportColumns'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
-
 type Group = { name: string; rows: Entry[]; total: number }
 
 /** `embedded`: shown inside the reports page, which owns the column choices and the back navigation. */
@@ -114,24 +113,24 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
       <div className="report-bar no-print">
         {!embedded && (
           <>
-        <a className="btn btn-ghost btn-icon" href={`#/projects/${id}`}>
-          <ArrowRight size={18} aria-hidden="true" />
-          رجوع للمشروع
-        </a>
-        <label className="check">
-          <input type="checkbox" checked={withContractor} onChange={(e) => setWithContractor(e.target.checked)} />
-          المقاول
-        </label>
-        {hasBank && (
-          <label className="check">
-            <input type="checkbox" checked={bankWanted} onChange={(e) => setBankWanted(e.target.checked)} />
-            البنك
-          </label>
-        )}
-        <label className="check">
-          <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
-          الملاحظات
-        </label>
+            <a className="btn btn-ghost btn-icon" href={`#/projects/${id}`}>
+              <ArrowRight size={18} aria-hidden="true" />
+              رجوع للمشروع
+            </a>
+            <label className="check">
+              <input type="checkbox" checked={withContractor} onChange={(e) => setWithContractor(e.target.checked)} />
+              المقاول
+            </label>
+            {hasBank && (
+              <label className="check">
+                <input type="checkbox" checked={bankWanted} onChange={(e) => setBankWanted(e.target.checked)} />
+                البنك
+              </label>
+            )}
+            <label className="check">
+              <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
+              الملاحظات
+            </label>
           </>
         )}
         <div className="head-actions">
@@ -154,10 +153,24 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
             <h1>تقرير مشروع: {project.name}</h1>
           </div>
           <dl className="paper-meta">
-            <div><dt>النوع</dt><dd>{TYPE_LABEL[project.type]}</dd></div>
-            <div><dt>الحالة</dt><dd>{project.status === 'active' ? 'نشط' : 'مقفول'}</dd></div>
-            <div><dt>تاريخ التقرير</dt><dd>{today}</dd></div>
-            {preparedBy && <div><dt>أعدّه</dt><dd>{preparedBy}</dd></div>}
+            <div>
+              <dt>النوع</dt>
+              <dd>{TYPE_LABEL[project.type]}</dd>
+            </div>
+            <div>
+              <dt>الحالة</dt>
+              <dd>{project.status === 'active' ? 'نشط' : 'مقفول'}</dd>
+            </div>
+            <div>
+              <dt>تاريخ التقرير</dt>
+              <dd>{today}</dd>
+            </div>
+            {preparedBy && (
+              <div>
+                <dt>أعدّه</dt>
+                <dd>{preparedBy}</dd>
+              </div>
+            )}
           </dl>
         </header>
 
@@ -167,19 +180,34 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
             { label: 'الوارد', value: money(project.income), tone: 'ok' },
             { label: 'المصروف', value: money(project.expenses), tone: 'err' },
             { label: 'الرصيد', value: money(balance), tone: 'neutral', neg: balance < 0 },
-            { label: 'استهلاك الميزانية', value: project.budget > 0 ? `${percentOf(project)}%` : '—', tone: 'warn', neg: isOver(project) },
+            {
+              label: 'استهلاك الميزانية',
+              value: project.budget > 0 ? `${percentOf(project)}%` : '—',
+              tone: 'warn',
+              neg: isOver(project),
+            },
           ]}
         />
 
         <div className="screen-only">
-          {incomeSections.length + groupSections.length === 0 ? <p className="muted">مفيش قيود.</p> : [...incomeSections, ...groupSections].map((g) => <DataGrid key={g.heading} section={g} />)}
-          {expenseGroups.length > 0 && <p className="grid-total">إجمالي المصروفات: <b>{money(project.expenses)}</b></p>}
+          {incomeSections.length + groupSections.length === 0 ? (
+            <p className="muted">مفيش قيود.</p>
+          ) : (
+            [...incomeSections, ...groupSections].map((g) => <DataGrid key={g.heading} section={g} />)
+          )}
+          {expenseGroups.length > 0 && (
+            <p className="grid-total">
+              إجمالي المصروفات: <b>{money(project.expenses)}</b>
+            </p>
+          )}
         </div>
 
         <PrintTables sections={incomeSections} />
         {expenseGroups.length > 0 && (
           <>
-            <div className="print-only"><h2>المصروفات حسب البند</h2></div>
+            <div className="print-only">
+              <h2>المصروفات حسب البند</h2>
+            </div>
             <PrintTables sections={groupSections.map((g) => ({ ...g, bar: true }))} />
             <div className="print-only">
               <table className="paper-table grand">
@@ -193,11 +221,18 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
             </div>
           </>
         )}
-        {expenseGroups.length === 0 && <div className="print-only"><h2>المصروفات حسب البند</h2><p className="muted">مفيش مصروفات.</p></div>}
+        {expenseGroups.length === 0 && (
+          <div className="print-only">
+            <h2>المصروفات حسب البند</h2>
+            <p className="muted">مفيش مصروفات.</p>
+          </div>
+        )}
 
         <Signatures />
 
-        <footer className="paper-foot">المصباح · {project.name} · {today}</footer>
+        <footer className="paper-foot">
+          المصباح · {project.name} · {today}
+        </footer>
       </article>
     </div>
   )

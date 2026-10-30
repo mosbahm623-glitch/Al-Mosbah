@@ -3,7 +3,14 @@ import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import { bankBalance, byProject, fetchBankMovements, fetchBankSummaries, type BankMovement, type BankSummary } from '../../lib/banks'
+import {
+  bankBalance,
+  byProject,
+  fetchBankMovements,
+  fetchBankSummaries,
+  type BankMovement,
+  type BankSummary,
+} from '../../lib/banks'
 import { dateText, money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
 import BankDialog from './BankDialog'
@@ -28,13 +35,16 @@ export default function BankDetail({ id }: { id: string }) {
   }, [rows, bank?.opening_balance])
   const projects = useMemo(() => byProject(rows ?? []), [rows])
 
-  if ((summaries.loading && !summaries.data) || (movements.loading && !movements.data)) return <p className="muted">جارٍ التحميل...</p>
+  if ((summaries.loading && !summaries.data) || (movements.loading && !movements.data))
+    return <p className="muted">جارٍ التحميل...</p>
   if (summaries.failed || movements.failed) return <p className="msg msg-error">مقدرناش نحمّل البنك، جرّب تاني</p>
   if (!bank) {
     return (
       <div className="page-stack">
         <h1 className="page-title">البنك مش موجود</h1>
-        <a className="btn btn-ghost" href="#/banks">رجوع للبنوك</a>
+        <a className="btn btn-ghost" href="#/banks">
+          رجوع للبنوك
+        </a>
       </div>
     )
   }
@@ -70,15 +80,28 @@ export default function BankDetail({ id }: { id: string }) {
       />
 
       <section className="panel">
-        <div className="panel-head"><h2 className="section-title">حسب المشروع</h2></div>
+        <div className="panel-head">
+          <h2 className="section-title">حسب المشروع</h2>
+        </div>
         {projects.length ? (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>المشروع</th><th>وارد</th><th>مصروف</th><th>الصافي</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>المشروع</th>
+                  <th>وارد</th>
+                  <th>مصروف</th>
+                  <th>الصافي</th>
+                </tr>
+              </thead>
               <tbody>
                 {projects.map((p) => (
                   <tr key={p.id}>
-                    <td className="strong"><a className="row-link" href={`#/projects/${p.id}`}>{p.name}</a></td>
+                    <td className="strong">
+                      <a className="row-link" href={`#/projects/${p.id}`}>
+                        {p.name}
+                      </a>
+                    </td>
                     <td className="num tone-text-ok">{money(p.income)}</td>
                     <td className="num tone-text-err">{money(p.expenses)}</td>
                     <td className="num strong">{money(p.income - p.expenses)}</td>
@@ -93,16 +116,30 @@ export default function BankDetail({ id }: { id: string }) {
       </section>
 
       <section className="panel">
-        <div className="panel-head"><h2 className="section-title">الحركات</h2></div>
+        <div className="panel-head">
+          <h2 className="section-title">الحركات</h2>
+        </div>
         {withBalance.length ? (
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>البيان</th><th>المقاول</th><th>وارد</th><th>مصروف</th><th>الرصيد</th></tr>
+                <tr>
+                  <th>رقم القيد</th>
+                  <th>التاريخ</th>
+                  <th>المشروع</th>
+                  <th>البند</th>
+                  <th>البيان</th>
+                  <th>المقاول</th>
+                  <th>وارد</th>
+                  <th>مصروف</th>
+                  <th>الرصيد</th>
+                </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={8} className="muted">رصيد افتتاحي</td>
+                  <td colSpan={8} className="muted">
+                    رصيد افتتاحي
+                  </td>
                   <td className="num strong">{money(bank.opening_balance)}</td>
                 </tr>
                 {withBalance.map(({ m, run }) => (

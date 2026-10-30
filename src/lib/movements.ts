@@ -36,16 +36,45 @@ export type Movement = {
 }
 
 type EntryRow = {
-  id: string; seq: number; kind: 'income' | 'expense'; category: string; item: string | null; amount: number
-  entry_date: string; created_at: string; notes: string | null; advance_id: string | null
+  id: string
+  seq: number
+  kind: 'income' | 'expense'
+  category: string
+  item: string | null
+  amount: number
+  entry_date: string
+  created_at: string
+  notes: string | null
+  advance_id: string | null
   status: 'pending' | 'approved' | 'rejected'
-  project: { name: string } | null; contractor: { name: string } | null; bank: { name: string } | null
+  project: { name: string } | null
+  contractor: { name: string } | null
+  bank: { name: string } | null
 }
-type InstallmentRow = { id: string; amount: number; paid_on: string; created_at: string; advance: { holder_name: string } | null }
-type ReturnRow = { id: string; amount: number; returned_on: string; created_at: string; notes: string | null; advance: { holder_name: string } | null }
+type InstallmentRow = {
+  id: string
+  amount: number
+  paid_on: string
+  created_at: string
+  advance: { holder_name: string } | null
+}
+type ReturnRow = {
+  id: string
+  amount: number
+  returned_on: string
+  created_at: string
+  notes: string | null
+  advance: { holder_name: string } | null
+}
 type TxnRow = {
-  id: string; kind: 'due' | 'payment'; amount: number; txn_date: string; created_at: string; notes: string | null
-  contractor: { name: string } | null; project: { name: string } | null
+  id: string
+  kind: 'due' | 'payment'
+  amount: number
+  txn_date: string
+  created_at: string
+  notes: string | null
+  contractor: { name: string } | null
+  project: { name: string } | null
 }
 
 const fromEntry = (e: EntryRow): Movement => ({
@@ -66,21 +95,54 @@ const fromEntry = (e: EntryRow): Movement => ({
 })
 
 const fromInstallment = (r: InstallmentRow): Movement => ({
-  key: `i-${r.id}`, kind: 'installment', date: r.paid_on, at: r.created_at, amount: r.amount,
-  category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: null,
-  seq: null, fromAdvance: false, status: 'approved',
+  key: `i-${r.id}`,
+  kind: 'installment',
+  date: r.paid_on,
+  at: r.created_at,
+  amount: r.amount,
+  category: null,
+  title: r.advance?.holder_name ?? 'عهدة',
+  project: null,
+  party: r.advance?.holder_name ?? null,
+  detail: null,
+  notes: null,
+  seq: null,
+  fromAdvance: false,
+  status: 'approved',
 })
 
 const fromReturn = (r: ReturnRow): Movement => ({
-  key: `r-${r.id}`, kind: 'return', date: r.returned_on, at: r.created_at, amount: r.amount,
-  category: null, title: r.advance?.holder_name ?? 'عهدة', project: null, party: r.advance?.holder_name ?? null, detail: null, notes: r.notes,
-  seq: null, fromAdvance: false, status: 'approved',
+  key: `r-${r.id}`,
+  kind: 'return',
+  date: r.returned_on,
+  at: r.created_at,
+  amount: r.amount,
+  category: null,
+  title: r.advance?.holder_name ?? 'عهدة',
+  project: null,
+  party: r.advance?.holder_name ?? null,
+  detail: null,
+  notes: r.notes,
+  seq: null,
+  fromAdvance: false,
+  status: 'approved',
 })
 
 const fromTxn = (t: TxnRow): Movement => ({
-  key: `t-${t.id}`, kind: t.kind, date: t.txn_date, at: t.created_at, amount: t.amount,
-  category: null, title: t.contractor?.name ?? 'مقاول', project: t.project?.name ?? null, party: t.contractor?.name ?? null, detail: null, notes: t.notes,
-  seq: null, fromAdvance: false, status: 'approved',
+  key: `t-${t.id}`,
+  kind: t.kind,
+  date: t.txn_date,
+  at: t.created_at,
+  amount: t.amount,
+  category: null,
+  title: t.contractor?.name ?? 'مقاول',
+  project: t.project?.name ?? null,
+  party: t.contractor?.name ?? null,
+  detail: null,
+  notes: t.notes,
+  seq: null,
+  fromAdvance: false,
+  status: 'approved',
 })
 
 const ENTRY_SELECT =
@@ -100,29 +162,77 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
   if ('latest' in scope) {
     const n = scope.latest
     const [a, b, c, d] = await Promise.all([
-      supabase.from('entries').select(ENTRY_SELECT).order('created_at', { ascending: false }).limit(n).returns<EntryRow[]>(),
-      supabase.from('advance_installments').select(INSTALLMENT_SELECT).order('created_at', { ascending: false }).limit(n).returns<InstallmentRow[]>(),
-      supabase.from('advance_returns').select(RETURN_SELECT).order('created_at', { ascending: false }).limit(n).returns<ReturnRow[]>(),
-      supabase.from('contractor_transactions').select(TXN_SELECT).order('created_at', { ascending: false }).limit(n).returns<TxnRow[]>(),
+      supabase
+        .from('entries')
+        .select(ENTRY_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(n)
+        .returns<EntryRow[]>(),
+      supabase
+        .from('advance_installments')
+        .select(INSTALLMENT_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(n)
+        .returns<InstallmentRow[]>(),
+      supabase
+        .from('advance_returns')
+        .select(RETURN_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(n)
+        .returns<ReturnRow[]>(),
+      supabase
+        .from('contractor_transactions')
+        .select(TXN_SELECT)
+        .order('created_at', { ascending: false })
+        .limit(n)
+        .returns<TxnRow[]>(),
     ])
     if (a.error || b.error || c.error || d.error) return null
-    const all = [...(a.data ?? []).map(fromEntry), ...(b.data ?? []).map(fromInstallment), ...(c.data ?? []).map(fromReturn), ...(d.data ?? []).map(fromTxn)]
+    const all = [
+      ...(a.data ?? []).map(fromEntry),
+      ...(b.data ?? []).map(fromInstallment),
+      ...(c.data ?? []).map(fromReturn),
+      ...(d.data ?? []).map(fromTxn),
+    ]
     return sortMovements(all).slice(0, n)
   }
 
   const { from, to, project } = scope
   const [a, b, c, d] = await Promise.all([
     fetchPaged<EntryRow>((x, y) => {
-      let q = supabase.from('entries').select(ENTRY_SELECT).eq('status', 'approved').gte('entry_date', from).lte('entry_date', to)
+      let q = supabase
+        .from('entries')
+        .select(ENTRY_SELECT)
+        .eq('status', 'approved')
+        .gte('entry_date', from)
+        .lte('entry_date', to)
       if (project) q = q.eq('project_id', project)
       return q.order('id').range(x, y).returns<EntryRow[]>()
     }),
     project
       ? Promise.resolve<InstallmentRow[]>([])
-      : fetchPaged<InstallmentRow>((x, y) => supabase.from('advance_installments').select(INSTALLMENT_SELECT).gte('paid_on', from).lte('paid_on', to).order('id').range(x, y).returns<InstallmentRow[]>()),
+      : fetchPaged<InstallmentRow>((x, y) =>
+          supabase
+            .from('advance_installments')
+            .select(INSTALLMENT_SELECT)
+            .gte('paid_on', from)
+            .lte('paid_on', to)
+            .order('id')
+            .range(x, y)
+            .returns<InstallmentRow[]>(),
+        ),
     project
       ? Promise.resolve<ReturnRow[]>([])
-      : fetchPaged<ReturnRow>((x, y) => supabase.from('advance_returns').select(RETURN_SELECT).gte('returned_on', from).lte('returned_on', to).order('id').range(x, y).returns<ReturnRow[]>()),
+      : fetchPaged<ReturnRow>((x, y) =>
+          supabase
+            .from('advance_returns')
+            .select(RETURN_SELECT)
+            .gte('returned_on', from)
+            .lte('returned_on', to)
+            .order('id')
+            .range(x, y)
+            .returns<ReturnRow[]>(),
+        ),
     fetchPaged<TxnRow>((x, y) => {
       let q = supabase.from('contractor_transactions').select(TXN_SELECT).gte('txn_date', from).lte('txn_date', to)
       if (project) q = q.eq('project_id', project)
@@ -142,7 +252,6 @@ export type DayTotals = Record<MovementKind, number> & {
   cashExpense: number
   count: number
 }
-
 
 export function totalsOfDay(rows: Movement[]): DayTotals {
   const sums: Record<MovementKind, number> = { income: 0, expense: 0, installment: 0, return: 0, due: 0, payment: 0 }

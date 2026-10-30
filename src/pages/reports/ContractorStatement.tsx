@@ -8,19 +8,58 @@ import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 
-type Txn = { id: string; kind: 'due' | 'payment'; amount: number; txn_date: string; notes: string | null; project: { name: string } | null }
-type Spent = { id: string; seq: number; category: string; item: string | null; amount: number; entry_date: string; project: { name: string } | null }
-
+type Txn = {
+  id: string
+  kind: 'due' | 'payment'
+  amount: number
+  txn_date: string
+  notes: string | null
+  project: { name: string } | null
+}
+type Spent = {
+  id: string
+  seq: number
+  category: string
+  item: string | null
+  amount: number
+  entry_date: string
+  project: { name: string } | null
+}
 
 /** What we owe one contractor (dues − payments, with a running balance) and what was spent under his name. */
-export default function ContractorStatement({ id, name, from, to }: { id: string; name: string; from: string; to: string }) {
+export default function ContractorStatement({
+  id,
+  name,
+  from,
+  to,
+}: {
+  id: string
+  name: string
+  from: string
+  to: string
+}) {
   const load = useCallback(async () => {
     const [txns, spent] = await Promise.all([
       fetchPaged<Txn>((a, b) =>
-        supabase.from('contractor_transactions').select('id,kind,amount,txn_date,notes,project:projects(name)').eq('contractor_id', id).order('txn_date').order('id').range(a, b).returns<Txn[]>(),
+        supabase
+          .from('contractor_transactions')
+          .select('id,kind,amount,txn_date,notes,project:projects(name)')
+          .eq('contractor_id', id)
+          .order('txn_date')
+          .order('id')
+          .range(a, b)
+          .returns<Txn[]>(),
       ),
       fetchPaged<Spent>((a, b) =>
-        supabase.from('entries').select('id,seq,category,item,amount,entry_date,project:projects(name)').eq('contractor_id', id).eq('status', 'approved').order('entry_date').order('id').range(a, b).returns<Spent[]>(),
+        supabase
+          .from('entries')
+          .select('id,seq,category,item,amount,entry_date,project:projects(name)')
+          .eq('contractor_id', id)
+          .eq('status', 'approved')
+          .order('entry_date')
+          .order('id')
+          .range(a, b)
+          .returns<Spent[]>(),
       ),
     ])
     return { data: txns && spent ? { txns, spent } : null, error: !txns || !spent }
@@ -29,7 +68,12 @@ export default function ContractorStatement({ id, name, from, to }: { id: string
 
   const view = useMemo(() => {
     if (!data) return null
-    const ledger = runLedger(0, data.txns.map((t) => ({ ...t, date: t.txn_date, delta: t.kind === 'due' ? t.amount : -t.amount })), from, to)
+    const ledger = runLedger(
+      0,
+      data.txns.map((t) => ({ ...t, date: t.txn_date, delta: t.kind === 'due' ? t.amount : -t.amount })),
+      from,
+      to,
+    )
     const dues = ledger.rows.filter((r) => r.kind === 'due').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const paid = ledger.rows.filter((r) => r.kind === 'payment').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const spent = data.spent.filter((e) => inRange(e.entry_date, from, to))
@@ -70,14 +114,29 @@ export default function ContractorStatement({ id, name, from, to }: { id: string
       sections={[
         {
           heading: 'المستحقات والمدفوعات',
-          cols: [{ h: 'التاريخ', kind: 'date' }, { h: 'النوع' }, { h: 'المشروع' }, { h: 'ملاحظات' }, { h: 'مستحق', kind: 'money' }, { h: 'مدفوع', kind: 'money' }, { h: 'الرصيد', kind: 'money' }],
+          cols: [
+            { h: 'التاريخ', kind: 'date' },
+            { h: 'النوع' },
+            { h: 'المشروع' },
+            { h: 'ملاحظات' },
+            { h: 'مستحق', kind: 'money' },
+            { h: 'مدفوع', kind: 'money' },
+            { h: 'الرصيد', kind: 'money' },
+          ],
           rows: ledgerRows,
           footer: ['الإجمالي', null, null, null, dues, paid, ledger.closing],
           empty: 'مفيش مستحقات أو مدفوعات في الفترة دي.',
         },
         {
           heading: 'المصروفات المسجلة باسم المقاول',
-          cols: [{ h: 'رقم', kind: 'int' }, { h: 'التاريخ', kind: 'date' }, { h: 'المشروع' }, { h: 'البند' }, { h: 'البيان' }, { h: 'المبلغ', kind: 'money' }],
+          cols: [
+            { h: 'رقم', kind: 'int' },
+            { h: 'التاريخ', kind: 'date' },
+            { h: 'المشروع' },
+            { h: 'البند' },
+            { h: 'البيان' },
+            { h: 'المبلغ', kind: 'money' },
+          ],
           rows: spent.map((e): Cell[] => [e.seq, e.entry_date, e.project?.name ?? null, e.category, e.item, e.amount]),
           footer: ['إجمالي المصروفات المسجلة', null, null, null, null, spentTotal],
           empty: 'مفيش مصروفات مسجلة باسمه في الفترة دي.',

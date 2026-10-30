@@ -9,7 +9,9 @@ import { useAsync } from '../lib/useAsync'
 
 type InstallEvent = Event & { prompt: () => Promise<void> }
 const isIphone = /iphone|ipad|ipod/i.test(navigator.userAgent)
-const isInstalled = () => window.matchMedia('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+const isInstalled = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (navigator as Navigator & { standalone?: boolean }).standalone === true
 
 /** Phones deliver notifications best (iPhone: only) when the app is on the home screen. */
 function InstallHint() {
@@ -24,7 +26,12 @@ function InstallHint() {
   }, [])
   if (isInstalled()) return null
   if (isIphone)
-    return <p className="muted small">على الآيفون: افتح الموقع من Safari، اضغط زرار المشاركة (المربع والسهم)، واختار "إضافة إلى الشاشة الرئيسية"، وافتح التطبيق من الأيقونة وبعدها فعّل الإشعارات.</p>
+    return (
+      <p className="muted small">
+        على الآيفون: افتح الموقع من Safari، اضغط زرار المشاركة (المربع والسهم)، واختار "إضافة إلى الشاشة الرئيسية"،
+        وافتح التطبيق من الأيقونة وبعدها فعّل الإشعارات.
+      </p>
+    )
   if (prompt)
     return (
       <button className="btn btn-ghost btn-icon" onClick={() => void prompt.prompt()}>
@@ -69,7 +76,11 @@ export default function Notifications() {
         actions={
           rows.length > 0 && (
             <>
-              <button className="btn btn-ghost btn-icon" disabled={busy || unread === 0} onClick={() => void run(markAllRead)}>
+              <button
+                className="btn btn-ghost btn-icon"
+                disabled={busy || unread === 0}
+                onClick={() => void run(markAllRead)}
+              >
                 <CheckCheck size={18} aria-hidden="true" />
                 تعليم الكل كمقروء
               </button>
@@ -84,11 +95,24 @@ export default function Notifications() {
 
       <section className="panel notice-push">
         <InstallHint />
-        {push === 'unsupported' && <p className="muted small">المتصفح ده مش بيدعم إشعارات الموبايل{isIphone ? ' من غير تثبيت التطبيق على الشاشة الرئيسية (iOS 16.4 أو أحدث)' : ''}.</p>}
-        {push === 'blocked' && <p className="msg msg-error">الإشعارات متقفولة لموقع المصباح. افتحها من إعدادات المتصفح للموقع وبعدين ارجع هنا.</p>}
+        {push === 'unsupported' && (
+          <p className="muted small">
+            المتصفح ده مش بيدعم إشعارات الموبايل
+            {isIphone ? ' من غير تثبيت التطبيق على الشاشة الرئيسية (iOS 16.4 أو أحدث)' : ''}.
+          </p>
+        )}
+        {push === 'blocked' && (
+          <p className="msg msg-error">
+            الإشعارات متقفولة لموقع المصباح. افتحها من إعدادات المتصفح للموقع وبعدين ارجع هنا.
+          </p>
+        )}
         {(push === 'on' || push === 'off') && (
           <>
-            <p className="muted small">{push === 'on' ? 'إشعارات الموبايل شغّالة على الجهاز ده.' : 'فعّل إشعارات الموبايل عشان توصلك حتى والتطبيق مقفول.'}</p>
+            <p className="muted small">
+              {push === 'on'
+                ? 'إشعارات الموبايل شغّالة على الجهاز ده.'
+                : 'فعّل إشعارات الموبايل عشان توصلك حتى والتطبيق مقفول.'}
+            </p>
             <button className="btn btn-icon" disabled={busy} onClick={() => void togglePush()}>
               {push === 'on' ? <BellOff size={18} aria-hidden="true" /> : <BellRing size={18} aria-hidden="true" />}
               {push === 'on' ? 'إيقاف إشعارات الموبايل' : 'تفعيل إشعارات الموبايل'}

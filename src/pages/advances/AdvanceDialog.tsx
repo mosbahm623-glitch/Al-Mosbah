@@ -60,7 +60,12 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
           <div className="field-row">
             <label className="field">
               الدفعة الأولى (ج.م)
-              <input value={first} onChange={(e) => setFirst(e.target.value)} inputMode="decimal" placeholder="اختياري" />
+              <input
+                value={first}
+                onChange={(e) => setFirst(e.target.value)}
+                inputMode="decimal"
+                placeholder="اختياري"
+              />
             </label>
             <label className="field">
               التاريخ

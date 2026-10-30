@@ -15,7 +15,16 @@ type Props = {
 }
 
 /** A dropdown whose last option lets the admin type and save a new entry in the list. */
-export default function CreatableSelect({ label, value, options, placeholder, disabled, required, onChange, onCreate }: Props) {
+export default function CreatableSelect({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  required,
+  onChange,
+  onCreate,
+}: Props) {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
@@ -62,7 +71,13 @@ export default function CreatableSelect({ label, value, options, placeholder, di
       </label>
       {adding && (
         <div className="add-row">
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="الاسم الجديد" aria-label={`${label} جديد`} autoFocus />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="الاسم الجديد"
+            aria-label={`${label} جديد`}
+            autoFocus
+          />
           <button type="button" className="btn" onClick={() => void add()} disabled={busy || !name.trim()}>
             إضافة
           </button>

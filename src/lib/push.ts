@@ -30,11 +30,15 @@ export async function enablePush(userId: string): Promise<PushState> {
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return permission === 'denied' ? 'blocked' : 'off'
   const reg = await navigator.serviceWorker.ready
-  const sub = (await reg.pushManager.getSubscription()) ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(VAPID_PUBLIC) }))
+  const sub =
+    (await reg.pushManager.getSubscription()) ??
+    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(VAPID_PUBLIC) }))
   const j = sub.toJSON()
   if (!j.endpoint || !j.keys?.p256dh || !j.keys.auth) return 'off'
   await supabase.from('push_subscriptions').delete().eq('endpoint', j.endpoint)
-  const { error } = await supabase.from('push_subscriptions').insert({ user_id: userId, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth })
+  const { error } = await supabase
+    .from('push_subscriptions')
+    .insert({ user_id: userId, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth })
   return error ? 'off' : 'on'
 }
 

@@ -8,10 +8,23 @@ import { supabase } from '../../lib/supabase'
 import { useAsync } from '../../lib/useAsync'
 
 export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
-const TITLE: Record<PendingStatus, string> = { pending: 'القيود المعلّقة', approved: 'القيود المقبولة', rejected: 'القيود المرفوضة', all: 'حالة القيود' }
+const TITLE: Record<PendingStatus, string> = {
+  pending: 'القيود المعلّقة',
+  approved: 'القيود المقبولة',
+  rejected: 'القيود المرفوضة',
+  all: 'حالة القيود',
+}
 
 /** Entries waiting for an admin's decision, or turned down, with who recorded them. */
-export default function PendingReport({ status, creatorId, creatorName }: { status: PendingStatus; creatorId: string; creatorName: string }) {
+export default function PendingReport({
+  status,
+  creatorId,
+  creatorName,
+}: {
+  status: PendingStatus
+  creatorId: string
+  creatorName: string
+}) {
   const load = useCallback(async () => {
     const wanted = status === 'all' ? ['pending', 'approved', 'rejected'] : [status]
     const rows = await fetchPaged<Entry>((a, b) => {
@@ -25,9 +38,17 @@ export default function PendingReport({ status, creatorId, creatorName }: { stat
 
   const view = useMemo(() => {
     const rows = data ?? []
-    const sum = (s: Entry['status']) => rows.filter((e) => e.status === s).reduce((t, e) => t + toCents(e.amount), 0) / 100
+    const sum = (s: Entry['status']) =>
+      rows.filter((e) => e.status === s).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const count = (st: Entry['status']) => rows.filter((e) => e.status === st).length
-    return { rows, pending: count('pending'), approved: count('approved'), rejected: count('rejected'), pendingTotal: sum('pending'), approvedTotal: sum('approved') }
+    return {
+      rows,
+      pending: count('pending'),
+      approved: count('approved'),
+      rejected: count('rejected'),
+      pendingTotal: sum('pending'),
+      approvedTotal: sum('approved'),
+    }
   }, [data])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>

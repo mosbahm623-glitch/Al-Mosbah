@@ -9,7 +9,9 @@ const when = (iso: string) => new Date(iso).toLocaleDateString('ar-EG', { dateSt
 /** Admin only. The free plan has no automatic database backups, so this saves a full copy and warns when it has been a week. */
 export default function BackupPanel() {
   const { profile, isStaff } = useAuth()
-  const last = useAsync<{ at: string | null; stale: boolean }>(useCallback(async () => ({ data: await lastBackup(), error: null }), []))
+  const last = useAsync<{ at: string | null; stale: boolean }>(
+    useCallback(async () => ({ data: await lastBackup(), error: null }), []),
+  )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   if (!isStaff || !last.data) return null
@@ -29,10 +31,13 @@ export default function BackupPanel() {
     <section className={`panel backup ${stale ? 'backup-stale' : ''}`}>
       <div className="panel-head">
         <h2>النسخة الاحتياطية</h2>
-        <span className={`chip ${stale ? 'chip-err' : 'chip-ok'}`}>{at ? (stale ? 'قديمة' : 'حديثة') : 'ما اتعملتش'}</span>
+        <span className={`chip ${stale ? 'chip-err' : 'chip-ok'}`}>
+          {at ? (stale ? 'قديمة' : 'حديثة') : 'ما اتعملتش'}
+        </span>
       </div>
       <p className="muted small">
-        {at ? `آخر نسخة: ${when(at)}.` : 'لسه ما اتعملتش أي نسخة.'} الباقة المجانية مفيهاش نسخ تلقائية، نزّل نسخة كل أسبوع واحفظها في مكان تاني.
+        {at ? `آخر نسخة: ${when(at)}.` : 'لسه ما اتعملتش أي نسخة.'} الباقة المجانية مفيهاش نسخ تلقائية، نزّل نسخة كل
+        أسبوع واحفظها في مكان تاني.
       </p>
       {error && <p className="msg msg-error">{error}</p>}
       <button className="btn btn-icon" onClick={() => void run()} disabled={busy}>

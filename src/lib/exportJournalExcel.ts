@@ -60,7 +60,14 @@ export async function exportJournalExcel({ day, rows, withContractor, withBank: 
   }
 
   ws.views = [{ rightToLeft: true, state: 'frozen', ySplit: 1 }]
-  ws.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: '1:1' }
+  ws.pageSetup = {
+    orientation: 'landscape',
+    paperSize: 9,
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+    printTitlesRow: '1:1',
+  }
   ws.headerFooter.oddFooter = '&Cصفحة &P من &N'
 
   await downloadWorkbook(wb, `المصباح - يومية ${day}.xlsx`)

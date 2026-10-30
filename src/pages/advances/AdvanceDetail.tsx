@@ -33,7 +33,9 @@ export default function AdvanceDetail({ id }: { id: string }) {
     return (
       <div className="page-stack">
         <h1 className="page-title">العهدة مش موجودة</h1>
-        <a className="btn btn-ghost" href="#/advances">رجوع للعهد</a>
+        <a className="btn btn-ghost" href="#/advances">
+          رجوع للعهد
+        </a>
       </div>
     )
   }
@@ -99,7 +101,17 @@ export default function AdvanceDetail({ id }: { id: string }) {
         {installments?.length ? (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>التاريخ</th><th>المبلغ</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  {isAdmin && (
+                    <th>
+                      <span className="sr-only">إجراءات</span>
+                    </th>
+                  )}
+                </tr>
+              </thead>
               <tbody>
                 {installments.map((i) => (
                   <tr key={i.id}>
@@ -107,7 +119,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td className="num strong">{money(i.amount)}</td>
                     {isAdmin && (
                       <td>
-                        <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => setMoney({ kind: 'installment', row: i })}>
+                        <button
+                          className="icon-btn"
+                          aria-label="تعديل الدفعة"
+                          onClick={() => setMoney({ kind: 'installment', row: i })}
+                        >
                           <Pencil size={16} aria-hidden="true" />
                         </button>
                       </td>
@@ -136,7 +152,22 @@ export default function AdvanceDetail({ id }: { id: string }) {
           <div className="table-wrap">
             <table className="table">
               <thead>
-                <tr><th>رقم القيد</th><th>التاريخ</th><th>المشروع</th><th>البند</th><th>البيان</th><th>المقاول</th><th>ملاحظات</th><th>سجّله</th><th>المبلغ</th>{canEdit && <th><span className="sr-only">إجراءات</span></th>}</tr>
+                <tr>
+                  <th>رقم القيد</th>
+                  <th>التاريخ</th>
+                  <th>المشروع</th>
+                  <th>البند</th>
+                  <th>البيان</th>
+                  <th>المقاول</th>
+                  <th>ملاحظات</th>
+                  <th>سجّله</th>
+                  <th>المبلغ</th>
+                  {canEdit && (
+                    <th>
+                      <span className="sr-only">إجراءات</span>
+                    </th>
+                  )}
+                </tr>
               </thead>
               <tbody>
                 {entries.map((e) => (
@@ -147,8 +178,18 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td>{e.category}</td>
                     <td className="strong">
                       {e.item}
-                      {e.status === 'pending' && <> <span className="chip chip-warn">قيد الموافقة</span></>}
-                      {e.status === 'rejected' && <> <span className="chip chip-err">مرفوض</span></>}
+                      {e.status === 'pending' && (
+                        <>
+                          {' '}
+                          <span className="chip chip-warn">قيد الموافقة</span>
+                        </>
+                      )}
+                      {e.status === 'rejected' && (
+                        <>
+                          {' '}
+                          <span className="chip chip-err">مرفوض</span>
+                        </>
+                      )}
                     </td>
                     <td className="muted">{e.contractor?.name}</td>
                     <td className="muted">{e.notes}</td>
@@ -157,7 +198,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     {canEdit && (
                       <td>
                         {(isAdmin || e.status !== 'approved') && (
-                          <button className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => setEditingEntry(e)}>
+                          <button
+                            className="icon-btn"
+                            aria-label={`تعديل القيد ${e.seq}`}
+                            onClick={() => setEditingEntry(e)}
+                          >
                             <Pencil size={16} aria-hidden="true" />
                           </button>
                         )}
@@ -186,7 +231,18 @@ export default function AdvanceDetail({ id }: { id: string }) {
         {returns?.length ? (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th>{isAdmin && <th><span className="sr-only">إجراءات</span></th>}</tr></thead>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>المبلغ</th>
+                  <th>ملاحظات</th>
+                  {isAdmin && (
+                    <th>
+                      <span className="sr-only">إجراءات</span>
+                    </th>
+                  )}
+                </tr>
+              </thead>
               <tbody>
                 {returns.map((r) => (
                   <tr key={r.id}>
@@ -195,7 +251,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td className="muted">{r.notes}</td>
                     {isAdmin && (
                       <td>
-                        <button className="icon-btn" aria-label="تعديل المرتجع" onClick={() => setMoney({ kind: 'return', row: r })}>
+                        <button
+                          className="icon-btn"
+                          aria-label="تعديل المرتجع"
+                          onClick={() => setMoney({ kind: 'return', row: r })}
+                        >
                           <Pencil size={16} aria-hidden="true" />
                         </button>
                       </td>
@@ -230,10 +290,24 @@ export default function AdvanceDetail({ id }: { id: string }) {
         />
       )}
       {spending && projects.data && (
-        <EntryDialog projectId="" projectName={advance.holder_name} projects={projects.data} advanceId={id} onClose={() => setSpending(false)} onSaved={reload} />
+        <EntryDialog
+          projectId=""
+          projectName={advance.holder_name}
+          projects={projects.data}
+          advanceId={id}
+          onClose={() => setSpending(false)}
+          onSaved={reload}
+        />
       )}
       {editingEntry && projects.data && (
-        <EntryDialog projectId={editingEntry.project_id ?? ''} projectName={advance.holder_name} projects={projects.data} entry={editingEntry} onClose={() => setEditingEntry(null)} onSaved={reload} />
+        <EntryDialog
+          projectId={editingEntry.project_id ?? ''}
+          projectName={advance.holder_name}
+          projects={projects.data}
+          entry={editingEntry}
+          onClose={() => setEditingEntry(null)}
+          onSaved={reload}
+        />
       )}
       {editing && <AdvanceDialog advance={advance} onClose={() => setEditing(false)} onSaved={reload} />}
     </div>

@@ -13,4 +13,6 @@ export const todayText = () => new Date().toLocaleDateString('en-GB').replaceAll
 
 /** "من 01-10-2026 إلى 28-10-2026", or "كل الفترات" when both ends are open. */
 export const periodText = (from: string, to: string) =>
-  !from && !to ? 'كل الفترات' : `${from ? `من ${dateText(from)}` : ''}${from && to ? ' ' : ''}${to ? `إلى ${dateText(to)}` : ''}`
+  !from && !to
+    ? 'كل الفترات'
+    : `${from ? `من ${dateText(from)}` : ''}${from && to ? ' ' : ''}${to ? `إلى ${dateText(to)}` : ''}`

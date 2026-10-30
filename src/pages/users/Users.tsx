@@ -42,14 +42,18 @@ export default function Users() {
                   <th>الدور</th>
                   <th>الحالة</th>
                   <th>الصفحات</th>
-                  <th><span className="sr-only">إجراءات</span></th>
+                  <th>
+                    <span className="sr-only">إجراءات</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {users.data.map((u) => (
                   <tr key={u.id}>
                     <td className="strong">{u.full_name ?? '—'}</td>
-                    <td className="muted" dir="ltr">{u.email}</td>
+                    <td className="muted" dir="ltr">
+                      {u.email}
+                    </td>
                     <td>{u.role === 'admin' ? 'أدمن' : u.role === 'owner' ? 'مالك' : 'مستخدم'}</td>
                     <td>
                       <span className={`chip ${u.is_active ? 'chip-ok' : 'chip-neutral'}`}>
@@ -63,13 +67,23 @@ export default function Users() {
                         : u.permissions.length
                           ? MODULES.flatMap((m) => {
                               const p = u.permissions.find((x) => x.module === m.id)
-                              return p ? [m.id === 'advances' ? `${m.label} (${LEVEL_LABEL[p.level]} · ${u.advanceIds.length} عهدة)` : `${m.label} (${LEVEL_LABEL[p.level]})`] : []
+                              return p
+                                ? [
+                                    m.id === 'advances'
+                                      ? `${m.label} (${LEVEL_LABEL[p.level]} · ${u.advanceIds.length} عهدة)`
+                                      : `${m.label} (${LEVEL_LABEL[p.level]})`,
+                                  ]
+                                : []
                             }).join(' · ')
                           : 'مفيش صلاحيات'}
                     </td>
                     <td>
                       {(isAdmin || u.role !== 'admin') && (
-                        <button className="icon-btn" aria-label={`صلاحيات ${u.full_name ?? ''}`} onClick={() => setEditing(u)}>
+                        <button
+                          className="icon-btn"
+                          aria-label={`صلاحيات ${u.full_name ?? ''}`}
+                          onClick={() => setEditing(u)}
+                        >
                           <Pencil size={16} aria-hidden="true" />
                         </button>
                       )}
@@ -83,7 +97,15 @@ export default function Users() {
       )}
 
       {adding && <NewUserDialog onClose={() => setAdding(false)} onCreated={users.reload} />}
-      {editing && advances.data && <UserDialog user={editing} advances={advances.data} isSelf={editing.id === profile?.id} onClose={() => setEditing(null)} onSaved={users.reload} />}
+      {editing && advances.data && (
+        <UserDialog
+          user={editing}
+          advances={advances.data}
+          isSelf={editing.id === profile?.id}
+          onClose={() => setEditing(null)}
+          onSaved={users.reload}
+        />
+      )}
     </div>
   )
 }

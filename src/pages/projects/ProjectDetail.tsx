@@ -25,7 +25,9 @@ export default function ProjectDetail({ id }: { id: string }) {
     return (
       <div className="page-stack">
         <h1 className="page-title">المشروع مش موجود</h1>
-        <a className="btn btn-ghost" href="#/projects">رجوع للمشاريع</a>
+        <a className="btn btn-ghost" href="#/projects">
+          رجوع للمشاريع
+        </a>
       </div>
     )
   }
@@ -49,7 +51,12 @@ export default function ProjectDetail({ id }: { id: string }) {
             {(projects?.length ?? 0) > 1 && (
               <label className="switcher">
                 <span className="sr-only">تبديل المشروع</span>
-                <select value={id} onChange={(e) => { window.location.hash = `#/projects/${e.target.value}` }}>
+                <select
+                  value={id}
+                  onChange={(e) => {
+                    window.location.hash = `#/projects/${e.target.value}`
+                  }}
+                >
                   {projects?.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
@@ -105,7 +112,14 @@ export default function ProjectDetail({ id }: { id: string }) {
         <EntryDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} onSaved={reload} />
       )}
       {editing && (
-        <EntryDialog projectId={id} projectName={project.name} projects={projects} entry={editing} onClose={() => setEditing(null)} onSaved={reload} />
+        <EntryDialog
+          projectId={id}
+          projectName={project.name}
+          projects={projects}
+          entry={editing}
+          onClose={() => setEditing(null)}
+          onSaved={reload}
+        />
       )}
       {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reload} />}
     </div>

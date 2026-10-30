@@ -9,14 +9,32 @@ import type { ReportColumns } from '../../lib/reportColumns'
 type Props = { from: string; to: string; projectId: string; projectName: string } & ReportColumns
 
 /** Every approved movement between two dates, for one project or all of them. */
-export default function PeriodReport({ from, to, projectId, projectName, withContractor, withBank: bankWanted, withNotes }: Props) {
+export default function PeriodReport({
+  from,
+  to,
+  projectId,
+  projectName,
+  withContractor,
+  withBank: bankWanted,
+  withNotes,
+}: Props) {
   const fetchRows = useCallback(async () => {
-    const rows = await fetchMovements({ from: from || '2000-01-01', to: to || todayISO(), project: projectId || undefined })
+    const rows = await fetchMovements({
+      from: from || '2000-01-01',
+      to: to || todayISO(),
+      project: projectId || undefined,
+    })
     return { data: rows, error: rows === null }
   }, [from, to, projectId])
   const { data, failed } = useAsync<Movement[]>(fetchRows)
 
-  const rows = useMemo(() => [...(data ?? [])].sort((a, b) => a.date.localeCompare(b.date) || a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)), [data])
+  const rows = useMemo(
+    () =>
+      [...(data ?? [])].sort(
+        (a, b) => a.date.localeCompare(b.date) || a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0),
+      ),
+    [data],
+  )
   const t = useMemo(() => totalsOfDay(rows), [rows])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
@@ -63,7 +81,14 @@ export default function PeriodReport({ from, to, projectId, projectName, withCon
         ...(projectId ? [] : [{ label: 'دفعات عهد', value: money(t.installment), tone: 'warn' as const }]),
         { label: 'عدد الحركات', value: String(t.count), tone: 'neutral' },
       ]}
-      sections={[{ cols, rows: body, footer: [`عدد الحركات: ${t.count}`, ...cols.slice(1).map(() => null)], empty: 'مفيش حركات في الفترة دي.' }]}
+      sections={[
+        {
+          cols,
+          rows: body,
+          footer: [`عدد الحركات: ${t.count}`, ...cols.slice(1).map(() => null)],
+          empty: 'مفيش حركات في الفترة دي.',
+        },
+      ]}
       note={
         projectId
           ? 'تقرير مشروع واحد: دفعات ومرتجع العهد مش بتظهر لأنها مش مربوطة بمشروع.'

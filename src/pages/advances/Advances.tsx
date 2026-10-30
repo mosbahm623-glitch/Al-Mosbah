@@ -26,9 +26,7 @@ export default function Advances() {
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase()
     return (advances.data ?? []).filter(
-      (a) =>
-        (status === 'all' || a.status === status) &&
-        (!term || a.holder_name.toLowerCase().includes(term)),
+      (a) => (status === 'all' || a.status === status) && (!term || a.holder_name.toLowerCase().includes(term)),
     )
   }, [advances.data, q, status])
 
@@ -60,7 +58,13 @@ export default function Advances() {
       <div className="toolbar">
         <label className="search-field">
           <Search size={18} aria-hidden="true" />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المستلم" aria-label="بحث في العهد" />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ابحث باسم المستلم"
+            aria-label="بحث في العهد"
+          />
         </label>
         <Segmented label="حالة العهدة" value={status} options={STATUS} onChange={setStatus} />
         <span className="toolbar-note muted small">{rows.length} عهدة</span>
@@ -89,12 +93,18 @@ export default function Advances() {
                   const bal = advanceBalance(a)
                   return (
                     <tr key={a.id}>
-                      <td className="strong"><a className="row-link" href={`#/advances/${a.id}`}>{a.holder_name}</a></td>
+                      <td className="strong">
+                        <a className="row-link" href={`#/advances/${a.id}`}>
+                          {a.holder_name}
+                        </a>
+                      </td>
                       <td className="num">{money(a.given)}</td>
                       <td className="num">{money(a.spent)}</td>
                       <td className="num">{money(a.returned)}</td>
                       <td className={`num strong ${bal < 0 ? 'tone-text-err' : ''}`}>{money(bal)}</td>
-                      <td><AdvanceChip status={a.status} /></td>
+                      <td>
+                        <AdvanceChip status={a.status} />
+                      </td>
                     </tr>
                   )
                 })}

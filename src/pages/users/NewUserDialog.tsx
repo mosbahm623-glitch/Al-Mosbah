@@ -33,7 +33,15 @@ export default function NewUserDialog({ onClose, onCreated }: { onClose: () => v
         </label>
         <label className="field">
           كلمة السر (8 حروف على الأقل)
-          <input type="text" dir="ltr" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required autoComplete="off" />
+          <input
+            type="text"
+            dir="ltr"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
+            required
+            autoComplete="off"
+          />
         </label>
         {error && <p className="msg msg-error">{error}</p>}
         <div className="dialog-actions">

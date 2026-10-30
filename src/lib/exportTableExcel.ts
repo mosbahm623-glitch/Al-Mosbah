@@ -2,7 +2,14 @@ import { todayText } from './format'
 import type { Kpi, Section } from './tableTypes'
 import { HEAD_FILL, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
-type Options = { title: string; sheet: string; filename: string; meta: { label: string; value: string }[]; kpis?: Kpi[]; sections: Section[] }
+type Options = {
+  title: string
+  sheet: string
+  filename: string
+  meta: { label: string; value: string }[]
+  kpis?: Kpi[]
+  sections: Section[]
+}
 
 /** Any table report as a one-sheet workbook: title, summary lines, then each table with its totals row. */
 export async function exportTableExcel({ title, sheet, filename, meta, kpis, sections }: Options) {
@@ -10,13 +17,19 @@ export async function exportTableExcel({ title, sheet, filename, meta, kpis, sec
   const wb = new ExcelJS.Workbook()
   wb.creator = 'المصباح'
   wb.created = new Date()
-  const ws = wb.addWorksheet(sheet.replace(/[\\/*?:[\]]/g, ' ').slice(0, 30), { properties: { tabColor: { argb: 'FFC74634' } } })
+  const ws = wb.addWorksheet(sheet.replace(/[\\/*?:[\]]/g, ' ').slice(0, 30), {
+    properties: { tabColor: { argb: 'FFC74634' } },
+  })
 
   const width = Math.max(4, ...sections.map((s) => s.cols.length))
   const widths = Array.from({ length: width }, () => 12)
   for (const s of sections) {
     s.cols.forEach((c, i) => {
-      const longest = Math.max(c.h.length, ...s.rows.map((r) => String(r[i] ?? '').length), String(s.footer?.[i] ?? '').length)
+      const longest = Math.max(
+        c.h.length,
+        ...s.rows.map((r) => String(r[i] ?? '').length),
+        String(s.footer?.[i] ?? '').length,
+      )
       widths[i] = Math.min(40, Math.max(widths[i], longest + 3))
     })
   }
@@ -28,7 +41,9 @@ export async function exportTableExcel({ title, sheet, filename, meta, kpis, sec
   t.getCell(1).font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }
   t.getCell(1).fill = solid(HEAD_FILL)
   t.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
-  const info = ws.addRow([[...meta.map((m) => `${m.label}: ${m.value}`), `تاريخ التقرير: ${todayText()}`].join('  ·  ')])
+  const info = ws.addRow([
+    [...meta.map((m) => `${m.label}: ${m.value}`), `تاريخ التقرير: ${todayText()}`].join('  ·  '),
+  ])
   ws.mergeCells(info.number, 1, info.number, width)
   info.getCell(1).alignment = { horizontal: 'center' }
 

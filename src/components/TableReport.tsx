@@ -60,10 +60,21 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
           </div>
           <dl className="paper-meta">
             {meta.map((m) => (
-              <div key={m.label}><dt>{m.label}</dt><dd>{m.value}</dd></div>
+              <div key={m.label}>
+                <dt>{m.label}</dt>
+                <dd>{m.value}</dd>
+              </div>
             ))}
-            <div><dt>تاريخ التقرير</dt><dd>{today}</dd></div>
-            {preparedBy && <div><dt>أعدّه</dt><dd>{preparedBy}</dd></div>}
+            <div>
+              <dt>تاريخ التقرير</dt>
+              <dd>{today}</dd>
+            </div>
+            {preparedBy && (
+              <div>
+                <dt>أعدّه</dt>
+                <dd>{preparedBy}</dd>
+              </div>
+            )}
           </dl>
         </header>
 
@@ -79,7 +90,9 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
 
         {note && <p className="muted small note">{note}</p>}
         <Signatures />
-        <footer className="paper-foot">المصباح · {title} · {today}</footer>
+        <footer className="paper-foot">
+          المصباح · {title} · {today}
+        </footer>
       </article>
     </div>
   )

@@ -7,16 +7,33 @@ import { runLedger } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 
-
 /** One bank account: balance before the period, every movement with its running balance, and the closing balance. */
-export default function BankStatement({ id, name, opening, from, to }: { id: string; name: string; opening: number; from: string; to: string }) {
+export default function BankStatement({
+  id,
+  name,
+  opening,
+  from,
+  to,
+}: {
+  id: string
+  name: string
+  opening: number
+  from: string
+  to: string
+}) {
   const load = useCallback(() => fetchBankMovements(id), [id])
   const { data, failed } = useAsync<BankMovement[]>(load)
 
   const view = useMemo(() => {
     if (!data) return null
-    const ledger = runLedger(opening, data.map((m) => ({ ...m, date: m.entry_date, delta: m.kind === 'income' ? m.amount : -m.amount })), from, to)
-    const sum = (kind: 'income' | 'expense') => ledger.rows.filter((r) => r.kind === kind).reduce((s, r) => s + toCents(r.amount), 0) / 100
+    const ledger = runLedger(
+      opening,
+      data.map((m) => ({ ...m, date: m.entry_date, delta: m.kind === 'income' ? m.amount : -m.amount })),
+      from,
+      to,
+    )
+    const sum = (kind: 'income' | 'expense') =>
+      ledger.rows.filter((r) => r.kind === kind).reduce((s, r) => s + toCents(r.amount), 0) / 100
     return { ledger, income: sum('income'), expense: sum('expense') }
   }, [data, opening, from, to])
 

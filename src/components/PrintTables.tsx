@@ -7,7 +7,13 @@ const widthClass = (kind: string | undefined, i: number, last: boolean) =>
 /** "name (3 قيد)": the count part is printed lighter. */
 const barTitle = (h: string) => {
   const m = /^(.*?) (\(.*\))$/.exec(h)
-  return m ? <>{m[1]} <span className="count">{m[2]}</span></> : h
+  return m ? (
+    <>
+      {m[1]} <span className="count">{m[2]}</span>
+    </>
+  ) : (
+    h
+  )
 }
 
 /** The paper tables of a report, shown only when printing. The screen shows the same sections as DataGrids. */
@@ -31,7 +37,9 @@ export default function PrintTables({ sections, ledger = false }: { sections: Se
                   )}
                   <tr>
                     {s.cols.map((c, i) => (
-                      <th key={c.h} className={widthClass(c.kind, i, i === s.cols.length - 1)}>{c.h}</th>
+                      <th key={c.h} className={widthClass(c.kind, i, i === s.cols.length - 1)}>
+                        {c.h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -39,8 +47,15 @@ export default function PrintTables({ sections, ledger = false }: { sections: Se
                   {s.rows.map((r, ri) => (
                     <tr key={ri}>
                       {r.map((v, ci) => (
-                        <td key={ci} className={`${isNumericCol(s.cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && s.cols[ci].kind === 'money' ? 'neg' : ''}`}>
-                          {pillOf(s.cols[ci], v) ? <span className={`tag tag-${pillOf(s.cols[ci], v)}`}>{showCell(s.cols[ci].kind, v)}</span> : showCell(s.cols[ci].kind, v)}
+                        <td
+                          key={ci}
+                          className={`${isNumericCol(s.cols[ci]) ? 'num' : ''} ${typeof v === 'number' && v < 0 && s.cols[ci].kind === 'money' ? 'neg' : ''}`}
+                        >
+                          {pillOf(s.cols[ci], v) ? (
+                            <span className={`tag tag-${pillOf(s.cols[ci], v)}`}>{showCell(s.cols[ci].kind, v)}</span>
+                          ) : (
+                            showCell(s.cols[ci].kind, v)
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -51,7 +66,9 @@ export default function PrintTables({ sections, ledger = false }: { sections: Se
                     <tr>
                       <td colSpan={span}>{s.footer[0]}</td>
                       {s.footer.slice(span).map((v, k) => (
-                        <td key={k} className={isNumericCol(s.cols[span + k]) ? 'num' : ''}>{showCell(s.cols[span + k].kind, v)}</td>
+                        <td key={k} className={isNumericCol(s.cols[span + k]) ? 'num' : ''}>
+                          {showCell(s.cols[span + k].kind, v)}
+                        </td>
                       ))}
                     </tr>
                   </tfoot>

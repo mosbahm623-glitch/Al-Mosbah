@@ -17,7 +17,8 @@ export type BankMovement = {
 }
 
 /** Current balance = opening + money in − money out. */
-export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses'>) => b.opening_balance + b.income - b.expenses
+export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses'>) =>
+  b.opening_balance + b.income - b.expenses
 
 export const fetchBankSummaries = () => supabase.rpc('bank_summaries')
 export const fetchBankMovements = (bankId: string) => supabase.rpc('bank_movements', { p_bank: bankId })

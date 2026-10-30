@@ -3,7 +3,14 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
-import { replaceAdvanceAccess, replacePermissions, updateRole, type AdvanceOption, type UserRow } from '../../lib/users'
+import {
+  replaceAdvanceAccess,
+  replacePermissions,
+  setLowBalanceAlert,
+  updateRole,
+  type AdvanceOption,
+  type UserRow,
+} from '../../lib/users'
 
 type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))
@@ -26,6 +33,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
         MODULES.map((m) => [m.id, user.permissions.find((p) => p.module === m.id)?.level ?? 'none']),
       ) as Record<Module, Choice>,
   )
+  const [alertOn, setAlertOn] = useState(user.notify_low_balance)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -39,6 +47,13 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
       if (err) {
         setSaving(false)
         return setError('ما اتحفظش، جرّب تاني')
+      }
+    }
+    if (alertOn !== user.notify_low_balance) {
+      const { error: err } = await setLowBalanceAlert(user.id, alertOn)
+      if (err) {
+        setSaving(false)
+        return setError('تنبيه الرصيد ما اتحفظش، جرّب تاني')
       }
     }
     const rows = MODULES.flatMap((m) =>
@@ -70,6 +85,10 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
         <label className="check">
           <input type="checkbox" checked={active} disabled={isSelf} onChange={(e) => setActive(e.target.checked)} />
           الحساب مفعّل
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={alertOn} onChange={(e) => setAlertOn(e.target.checked)} />
+          يستلم تنبيه لما رصيد أي مشروع ينزل عن 50,000
         </label>
         {isSelf && <p className="muted small">مينفعش تغيّر دورك أو توقف حسابك بنفسك.</p>}
 

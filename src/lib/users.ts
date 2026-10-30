@@ -7,6 +7,8 @@ export type UserRow = {
   email: string | null
   role: 'admin' | 'owner' | 'user'
   is_active: boolean
+  /** gets the low-balance alert (a project's balance fell below 50,000) */
+  notify_low_balance: boolean
   permissions: { module: Module; level: Level }[]
   /** custodies this user may see (matters only when he has the العهد page) */
   advanceIds: string[]
@@ -21,7 +23,11 @@ export const fetchAdvanceOptions = () =>
 /** Every account with its page permissions (admins only; other users cannot read this). */
 export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unknown }> {
   const [profiles, perms, access] = await Promise.all([
-    supabase.from('profiles').select('id,full_name,email,role,is_active').order('created_at').returns<Profile[]>(),
+    supabase
+      .from('profiles')
+      .select('id,full_name,email,role,is_active,notify_low_balance')
+      .order('created_at')
+      .returns<Profile[]>(),
     supabase
       .from('user_permissions')
       .select('user_id,module,level')
@@ -75,6 +81,9 @@ export async function createUser(input: { full_name: string; email: string; pass
 
 export const updateRole = (userId: string, role: UserRow['role'], isActive: boolean) =>
   supabase.from('profiles').update({ role, is_active: isActive }).eq('id', userId)
+
+export const setLowBalanceAlert = (userId: string, on: boolean) =>
+  supabase.from('profiles').update({ notify_low_balance: on }).eq('id', userId)
 
 /** Replaces all page permissions of one user. Both results are returned so the caller can tell which step failed. */
 export async function replacePermissions(userId: string, rows: { user_id: string; module: Module; level: Level }[]) {

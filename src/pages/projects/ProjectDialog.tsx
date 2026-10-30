@@ -1,9 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
-import { supabase } from '../../lib/supabase'
 import { TYPE_LABEL, type ProjectType } from '../../lib/format'
-import type { ProjectSummary } from '../../lib/projects'
+import { saveProject, type ProjectSummary } from '../../lib/projects'
 
 const TYPES = (Object.keys(TYPE_LABEL) as ProjectType[]).map((value) => ({ value, label: TYPE_LABEL[value] }))
 const STATUSES = [
@@ -29,9 +28,7 @@ export default function ProjectDialog({ project, onClose, onSaved }: Props) {
     setSaving(true)
     setError(null)
     const row = { name: name.trim(), type, status, budget: amount }
-    const { error: err } = project
-      ? await supabase.from('projects').update(row).eq('id', project.id)
-      : await supabase.from('projects').insert(row)
+    const { error: err } = await saveProject(row, project?.id)
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')
     onSaved()

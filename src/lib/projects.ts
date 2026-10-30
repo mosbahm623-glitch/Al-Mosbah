@@ -44,6 +44,15 @@ export const isOver = (p: ProjectSummary) => p.budget > 0 && p.expenses > p.budg
 /** Per-project totals, computed in the database (see migration 005). */
 export const fetchSummaries = () => supabase.rpc('project_summaries')
 
+/** The figures on the dashboard, all computed in the database. */
+export const fetchDashboardSummary = () => supabase.rpc('dashboard_summary')
+
+export type ProjectInput = { name: string; type: ProjectType; status: 'active' | 'closed'; budget: number }
+
+/** A new project, or (with an id) an edit of an existing one. */
+export const saveProject = (row: ProjectInput, id?: string) =>
+  id ? supabase.from('projects').update(row).eq('id', id) : supabase.from('projects').insert(row)
+
 export const ENTRY_COLUMNS =
   'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 

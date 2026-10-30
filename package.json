@@ -9,8 +9,11 @@
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \".github/**/*.yml\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "architecture:check": "node scripts/check-architecture.mjs",
+    "knip": "knip",
+    "quality": "npm run format:check && npm run lint && npm run architecture:check && npm run knip && npm test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -24,6 +27,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "knip": "^6.44.0",
     "oxlint": "^1.89.0",
     "prettier": "^3.9.10",
     "typescript": "~7.0.2",

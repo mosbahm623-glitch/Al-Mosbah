@@ -3,8 +3,7 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
-import { supabase } from '../../lib/supabase'
-import type { AdvanceOption, UserRow } from '../../lib/users'
+import { replaceAdvanceAccess, replacePermissions, updateRole, type AdvanceOption, type UserRow } from '../../lib/users'
 
 type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))
@@ -36,7 +35,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
     setSaving(true)
     setError(null)
     if (!isSelf && (role !== user.role || active !== user.is_active)) {
-      const { error: err } = await supabase.from('profiles').update({ role, is_active: active }).eq('id', user.id)
+      const { error: err } = await updateRole(user.id, role, active)
       if (err) {
         setSaving(false)
         return setError('ما اتحفظش، جرّب تاني')
@@ -45,15 +44,9 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
     const rows = MODULES.flatMap((m) =>
       levels[m.id] === 'none' ? [] : [{ user_id: user.id, module: m.id, level: levels[m.id] as Level }],
     )
-    const cleared = await supabase.from('user_permissions').delete().eq('user_id', user.id)
-    const saved = rows.length ? await supabase.from('user_permissions').insert(rows) : { error: null }
+    const { cleared, saved } = await replacePermissions(user.id, rows)
     const wanted = levels.advances === 'none' || role !== 'user' ? [] : advanceIds
-    const clearedAccess = await supabase.from('user_advance_access').delete().eq('user_id', user.id)
-    const savedAccess = wanted.length
-      ? await supabase
-          .from('user_advance_access')
-          .insert(wanted.map((advance_id) => ({ user_id: user.id, advance_id })))
-      : { error: null }
+    const { cleared: clearedAccess, saved: savedAccess } = await replaceAdvanceAccess(user.id, wanted)
     setSaving(false)
     if (clearedAccess.error || savedAccess.error)
       return setError('العهد المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')

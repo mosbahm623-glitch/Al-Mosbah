@@ -3,10 +3,9 @@ import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import { advanceBalance, type AdvanceReturn, type Installment } from '../../lib/advances'
+import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
 import { dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
-import { supabase } from '../../lib/supabase'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
@@ -44,10 +43,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
 
   async function toggleStatus() {
     if (!advance) return
-    const { error } = await supabase
-      .from('advances')
-      .update({ status: advance.status === 'open' ? 'closed' : 'open' })
-      .eq('id', id)
+    const { error } = await setAdvanceStatus(id, advance.status === 'open' ? 'closed' : 'open')
     if (!error) reload()
   }
 

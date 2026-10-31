@@ -80,7 +80,7 @@ export default function Advances() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>المستلم</th>
+                  <th>صاحب العهدة</th>
                   <th>المستلم</th>
                   <th>المصروف</th>
                   <th>المرتجع</th>

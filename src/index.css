@@ -2171,3 +2171,71 @@ a.btn[aria-disabled='true'] {
   border-radius: 2px;
   margin-inline-end: 4px;
 }
+
+/* ===== tables on phones: every row becomes a card (labels come from useStackedTables) ===== */
+@media (max-width: 719px) {
+  .table-wrap {
+    overflow: visible;
+  }
+  .table,
+  .table tbody,
+  .table tfoot {
+    display: block;
+    min-width: 0;
+  }
+  /* the column titles move beside each value; keep them for screen readers */
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .table tr {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--line-2);
+  }
+  .table tbody tr:first-child {
+    border-top: 0;
+  }
+  .table td {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+    text-align: end;
+    overflow-wrap: anywhere;
+  }
+  /* the auto margin pushes the value (text and any chip) to the far side, side by side */
+  .table td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    margin-inline-end: auto;
+    padding-inline-end: 1rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: start;
+  }
+  .table td[data-label='']::before {
+    content: none;
+  }
+  .table td:empty {
+    display: none;
+  }
+  .table td[colspan] {
+    justify-content: flex-start;
+  }
+  .table tfoot tr {
+    background: var(--surface-2);
+    border-top: 1px solid var(--line);
+  }
+  .table tfoot td {
+    background: none;
+    border: 0;
+  }
+}

@@ -2213,8 +2213,15 @@ a.btn[aria-disabled='true'] {
     display: inline;
   }
   .table td.num,
+  .table td.sm-only,
   .table td .chip {
     white-space: nowrap;
+  }
+  /* number-like columns take only what they need; the description gets the rest */
+  .table td.num,
+  .table td.sm-only,
+  .table td:has(> .icon-btn) {
+    width: 1%;
   }
   .table .icon-btn {
     width: 1.6rem;
@@ -2222,12 +2229,14 @@ a.btn[aria-disabled='true'] {
     padding: 0;
   }
   .table .sub {
-    display: block;
-    margin-top: 0.2rem;
-    font-size: 0.66rem;
-    font-weight: 400;
-    line-height: 1.45;
-    color: var(--muted);
+    display: none;
+  }
+  /* one line per row: long text is cut with … instead of making the row taller */
+  .table td.strong:not(.num) {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .table .chip {
     padding: 0.05rem 0.4rem;

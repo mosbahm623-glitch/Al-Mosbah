@@ -67,13 +67,13 @@ export default function Recent() {
             <table className="table">
               <thead>
                 <tr>
-                  <th>اتسجل</th>
-                  <th>التاريخ</th>
+                  <th className="sm-hide">اتسجل</th>
+                  <th className="sm-hide">التاريخ</th>
                   <th>النوع</th>
-                  <th>البند</th>
+                  <th className="sm-hide">البند</th>
                   <th>البيان</th>
-                  <th>المشروع</th>
-                  <th>المقاول / العهدة</th>
+                  <th className="sm-hide">المشروع</th>
+                  <th className="sm-hide">المقاول / العهدة</th>
                   <th>المبلغ</th>
                 </tr>
               </thead>
@@ -82,20 +82,27 @@ export default function Recent() {
                   const dir = direction(m)
                   return (
                     <tr key={m.key}>
-                      <td className="num muted small">
+                      <td className="num muted small sm-hide">
                         {dayText(m.at)} {timeText(m.at)}
                       </td>
-                      <td className="num">{dateText(m.date)}</td>
+                      <td className="num sm-hide">{dateText(m.date)}</td>
                       <td>
                         <span className="chip chip-neutral">{KIND_LABEL[m.kind]}</span>
                         {m.fromAdvance && <span className="muted small"> من عهدة</span>}
                         {m.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
                         {m.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
                       </td>
-                      <td>{m.category}</td>
-                      <td className="strong">{m.title}</td>
-                      <td>{m.project}</td>
-                      <td>{m.party}</td>
+                      <td className="sm-hide">{m.category}</td>
+                      <td className="strong">
+                        {m.title}
+                        <span className="sub">{dateText(m.date)}</span>
+                        <span className="sub">{[m.category, m.project, m.party].filter(Boolean).join(' · ')}</span>
+                        <span className="sub">
+                          اتسجل {dayText(m.at)} {timeText(m.at)}
+                        </span>
+                      </td>
+                      <td className="sm-hide">{m.project}</td>
+                      <td className="sm-hide">{m.party}</td>
                       <td className={`num strong ${TONE[dir]}`}>
                         {SIGN[dir]}
                         {money(m.amount)}

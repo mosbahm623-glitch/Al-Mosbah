@@ -71,25 +71,33 @@ export default function QuickEntry() {
               <thead>
                 <tr>
                   <th>رقم القيد</th>
-                  <th>التاريخ</th>
-                  <th>المشروع</th>
+                  <th className="sm-hide">التاريخ</th>
+                  <th className="sm-hide">المشروع</th>
                   <th>البند</th>
                   <th>المبلغ</th>
-                  <th>الحالة</th>
+                  <th className="sm-hide">الحالة</th>
                 </tr>
               </thead>
               <tbody>
                 {mine.data.map((e) => (
                   <tr key={e.id}>
-                    <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">{dateText(e.entry_date)}</td>
-                    <td>{e.project?.name}</td>
-                    <td>{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</td>
+                    <td className="strong num">
+                      #{e.seq}
+                      <span className="sub">{dateText(e.entry_date)}</span>
+                    </td>
+                    <td className="num muted sm-hide">{dateText(e.entry_date)}</td>
+                    <td className="sm-hide">{e.project?.name}</td>
+                    <td>
+                      {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
+                      <span className="sub">
+                        {[e.project?.name, STATUS[e.status] ?? e.status].filter(Boolean).join(' · ')}
+                      </span>
+                    </td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}
                       {money(e.amount)}
                     </td>
-                    <td className="muted">{STATUS[e.status] ?? e.status}</td>
+                    <td className="muted sm-hide">{STATUS[e.status] ?? e.status}</td>
                   </tr>
                 ))}
               </tbody>

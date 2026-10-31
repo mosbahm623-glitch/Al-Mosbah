@@ -8,6 +8,23 @@ import { useAsync } from '../../lib/useAsync'
 import NewUserDialog from './NewUserDialog'
 import UserDialog from './UserDialog'
 
+const roleText = (role: UserRow['role']) => (role === 'admin' ? 'أدمن' : role === 'owner' ? 'مالك' : 'مستخدم')
+
+/** The pages a person can open, in one line. */
+function pagesText(u: UserRow) {
+  if (u.role !== 'user') return 'كل الصفحات'
+  if (!u.permissions.length) return 'مفيش صلاحيات'
+  return MODULES.flatMap((m) => {
+    const p = u.permissions.find((x) => x.module === m.id)
+    if (!p) return []
+    return [
+      m.id === 'advances'
+        ? `${m.label} (${LEVEL_LABEL[p.level]} · ${u.advanceIds.length} عهدة)`
+        : `${m.label} (${LEVEL_LABEL[p.level]})`,
+    ]
+  }).join(' · ')
+}
+
 export default function Users() {
   const { profile, isAdmin } = useAuth()
   const users = useAsync<UserRow[]>(fetchUsers)
@@ -38,10 +55,10 @@ export default function Users() {
               <thead>
                 <tr>
                   <th>الاسم</th>
-                  <th>الإيميل</th>
-                  <th>الدور</th>
-                  <th>الحالة</th>
-                  <th>الصفحات</th>
+                  <th className="sm-hide">الإيميل</th>
+                  <th className="sm-hide">الدور</th>
+                  <th className="sm-hide">الحالة</th>
+                  <th className="sm-hide">الصفحات</th>
                   <th>
                     <span className="sr-only">إجراءات</span>
                   </th>
@@ -50,33 +67,27 @@ export default function Users() {
               <tbody>
                 {users.data.map((u) => (
                   <tr key={u.id}>
-                    <td className="strong">{u.full_name ?? '—'}</td>
-                    <td className="muted" dir="ltr">
+                    <td className="strong">
+                      {u.full_name ?? '—'}
+                      <span className="sub" dir="ltr">
+                        {u.email}
+                      </span>
+                      <span className="sub">
+                        {roleText(u.role)} · {u.is_active ? 'مفعّل' : 'موقوف'}
+                      </span>
+                      <span className="sub">{pagesText(u)}</span>
+                    </td>
+                    <td className="muted sm-hide" dir="ltr">
                       {u.email}
                     </td>
-                    <td>{u.role === 'admin' ? 'أدمن' : u.role === 'owner' ? 'مالك' : 'مستخدم'}</td>
-                    <td>
+                    <td className="sm-hide">{roleText(u.role)}</td>
+                    <td className="sm-hide">
                       <span className={`chip ${u.is_active ? 'chip-ok' : 'chip-neutral'}`}>
                         <span className="dot" />
                         {u.is_active ? 'مفعّل' : 'موقوف'}
                       </span>
                     </td>
-                    <td className="muted small">
-                      {u.role !== 'user'
-                        ? 'كل الصفحات'
-                        : u.permissions.length
-                          ? MODULES.flatMap((m) => {
-                              const p = u.permissions.find((x) => x.module === m.id)
-                              return p
-                                ? [
-                                    m.id === 'advances'
-                                      ? `${m.label} (${LEVEL_LABEL[p.level]} · ${u.advanceIds.length} عهدة)`
-                                      : `${m.label} (${LEVEL_LABEL[p.level]})`,
-                                  ]
-                                : []
-                            }).join(' · ')
-                          : 'مفيش صلاحيات'}
-                    </td>
+                    <td className="muted small sm-hide">{pagesText(u)}</td>
                     <td>
                       {(isAdmin || u.role !== 'admin') && (
                         <button

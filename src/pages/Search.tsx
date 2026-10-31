@@ -70,13 +70,13 @@ function SearchView({ q }: { q: string }) {
               <thead>
                 <tr>
                   <th>رقم</th>
-                  <th>التاريخ</th>
-                  <th>المشروع</th>
-                  <th>النوع</th>
-                  <th>البند</th>
+                  <th className="sm-hide">التاريخ</th>
+                  <th className="sm-hide">المشروع</th>
+                  <th className="sm-hide">النوع</th>
+                  <th className="sm-hide">البند</th>
                   <th>البيان</th>
-                  <th>المقاول</th>
-                  <th>الحالة</th>
+                  <th className="sm-hide">المقاول</th>
+                  <th className="sm-hide">الحالة</th>
                   <th>المبلغ</th>
                   {canEdit && (
                     <th>
@@ -90,19 +90,29 @@ function SearchView({ q }: { q: string }) {
                   <tr key={e.id}>
                     <td className="num">
                       <a href={`#/projects/${e.project_id}`}>{e.seq}</a>
+                      <span className="sub">{dateText(e.entry_date)}</span>
                     </td>
-                    <td className="num">{dateText(e.entry_date)}</td>
-                    <td>
+                    <td className="num sm-hide">{dateText(e.entry_date)}</td>
+                    <td className="sm-hide">
                       <a href={`#/projects/${e.project_id}`}>{e.project?.name}</a>
                     </td>
-                    <td>
+                    <td className="sm-hide">
                       {e.kind === 'income' ? 'وارد' : 'مصروف'}
                       {e.advance_id && <span className="muted small"> من عهدة</span>}
                     </td>
-                    <td>{e.category}</td>
-                    <td className="strong">{e.item}</td>
-                    <td>{e.contractor?.name}</td>
-                    <td>
+                    <td className="sm-hide">{e.category}</td>
+                    <td className="strong">
+                      {e.item}
+                      <span className="sub">
+                        {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
+                      </span>
+                      <span className="sub">
+                        {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                        {e.advance_id ? ' من عهدة' : ''} · {STATUS[e.status]}
+                      </span>
+                    </td>
+                    <td className="sm-hide">{e.contractor?.name}</td>
+                    <td className="sm-hide">
                       <span
                         className={`chip ${e.status === 'approved' ? 'chip-neutral' : e.status === 'pending' ? 'chip-warn' : 'chip-err'}`}
                       >

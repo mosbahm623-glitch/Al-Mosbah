@@ -83,9 +83,9 @@ export default function Advances() {
                   <th>صاحب العهدة</th>
                   <th>المستلم</th>
                   <th>المصروف</th>
-                  <th>المرتجع</th>
+                  <th className="sm-hide">المرتجع</th>
                   <th>الرصيد</th>
-                  <th>الحالة</th>
+                  <th className="sm-hide">الحالة</th>
                 </tr>
               </thead>
               <tbody>
@@ -97,12 +97,16 @@ export default function Advances() {
                         <a className="row-link" href={`#/advances/${a.id}`}>
                           {a.holder_name}
                         </a>
+                        <span className="sub">
+                          <AdvanceChip status={a.status} />
+                          {a.returned > 0 && <> · مرتجع {money(a.returned)}</>}
+                        </span>
                       </td>
                       <td className="num">{money(a.given)}</td>
                       <td className="num">{money(a.spent)}</td>
-                      <td className="num">{money(a.returned)}</td>
+                      <td className="num sm-hide">{money(a.returned)}</td>
                       <td className={`num strong ${bal < 0 ? 'tone-text-err' : ''}`}>{money(bal)}</td>
-                      <td>
+                      <td className="sm-hide">
                         <AdvanceChip status={a.status} />
                       </td>
                     </tr>

@@ -150,13 +150,13 @@ export default function AdvanceDetail({ id }: { id: string }) {
               <thead>
                 <tr>
                   <th>رقم القيد</th>
-                  <th>التاريخ</th>
-                  <th>المشروع</th>
-                  <th>البند</th>
+                  <th className="sm-hide">التاريخ</th>
+                  <th className="sm-hide">المشروع</th>
+                  <th className="sm-hide">البند</th>
                   <th>البيان</th>
-                  <th>المقاول</th>
-                  <th>ملاحظات</th>
-                  <th>سجّله</th>
+                  <th className="sm-hide">المقاول</th>
+                  <th className="sm-hide">ملاحظات</th>
+                  <th className="sm-hide">سجّله</th>
                   <th>المبلغ</th>
                   {canEdit && (
                     <th>
@@ -168,10 +168,13 @@ export default function AdvanceDetail({ id }: { id: string }) {
               <tbody>
                 {entries.map((e) => (
                   <tr key={e.id}>
-                    <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">{dateText(e.entry_date)}</td>
-                    <td>{e.project?.name}</td>
-                    <td>{e.category}</td>
+                    <td className="strong num">
+                      #{e.seq}
+                      <span className="sub">{dateText(e.entry_date)}</span>
+                    </td>
+                    <td className="num muted sm-hide">{dateText(e.entry_date)}</td>
+                    <td className="sm-hide">{e.project?.name}</td>
+                    <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
                       {e.status === 'pending' && (
@@ -186,10 +189,15 @@ export default function AdvanceDetail({ id }: { id: string }) {
                           <span className="chip chip-err">مرفوض</span>
                         </>
                       )}
+                      <span className="sub">
+                        {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
+                      </span>
+                      {e.notes && <span className="sub">{e.notes}</span>}
+                      {e.creator?.full_name && <span className="sub">سجّله {e.creator.full_name}</span>}
                     </td>
-                    <td className="muted">{e.contractor?.name}</td>
-                    <td className="muted">{e.notes}</td>
-                    <td className="muted">{e.creator?.full_name}</td>
+                    <td className="muted sm-hide">{e.contractor?.name}</td>
+                    <td className="muted sm-hide">{e.notes}</td>
+                    <td className="muted sm-hide">{e.creator?.full_name}</td>
                     <td className="num strong tone-text-err">−{money(e.amount)}</td>
                     {canEdit && (
                       <td>

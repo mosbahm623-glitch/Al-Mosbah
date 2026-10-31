@@ -99,16 +99,24 @@ export default function Dashboard() {
                       <th>المشروع</th>
                       <th>الميزانية</th>
                       <th>المصروف</th>
-                      <th>الحالة</th>
+                      <th className="sm-hide">الحالة</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.budget_rows.map((r) => (
                       <tr key={r.id}>
-                        <td className="strong">{r.name}</td>
+                        <td className="strong">
+                          {r.name}
+                          <span className="sub">
+                            <span className={`chip ${r.over ? 'chip-err' : 'chip-ok'}`}>
+                              <span className="dot" aria-hidden="true" />
+                              {r.over ? 'تجاوز الميزانية' : 'ضمن الميزانية'}
+                            </span>
+                          </span>
+                        </td>
                         <td className="num">{money(r.budget)}</td>
                         <td className="num">{money(r.spent)}</td>
-                        <td>
+                        <td className="sm-hide">
                           <span className={`chip ${r.over ? 'chip-err' : 'chip-ok'}`}>
                             <span className="dot" aria-hidden="true" />
                             {r.over ? 'تجاوز الميزانية' : 'ضمن الميزانية'}

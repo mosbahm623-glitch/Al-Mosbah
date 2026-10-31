@@ -124,12 +124,12 @@ export default function BankDetail({ id }: { id: string }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>رقم القيد</th>
-                  <th>التاريخ</th>
-                  <th>المشروع</th>
-                  <th>البند</th>
+                  <th className="sm-hide">رقم القيد</th>
+                  <th className="sm-hide">التاريخ</th>
+                  <th className="sm-hide">المشروع</th>
+                  <th className="sm-hide">البند</th>
                   <th>البيان</th>
-                  <th>المقاول</th>
+                  <th className="sm-hide">المقاول</th>
                   <th>وارد</th>
                   <th>مصروف</th>
                   <th>الرصيد</th>
@@ -137,19 +137,30 @@ export default function BankDetail({ id }: { id: string }) {
               </thead>
               <tbody>
                 <tr>
-                  <td colSpan={8} className="muted">
+                  <td colSpan={8} className="muted sm-hide">
+                    رصيد افتتاحي
+                  </td>
+                  <td colSpan={3} className="muted sm-only">
                     رصيد افتتاحي
                   </td>
                   <td className="num strong">{money(bank.opening_balance)}</td>
                 </tr>
                 {withBalance.map(({ m, run }) => (
                   <tr key={m.id}>
-                    <td className="strong num">#{m.seq}</td>
-                    <td className="num muted">{dateText(m.entry_date)}</td>
-                    <td>{m.project_name}</td>
-                    <td>{m.category}</td>
-                    <td>{m.item}</td>
-                    <td className="muted">{m.contractor}</td>
+                    <td className="strong num sm-hide">#{m.seq}</td>
+                    <td className="num muted sm-hide">{dateText(m.entry_date)}</td>
+                    <td className="sm-hide">{m.project_name}</td>
+                    <td className="sm-hide">{m.category}</td>
+                    <td>
+                      {m.item}
+                      <span className="sub">
+                        #{m.seq} · {dateText(m.entry_date)}
+                      </span>
+                      <span className="sub">
+                        {[m.category, m.project_name, m.contractor].filter(Boolean).join(' · ')}
+                      </span>
+                    </td>
+                    <td className="muted sm-hide">{m.contractor}</td>
                     <td className="num tone-text-ok">{m.kind === 'income' ? money(m.amount) : ''}</td>
                     <td className="num tone-text-err">{m.kind === 'expense' ? money(m.amount) : ''}</td>
                     <td className="num strong">{money(run)}</td>

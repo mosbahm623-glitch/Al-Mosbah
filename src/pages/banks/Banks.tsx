@@ -52,7 +52,7 @@ export default function Banks() {
               <thead>
                 <tr>
                   <th>البنك</th>
-                  <th>رصيد افتتاحي</th>
+                  <th className="sm-hide">رصيد افتتاحي</th>
                   <th>وارد</th>
                   <th>مصروف</th>
                   <th>الرصيد الحالي</th>
@@ -67,8 +67,9 @@ export default function Banks() {
                         <a className="row-link" href={`#/banks/${b.id}`}>
                           {b.name}
                         </a>
+                        <span className="sub">افتتاحي {money(b.opening_balance)}</span>
                       </td>
-                      <td className="num">{money(b.opening_balance)}</td>
+                      <td className="num sm-hide">{money(b.opening_balance)}</td>
                       <td className="num tone-text-ok">{money(b.income)}</td>
                       <td className="num tone-text-err">{money(b.expenses)}</td>
                       <td className={`num strong ${bal < 0 ? 'tone-text-err' : ''}`}>{money(bal)}</td>

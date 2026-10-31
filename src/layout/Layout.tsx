@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
+import { useStackedTables } from './useStackedTables'
 import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { applyTheme, currentTheme, type Theme } from './theme'
@@ -29,6 +30,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(currentTheme)
 
   useEffect(() => startLive(), [])
+
+  const content = useRef<HTMLElement>(null)
+  useStackedTables(content)
 
   const searchTimer = useRef<number | undefined>(undefined)
   const goSearch = (raw: string) => {
@@ -196,7 +200,9 @@ export default function Layout({ children }: { children: ReactNode }) {
         </nav>
       </aside>
 
-      <main className="content">{children}</main>
+      <main className="content" ref={content}>
+        {children}
+      </main>
     </div>
   )
 }

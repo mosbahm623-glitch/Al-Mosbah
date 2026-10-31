@@ -5,6 +5,11 @@ export const TYPE_LABEL = { finishing: 'تشطيب', furnishing: 'فرش' } as c
 export type ProjectType = keyof typeof TYPE_LABEL
 
 export const dateText = (iso: string) => iso.split('-').reverse().join('-')
+/** DD-MM-YY, short enough for a phone table column. */
+export const dateShort = (iso: string) => {
+  const [y = '', m = '', d = ''] = iso.split('-')
+  return `${d}-${m}-${y.slice(2)}`
+}
 
 /** Today as YYYY-MM-DD in the local time zone (what <input type="date"> and the database use). */
 export const todayISO = () => new Date().toLocaleDateString('en-CA')

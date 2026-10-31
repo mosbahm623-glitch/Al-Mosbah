@@ -116,20 +116,26 @@ export function LatestMovements() {
           <table className="table">
             <thead>
               <tr>
-                <th>التاريخ</th>
-                <th>النوع</th>
+                <th className="sm-hide">التاريخ</th>
+                <th className="sm-hide">النوع</th>
                 <th>البيان</th>
-                <th>المشروع</th>
+                <th className="sm-hide">المشروع</th>
                 <th>المبلغ</th>
               </tr>
             </thead>
             <tbody>
               {data.map((m) => (
                 <tr key={m.key}>
-                  <td>{dateText(m.date)}</td>
-                  <td>{KIND_LABEL[m.kind]}</td>
-                  <td className="strong">{m.title || m.category || '—'}</td>
-                  <td>{m.project ?? '—'}</td>
+                  <td className="sm-hide">{dateText(m.date)}</td>
+                  <td className="sm-hide">{KIND_LABEL[m.kind]}</td>
+                  <td className="strong">
+                    {m.title || m.category || '—'}
+                    {m.project && <span className="sub-line">{m.project}</span>}
+                    <span className="sub">
+                      {[dateText(m.date), KIND_LABEL[m.kind], m.project].filter(Boolean).join(' · ')}
+                    </span>
+                  </td>
+                  <td className="sm-hide">{m.project ?? '—'}</td>
                   <td className={`num ${TONE[direction(m)]}`}>
                     {SIGN[direction(m)]}
                     {money(m.amount)}

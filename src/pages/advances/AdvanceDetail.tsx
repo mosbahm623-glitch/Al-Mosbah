@@ -4,7 +4,7 @@ import Stats from '../../components/Stats'
 import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
-import { dateText, money } from '../../lib/format'
+import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
@@ -149,15 +149,16 @@ export default function AdvanceDetail({ id }: { id: string }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>رقم القيد</th>
+                  <th>رقم</th>
                   <th>التاريخ</th>
-                  <th>المشروع</th>
-                  <th>البند</th>
+                  <th className="sm-hide">المشروع</th>
+                  <th className="sm-hide">البند</th>
                   <th>البيان</th>
-                  <th>المقاول</th>
-                  <th>ملاحظات</th>
-                  <th>سجّله</th>
+                  <th className="sm-hide">المقاول</th>
+                  <th className="sm-hide">ملاحظات</th>
+                  <th className="sm-hide">سجّله</th>
                   <th>المبلغ</th>
+                  <th className="sm-only">الحالة</th>
                   {canEdit && (
                     <th>
                       <span className="sr-only">إجراءات</span>
@@ -169,28 +170,42 @@ export default function AdvanceDetail({ id }: { id: string }) {
                 {entries.map((e) => (
                   <tr key={e.id}>
                     <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">{dateText(e.entry_date)}</td>
-                    <td>{e.project?.name}</td>
-                    <td>{e.category}</td>
+                    <td className="num muted">
+                      <span className="sm-hide">{dateText(e.entry_date)}</span>
+                      <span className="sm-only">{dateShort(e.entry_date)}</span>
+                    </td>
+                    <td className="sm-hide">{e.project?.name}</td>
+                    <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
                       {e.status === 'pending' && (
                         <>
                           {' '}
-                          <span className="chip chip-warn">قيد الموافقة</span>
+                          <span className="sm-hide chip chip-warn">قيد الموافقة</span>
                         </>
                       )}
                       {e.status === 'rejected' && (
                         <>
                           {' '}
-                          <span className="chip chip-err">مرفوض</span>
+                          <span className="sm-hide chip chip-err">مرفوض</span>
                         </>
                       )}
+                      {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
+                      <span className="sub">
+                        {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
+                      </span>
+                      {e.notes && <span className="sub">{e.notes}</span>}
+                      {e.creator?.full_name && <span className="sub">سجّله {e.creator.full_name}</span>}
                     </td>
-                    <td className="muted">{e.contractor?.name}</td>
-                    <td className="muted">{e.notes}</td>
-                    <td className="muted">{e.creator?.full_name}</td>
+                    <td className="muted sm-hide">{e.contractor?.name}</td>
+                    <td className="muted sm-hide">{e.notes}</td>
+                    <td className="muted sm-hide">{e.creator?.full_name}</td>
                     <td className="num strong tone-text-err">−{money(e.amount)}</td>
+                    <td className="sm-only">
+                      {e.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
+                      {e.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
+                      {e.status === 'approved' && <span className="chip chip-ok">معتمد</span>}
+                    </td>
                     {canEdit && (
                       <td>
                         {(isAdmin || e.status !== 'approved') && (

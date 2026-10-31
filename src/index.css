@@ -2180,16 +2180,17 @@ a.btn[aria-disabled='true'] {
 @media (max-width: 719px) {
   .table {
     min-width: 0;
-    font-size: 0.82rem;
+    width: 100%;
+    font-size: 0.76rem;
   }
   .table th {
-    padding: 0.55rem 0.5rem;
-    font-size: 0.7rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.64rem;
     white-space: normal;
     line-height: 1.3;
   }
   .table td {
-    padding: 0.65rem 0.5rem;
+    padding: 0.6rem 0.25rem;
     vertical-align: top;
     overflow-wrap: anywhere;
   }
@@ -2204,19 +2205,32 @@ a.btn[aria-disabled='true'] {
   .table .sm-hide {
     display: none;
   }
+  .table th.sm-only,
   .table td.sm-only {
     display: table-cell;
+  }
+  .table span.sm-only {
+    display: inline;
+  }
+  .table td.num,
+  .table td .chip {
+    white-space: nowrap;
+  }
+  .table .icon-btn {
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
   }
   .table .sub {
     display: block;
     margin-top: 0.2rem;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 400;
     line-height: 1.45;
     color: var(--muted);
   }
   .table .chip {
-    padding: 0.1rem 0.5rem;
-    font-size: 0.7rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.62rem;
   }
 }

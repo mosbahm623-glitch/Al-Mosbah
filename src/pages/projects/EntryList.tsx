@@ -4,7 +4,7 @@ import { restoreEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
-import { dateText, money } from '../../lib/format'
+import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 
 const KINDS = [
@@ -83,8 +83,8 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
             <table className="table">
               <thead>
                 <tr>
-                  <th>رقم القيد</th>
-                  <th className="sm-hide">التاريخ</th>
+                  <th>رقم</th>
+                  <th>التاريخ</th>
                   <th className="sm-hide">النوع</th>
                   <th className="sm-hide">البند</th>
                   <th>البيان</th>
@@ -93,6 +93,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                   <th className="sm-hide">سجّله</th>
                   <th className="sm-hide">ملاحظات</th>
                   <th>المبلغ</th>
+                  <th className="sm-only">الحالة</th>
                   {canEdit && (
                     <th>
                       <span className="sr-only">إجراءات</span>
@@ -103,11 +104,11 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               <tbody>
                 {shown.map((e) => (
                   <tr key={e.id} className={e.status === 'deleted' ? 'row-deleted' : undefined}>
-                    <td className="strong num">
-                      #{e.seq}
-                      <span className="sub">{dateText(e.entry_date)}</span>
+                    <td className="strong num">#{e.seq}</td>
+                    <td className="num muted">
+                      <span className="sm-hide">{dateText(e.entry_date)}</span>
+                      <span className="sm-only">{dateShort(e.entry_date)}</span>
                     </td>
-                    <td className="num muted sm-hide">{dateText(e.entry_date)}</td>
                     <td className="sm-hide">
                       <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
                         <span className="dot" />
@@ -126,13 +127,13 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       {e.status === 'pending' && (
                         <>
                           {' '}
-                          <span className="chip chip-warn">قيد الموافقة</span>
+                          <span className="sm-hide chip chip-warn">قيد الموافقة</span>
                         </>
                       )}
                       {e.status === 'rejected' && (
                         <>
                           {' '}
-                          <span className="chip chip-err">مرفوض</span>
+                          <span className="sm-hide chip chip-err">مرفوض</span>
                         </>
                       )}
                       {e.status === 'deleted' && (
@@ -155,6 +156,11 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}
                       {money(e.amount)}
+                    </td>
+                    <td className="sm-only">
+                      {e.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
+                      {e.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
+                      {e.status === 'approved' && <span className="chip chip-ok">معتمد</span>}
                     </td>
                     {canEdit && (
                       <td>

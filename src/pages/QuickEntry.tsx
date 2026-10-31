@@ -89,6 +89,7 @@ export default function QuickEntry() {
                     <td className="sm-hide">{e.project?.name}</td>
                     <td>
                       {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
+                      {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
                         {[e.project?.name, STATUS[e.status] ?? e.status].filter(Boolean).join(' · ')}
                       </span>

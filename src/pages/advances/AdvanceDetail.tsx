@@ -190,6 +190,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                           <span className="sm-hide chip chip-err">مرفوض</span>
                         </>
                       )}
+                      {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
                         {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
                       </span>

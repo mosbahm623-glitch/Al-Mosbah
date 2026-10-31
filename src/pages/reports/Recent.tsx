@@ -95,6 +95,7 @@ export default function Recent() {
                       <td className="sm-hide">{m.category}</td>
                       <td className="strong">
                         {m.title}
+                        {m.project && <span className="sub-line">{m.project}</span>}
                         <span className="sub">{dateText(m.date)}</span>
                         <span className="sub">{[m.category, m.project, m.party].filter(Boolean).join(' · ')}</span>
                         <span className="sub">

@@ -130,6 +130,7 @@ export function LatestMovements() {
                   <td className="sm-hide">{KIND_LABEL[m.kind]}</td>
                   <td className="strong">
                     {m.title || m.category || '—'}
+                    {m.project && <span className="sub-line">{m.project}</span>}
                     <span className="sub">
                       {[dateText(m.date), KIND_LABEL[m.kind], m.project].filter(Boolean).join(' · ')}
                     </span>

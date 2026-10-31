@@ -2174,6 +2174,7 @@ a.btn[aria-disabled='true'] {
 
 /* ===== tables on phones: the same table, but only the key columns; the rest sits under the main text ===== */
 .sub,
+.sub-line,
 .sm-only {
   display: none;
 }
@@ -2230,6 +2231,16 @@ a.btn[aria-disabled='true'] {
   }
   .table .sub {
     display: none;
+  }
+  /* the one detail line kept under the description (the project) */
+  .table .sub-line {
+    display: block;
+    margin-top: 0.1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.66rem;
+    font-weight: 400;
+    color: var(--muted);
   }
   /* one line per row: long text is cut with … instead of making the row taller */
   .table td.strong:not(.num) {

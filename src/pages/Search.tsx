@@ -103,6 +103,7 @@ function SearchView({ q }: { q: string }) {
                     <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
+                      {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
                         {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
                       </span>

@@ -2254,3 +2254,22 @@ a.btn[aria-disabled='true'] {
     font-size: 0.62rem;
   }
 }
+
+/* rejection reason: typed by the admin, shown to whoever recorded the entry */
+.appr-reject {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.appr-reject input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.reject-reason {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--err, #b42318);
+}

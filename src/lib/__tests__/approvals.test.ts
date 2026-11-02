@@ -38,6 +38,13 @@ describe('decide', () => {
     expect(b.calls).toContainEqual(['eq', ['rev', 7]])
   })
 
+  it('sends the reason along with a rejection', async () => {
+    const a = query({ data: [{ id: 'a' }], error: null })
+    from.mockReturnValueOnce(a.query)
+    await decide([{ id: 'a', rev: 2 }], 'rejected', '  المبلغ غلط ')
+    expect(a.calls[0]).toEqual(['update', [{ status: 'rejected', reject_reason: 'المبلغ غلط' }]])
+  })
+
   it('counts everything as done when every update went through', async () => {
     from.mockReturnValue(query({ data: [{ id: 'x' }], error: null }).query)
     expect(

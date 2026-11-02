@@ -289,6 +289,9 @@ export default function EntryDialog({
         </label>
       </fieldset>
       {locked && <p className="msg span-2 muted">مفيش عندك صلاحية تعدّل القيود.</p>}
+      {entry?.status === 'rejected' && entry.reject_reason && (
+        <p className="msg msg-error span-2">اترفض القيد ده. السبب: {entry.reject_reason}</p>
+      )}
       {isStaff && entry && <EntryHistory entryId={entry.id} />}
       {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
       {confirmDelete && (

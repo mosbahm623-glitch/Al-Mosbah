@@ -2,6 +2,7 @@ import type { Module } from '../auth/permissions'
 import {
   Bell,
   CheckSquare,
+  DatabaseBackup,
   FileBarChart,
   HandCoins,
   History,
@@ -43,6 +44,7 @@ export const NAV: NavGroup[] = [
       { path: 'approvals', label: 'الموافقات', icon: CheckSquare, adminOnly: true },
       { path: 'users', label: 'المستخدمين', icon: Users, staffOnly: true },
       { path: 'reports', label: 'التقارير والتصدير', icon: FileBarChart, module: 'reports' },
+      { path: 'backup', label: 'النسخة الاحتياطية', icon: DatabaseBackup, staffOnly: true },
     ],
   },
   {

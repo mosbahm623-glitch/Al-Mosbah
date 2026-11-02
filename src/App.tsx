@@ -20,6 +20,7 @@ const Reports = lazy(() => import('./pages/reports/Reports'))
 const Recent = lazy(() => import('./pages/reports/Recent'))
 const Contractors = lazy(() => import('./pages/contractors/Contractors'))
 const ContractorDetail = lazy(() => import('./pages/contractors/ContractorDetail'))
+const Backup = lazy(() => import('./pages/Backup'))
 const Search = lazy(() => import('./pages/Search'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
@@ -40,6 +41,7 @@ function Content() {
     return <ComingSoon title="الصفحة مش موجودة" />
   if (sectionItem?.module && !can(sectionItem.module)) return <NoAccess />
   if (route === 'users') return <Users />
+  if (route === 'backup') return <Backup />
   if (route === 'approvals') return <Approvals />
   if (route === 'dashboard') return <Dashboard />
   if (route === 'reports' || route === 'reports/journal') return <Reports />

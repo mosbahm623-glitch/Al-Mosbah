@@ -16,7 +16,7 @@ const KINDS = [
 type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void; onRestored?: () => void }
 
 export default function EntryList({ entries, canEdit, onEdit, onRestored }: Props) {
-  const { isAdmin, isStaff } = useAuth()
+  const { isAdmin, isStaff, canEditOwn, canDeleteOwn } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
 
@@ -176,7 +176,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                                 <RotateCcw size={17} />
                               </button>
                             )
-                          : (isStaff || e.status !== 'approved') && (
+                          : (isStaff || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
                               <button
                                 type="button"
                                 className="icon-btn"

@@ -24,7 +24,7 @@ function SearchView({ q }: { q: string }) {
   const [draft, setDraft] = useState(q)
   const load = useCallback(async () => (q ? searchEntries(q) : { data: [] as Hit[], error: false }), [q])
   const { data, failed, loading, reload } = useAsync<Hit[]>(load)
-  const { can, isStaff: isAdmin } = useAuth()
+  const { can, isStaff: isAdmin, canEditOwn, canDeleteOwn } = useAuth()
   const canEdit = can('projects', 'edit')
   const [editing, setEditing] = useState<Hit | null>(null)
 
@@ -123,7 +123,7 @@ function SearchView({ q }: { q: string }) {
                     <td className="num strong">{money(e.amount)}</td>
                     {canEdit && (
                       <td>
-                        {(isAdmin || e.status !== 'approved') && (
+                        {(isAdmin || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
                           <button
                             type="button"
                             className="icon-btn"

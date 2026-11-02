@@ -9,6 +9,8 @@ export type Profile = {
   full_name: string | null
   role: 'admin' | 'owner' | 'user'
   is_active: boolean
+  can_edit_entries: boolean
+  can_delete_entries: boolean
 }
 
 type AuthState = {
@@ -21,6 +23,10 @@ type AuthState = {
   isOwner: boolean
   /** admin or owner: full access to every page and to managing users */
   isStaff: boolean
+  /** may edit his own entries (staff always can; the admin switches it per user) */
+  canEditOwn: boolean
+  /** may delete his own entries (staff always can; the admin switches it per user) */
+  canDeleteOwn: boolean
   /** can the current user open (view) or change (edit) this page? */
   can: (module: Module, level?: Level) => boolean
   signIn: (email: string, password: string) => Promise<string | null>
@@ -68,7 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     const [p, r] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, role, is_active').eq('id', userId).maybeSingle(),
+      supabase
+        .from('profiles')
+        .select('id, full_name, role, is_active, can_edit_entries, can_delete_entries')
+        .eq('id', userId)
+        .maybeSingle(),
       supabase.from('user_permissions').select('module,level').eq('user_id', userId),
     ])
     const prof = (p.data as Profile | null) ?? null
@@ -162,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAdmin: profile?.role === 'admin',
       isOwner: profile?.role === 'owner',
       isStaff: profile?.role === 'admin' || profile?.role === 'owner',
+      canEditOwn: profile?.role === 'admin' || profile?.role === 'owner' || profile?.can_edit_entries !== false,
+      canDeleteOwn: profile?.role === 'admin' || profile?.role === 'owner' || profile?.can_delete_entries !== false,
       can: (module, level = 'view') =>
         allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
       signIn: async (email, password) => {

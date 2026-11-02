@@ -2,13 +2,8 @@ import { lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
-import Contractors from './pages/contractors/Contractors'
-import ContractorDetail from './pages/contractors/ContractorDetail'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
-import Search from './pages/Search'
-import Notifications from './pages/Notifications'
-import QuickEntry from './pages/QuickEntry'
 const Projects = lazy(() => import('./pages/projects/Projects'))
 const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
 const ProjectReport = lazy(() => import('./pages/projects/ProjectReport'))
@@ -22,6 +17,11 @@ const BankDetail = lazy(() => import('./pages/banks/BankDetail'))
 const Approvals = lazy(() => import('./pages/approvals/Approvals'))
 const Reports = lazy(() => import('./pages/reports/Reports'))
 const Recent = lazy(() => import('./pages/reports/Recent'))
+const Contractors = lazy(() => import('./pages/contractors/Contractors'))
+const ContractorDetail = lazy(() => import('./pages/contractors/ContractorDetail'))
+const Search = lazy(() => import('./pages/Search'))
+const Notifications = lazy(() => import('./pages/Notifications'))
+const QuickEntry = lazy(() => import('./pages/QuickEntry'))
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'

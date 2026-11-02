@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import { saveBank, type BankSummary } from '../../lib/banks'
 
 type Props = { bank?: BankSummary; onClose: () => void; onSaved: () => void }
@@ -38,14 +39,7 @@ export default function BankDialog({ bank, onClose, onSaved }: Props) {
           <input value={opening} onChange={(e) => setOpening(e.target.value)} inputMode="decimal" />
         </label>
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-        </div>
+        <FormActions saving={saving} onClose={onClose} />
       </form>
     </Dialog>
   )

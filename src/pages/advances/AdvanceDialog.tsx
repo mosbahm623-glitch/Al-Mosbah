@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances'
 
 type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
@@ -75,14 +76,7 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-        </div>
+        <FormActions saving={saving} onClose={onClose} />
       </form>
     </Dialog>
   )

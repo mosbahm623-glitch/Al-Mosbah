@@ -67,14 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // the user whose profile is loaded (or loading): stops the double fetch at start-up and on token refreshes
   const loadedFor = useRef<string | null>(null)
+  // what was last loaded, so an identical reload does not re-render or refresh every page
+  const lastSignature = useRef('')
 
   const loadProfile = useCallback(async (userId: string | null) => {
     loadedFor.current = userId
     if (!userId) {
+      lastSignature.current = ''
       setProfile(null)
       setPermissions({})
       writeCache(null)
-      return
+      return false
     }
     const [p, r] = await Promise.all([
       supabase
@@ -86,9 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ])
     const prof = (p.data as Profile | null) ?? null
     const perms = Object.fromEntries((r.data ?? []).map((x) => [x.module, x.level])) as Permissions
-    setProfile(prof)
-    setPermissions(perms)
+    const signature = JSON.stringify([prof, perms])
+    const changed = signature !== lastSignature.current
+    lastSignature.current = signature
+    if (changed) {
+      setProfile(prof)
+      setPermissions(perms)
+    }
     writeCache(prof ? { uid: userId, profile: prof, permissions: perms } : null)
+    return changed
   }, [])
 
   useEffect(() => {
@@ -100,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const cached = uid ? readCache(uid) : null
       if (cached) {
         // show the app at once from the last known profile; the fresh one replaces it a moment later
+        lastSignature.current = JSON.stringify([cached.profile, cached.permissions])
         setProfile(cached.profile)
         setPermissions(cached.permissions)
         setLoading(false)
@@ -132,7 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const reload = () => {
       window.clearTimeout(timer)
       timer = window.setTimeout(() => {
-        void loadProfile(uid).then(notifyDataChanged) // the data he may see can change too (e.g. custody access)
+        // the data he may see can change too (e.g. custody access), so a real change refreshes every page
+        void loadProfile(uid).then((changed) => changed && notifyDataChanged())
       }, 250)
     }
     const mine = (payload: { new: Record<string, unknown>; old: Record<string, unknown> }, key: string) => {
@@ -192,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut: async () => {
         await supabase.auth.signOut()
       },
-      refreshProfile: async () => loadProfile(session?.user.id ?? null),
+      refreshProfile: async () => void (await loadProfile(session?.user.id ?? null)),
     }),
     [loading, session, profile, permissions, loadProfile],
   )

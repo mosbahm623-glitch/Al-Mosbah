@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import Segmented from '../../components/Segmented'
 import { TYPE_LABEL, type ProjectType } from '../../lib/format'
 import { saveProject, type ProjectSummary } from '../../lib/projects'
@@ -57,14 +58,7 @@ export default function ProjectDialog({ project, onClose, onSaved }: Props) {
           </div>
         )}
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-        </div>
+        <FormActions saving={saving} onClose={onClose} />
       </form>
     </Dialog>
   )

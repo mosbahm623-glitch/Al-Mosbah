@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances'
 
 type Row = { id: string; amount: number; date: string; notes?: string | null }
@@ -79,19 +80,12 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
           </label>
         )}
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-          {row && (
-            <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving}>
-              {confirmDelete ? 'تأكيد الحذف نهائياً' : 'حذف'}
-            </button>
-          )}
-        </div>
+        <FormActions
+          saving={saving}
+          onClose={onClose}
+          onDelete={row ? () => void remove() : undefined}
+          confirmingDelete={confirmDelete}
+        />
       </form>
     </Dialog>
   )

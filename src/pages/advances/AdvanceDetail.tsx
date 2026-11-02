@@ -188,6 +188,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                         <>
                           {' '}
                           <span className="sm-hide chip chip-err">مرفوض</span>
+                          {e.reject_reason && <span className="reject-reason">سبب الرفض: {e.reject_reason}</span>}
                         </>
                       )}
                       {e.project?.name && <span className="sub-line">{e.project?.name}</span>}

@@ -31,6 +31,8 @@ export type Entry = {
   creator?: { full_name: string | null } | null
   /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
   status: 'pending' | 'approved' | 'rejected' | 'deleted'
+  /** why the admin rejected the entry (rejected entries only) */
+  reject_reason?: string | null
   /** why a deleted entry was deleted (deleted entries only) */
   deleteReason?: string | null
   /** only loaded where entries of several projects are listed (custody page) */
@@ -54,7 +56,7 @@ export const saveProject = (row: ProjectInput, id?: string) =>
   id ? supabase.from('projects').update(row).eq('id', id) : supabase.from('projects').insert(row)
 
 export const ENTRY_COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchEntries = (projectId: string) =>
   supabase

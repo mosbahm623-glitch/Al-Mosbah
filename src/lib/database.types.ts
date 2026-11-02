@@ -57,19 +57,19 @@ export type Database = {
           advance_id: string | null; amount: number; bank_id: string | null; category: string; contractor_id: string | null
           created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null
           entry_date: string; id: string; item: string | null; kind: string; notes: string | null
-          project_id: string; seq: number; rev: number; status: string; deleted_at: string | null; deleted_by: string | null; status_before_delete: string | null; delete_reason: string | null
+          project_id: string; seq: number; rev: number; status: string; deleted_at: string | null; deleted_by: string | null; status_before_delete: string | null; delete_reason: string | null; reject_reason: string | null
         },
         {
           advance_id?: string | null; amount: number; bank_id?: string | null; category: string; contractor_id?: string | null
           created_at?: string; created_by?: string | null; decided_at?: string | null; decided_by?: string | null
           entry_date?: string; id?: string; item?: string | null; kind: string; notes?: string | null
-          project_id: string; seq?: never; rev?: never; status?: string; deleted_at?: never; deleted_by?: never; status_before_delete?: never; delete_reason?: never
+          project_id: string; seq?: never; rev?: never; status?: string; deleted_at?: never; deleted_by?: never; status_before_delete?: never; delete_reason?: never; reject_reason?: never
         },
         {
           advance_id?: string | null; amount?: number; bank_id?: string | null; category?: string; contractor_id?: string | null
           created_at?: string; created_by?: string | null; decided_at?: string | null; decided_by?: string | null
           entry_date?: string; id?: string; item?: string | null; kind?: string; notes?: string | null
-          project_id?: string; seq?: never; rev?: never; status?: string; deleted_at?: never; deleted_by?: never; status_before_delete?: never; delete_reason?: never
+          project_id?: string; seq?: never; rev?: never; status?: string; deleted_at?: never; deleted_by?: never; status_before_delete?: never; delete_reason?: never; reject_reason?: string | null
         }
       >
       expense_categories: T<

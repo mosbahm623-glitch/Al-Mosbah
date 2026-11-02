@@ -134,6 +134,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                         <>
                           {' '}
                           <span className="sm-hide chip chip-err">مرفوض</span>
+                          {e.reject_reason && <span className="reject-reason">سبب الرفض: {e.reject_reason}</span>}
                         </>
                       )}
                       {e.status === 'deleted' && (

@@ -34,6 +34,7 @@ const FIELDS: [string, string][] = [
   ['entry_date', 'التاريخ'],
   ['notes', 'ملاحظات'],
   ['status', 'الحالة'],
+  ['reject_reason', 'سبب الرفض'],
   ['delete_reason', 'سبب المسح'],
 ]
 

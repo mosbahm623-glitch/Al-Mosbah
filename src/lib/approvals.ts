@@ -13,6 +13,7 @@ export type PendingEntry = {
   advance_id: string | null
   status: 'pending' | 'rejected'
   created_at: string
+  reject_reason: string | null
   project: { name: string } | null
   contractor: { name: string } | null
   bank: { name: string } | null
@@ -20,7 +21,7 @@ export type PendingEntry = {
 }
 
 const COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchByStatus = (status: 'pending' | 'rejected') =>
   supabase
@@ -32,11 +33,12 @@ export const fetchByStatus = (status: 'pending' | 'rejected') =>
 
 /**
  * Approve or reject entries as they were shown (same rev). Returns how many went through and how many were
- * skipped because someone changed them in the meantime; those need a fresh look.
+ * skipped because someone changed them in the meantime; those need a fresh look. A rejection carries its reason.
  */
-export async function decide(items: { id: string; rev: number }[], status: 'approved' | 'rejected') {
+export async function decide(items: { id: string; rev: number }[], status: 'approved' | 'rejected', reason?: string) {
+  const patch = status === 'rejected' ? { status, reject_reason: reason?.trim() ?? '' } : { status }
   const results = await Promise.all(
-    items.map((it) => supabase.from('entries').update({ status }).eq('id', it.id).eq('rev', it.rev).select('id')),
+    items.map((it) => supabase.from('entries').update(patch).eq('id', it.id).eq('rev', it.rev).select('id')),
   )
   const failed = results.some((r) => r.error)
   const done = results.filter((r) => !r.error && (r.data?.length ?? 0) > 0).length

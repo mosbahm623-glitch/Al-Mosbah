@@ -26,7 +26,7 @@ export async function signedUrls(paths: string[]): Promise<Record<string, string
 }
 
 /** A phone photo is several MB: scale it down and re-save it as JPEG (a few hundred KB). Falls back to the original. */
-export async function shrinkImage(file: File, maxSide = 1600, quality = 0.8): Promise<Blob> {
+async function shrinkImage(file: File, maxSide = 1600, quality = 0.8): Promise<Blob> {
   try {
     const bitmap = await createImageBitmap(file)
     const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
@@ -49,7 +49,7 @@ export async function shrinkImage(file: File, maxSide = 1600, quality = 0.8): Pr
 const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 /** Stores one invoice photo on an entry. Returns an error message, or null when it went through. */
-export async function uploadInvoice(entryId: string, file: File): Promise<string | null> {
+async function uploadInvoice(entryId: string, file: File): Promise<string | null> {
   const blob = await shrinkImage(file)
   if (!TYPES.includes(blob.type)) return 'نوع الصورة مش مدعوم (JPG أو PNG أو WebP)'
   if (blob.size > 5 * 1024 * 1024) return 'الصورة كبيرة قوي'

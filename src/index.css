@@ -1398,6 +1398,44 @@ a.btn[aria-disabled='true'] {
   display: grid;
   gap: 8px;
 }
+.perm-rights {
+  display: grid;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  overflow: hidden;
+}
+.perm-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.perm-right + .perm-right {
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+}
+.perm-right input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 2px 0 0;
+  padding: 0;
+  flex: none;
+}
+.perm-right span {
+  display: grid;
+  gap: 2px;
+}
+.perm-right b {
+  font-size: 0.92rem;
+}
+.perm-right small {
+  color: var(--muted, #6b6b6b);
+  font-size: 0.8rem;
+}
+.perm-right.is-off {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .perm-sub {
   display: grid;
   gap: 6px;

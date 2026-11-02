@@ -147,24 +147,35 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
               </div>
             ))}
             <div className="perm-block">
-              <span className="strong">قيوده اللي سجّلها</span>
-              <label className="check">
-                <input type="checkbox" checked={canEditOwn} onChange={(e) => setCanEditOwn(e.target.checked)} />
-                يقدر يعدّلها
-              </label>
-              <label className="check">
-                <input type="checkbox" checked={canDeleteOwn} onChange={(e) => setCanDeleteOwn(e.target.checked)} />
-                يقدر يمسحها
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={canEditApproved}
-                  disabled={!canEditOwn}
-                  onChange={(e) => setCanEditApproved(e.target.checked)}
-                />
-                يقدر يعدّل القيد بعد ما يتوافق عليه (بيرجع للأدمن يوافق تاني)
-              </label>
+              <span className="strong">القيود اللي بيسجّلها</span>
+              <div className="perm-rights">
+                <label className="perm-right">
+                  <input type="checkbox" checked={canEditOwn} onChange={(e) => setCanEditOwn(e.target.checked)} />
+                  <span>
+                    <b>يعدّل قيوده</b>
+                    <small>طول ما القيد لسه مستنّي الموافقة أو مترفوض.</small>
+                  </span>
+                </label>
+                <label className="perm-right">
+                  <input type="checkbox" checked={canDeleteOwn} onChange={(e) => setCanDeleteOwn(e.target.checked)} />
+                  <span>
+                    <b>يمسح قيوده</b>
+                    <small>القيد المعتمد مينفعش يتمسح غير بالأدمن.</small>
+                  </span>
+                </label>
+                <label className={canEditOwn ? 'perm-right' : 'perm-right is-off'}>
+                  <input
+                    type="checkbox"
+                    checked={canEditApproved}
+                    disabled={!canEditOwn}
+                    onChange={(e) => setCanEditApproved(e.target.checked)}
+                  />
+                  <span>
+                    <b>يعدّل قيوده بعد الموافقة عليها</b>
+                    <small>القيد يفضل معتمد، وبيوصلك إشعار بالتغيير والسبب.</small>
+                  </span>
+                </label>
+              </div>
             </div>
             <p className="muted small">مشاهدة = يشوف بس · تعديل = يشوف ويضيف ويعدّل ويحذف في الصفحة دي.</p>
           </div>

@@ -359,7 +359,13 @@ export default function EntryDialog({
       <div className="dialog-actions span-2">
         {!locked && !savedId && (
           <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : entry ? (isAdmin ? 'حفظ التعديل' : 'حفظ وإعادة إرسال') : 'حفظ القيد'}
+            {saving
+              ? 'جارٍ الحفظ...'
+              : entry
+                ? isAdmin || entry.status === 'approved'
+                  ? 'حفظ التعديل'
+                  : 'حفظ وإعادة إرسال'
+                : 'حفظ القيد'}
           </button>
         )}
         {!inline && (

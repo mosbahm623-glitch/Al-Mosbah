@@ -12,6 +12,8 @@ export type Profile = {
   can_edit_entries: boolean
   can_delete_entries: boolean
   can_edit_approved: boolean
+  /** the admin set a temporary password: the user must choose his own on first login */
+  must_change_password: boolean
 }
 
 type AuthState = {
@@ -34,6 +36,8 @@ type AuthState = {
   can: (module: Module, level?: Level) => boolean
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
+  /** saves the user's own new password; returns an error message or null */
+  setOwnPassword: (password: string) => Promise<string | null>
   refreshProfile: () => Promise<void>
 }
 
@@ -82,7 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [p, r] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, full_name, role, is_active, can_edit_entries, can_delete_entries, can_edit_approved')
+        .select(
+          'id, full_name, role, is_active, can_edit_entries, can_delete_entries, can_edit_approved, must_change_password',
+        )
         .eq('id', userId)
         .maybeSingle(),
       supabase.from('user_permissions').select('module,level').eq('user_id', userId),
@@ -202,6 +208,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         await supabase.auth.signOut()
+      },
+      setOwnPassword: async (password) => {
+        const { error } = await supabase.auth.updateUser({ password })
+        if (error) return translateAuthError(error.message)
+        const done = await supabase.rpc('password_changed')
+        if (done.error) return 'حصلت مشكلة، جرّب تاني'
+        await loadProfile(session?.user.id ?? null)
+        return null
       },
       refreshProfile: async () => void (await loadProfile(session?.user.id ?? null)),
     }),

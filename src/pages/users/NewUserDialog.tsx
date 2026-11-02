@@ -32,7 +32,7 @@ export default function NewUserDialog({ onClose, onCreated }: { onClose: () => v
           <input type="email" dir="ltr" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </label>
         <label className="field">
-          كلمة السر (8 حروف على الأقل)
+          كلمة سر مؤقتة (8 حروف على الأقل) — المستخدم هيغيّرها أول ما يدخل
           <input
             type="text"
             dir="ltr"

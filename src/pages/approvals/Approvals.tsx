@@ -1,16 +1,15 @@
 import { useCallback, useState } from 'react'
 import PageHead from '../../components/PageHead'
-import { Check, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import { decide, fetchByStatus, type PendingEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText, money, todayISO } from '../../lib/format'
+import { money, todayISO } from '../../lib/format'
 import ApprovalsReport from './ApprovalsReport'
+import ApprovalCard from './ApprovalCard'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
-import InvoiceLink from '../../components/InvoiceLink'
-import EntryHistory from '../../components/EntryHistory'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -40,6 +39,7 @@ export default function Approvals() {
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   const rows = list.data ?? []
+  const sum = (kind: 'income' | 'expense') => rows.filter((r) => r.kind === kind).reduce((t, r) => t + r.amount, 0)
 
   async function act(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
     setBusy(true)
@@ -101,119 +101,48 @@ export default function Approvals() {
         <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>
       )}
 
+      {rows.length > 0 && !other && (
+        <section className="stats appr-stats" aria-label="ملخص">
+          <div className="stat">
+            <span className="muted small">عدد القيود</span>
+            <strong>{rows.length}</strong>
+          </div>
+          <div className="stat">
+            <span className="muted small">إجمالي المصروفات</span>
+            <strong className="tone-text-err">
+              {money(sum('expense'))}
+              <small>ج.م</small>
+            </strong>
+          </div>
+          <div className="stat">
+            <span className="muted small">إجمالي الوارد</span>
+            <strong className="tone-text-ok">
+              {money(sum('income'))}
+              <small>ج.م</small>
+            </strong>
+          </div>
+        </section>
+      )}
+
       {rows.length > 0 && (
         <div className="appr-list">
           {rows.map((e) => (
-            <article className="appr-card" key={e.id}>
-              <div className="appr-main">
-                <div className="appr-tags">
-                  <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
-                    <span className="dot" />
-                    {e.kind === 'income' ? 'وارد' : 'مصروف'}
-                  </span>
-                  {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
-                  <InvoiceLink entry={e} />
-                  <span className="muted small">
-                    قيد #{e.seq} · {dateText(e.entry_date)}
-                  </span>
-                </div>
-                <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
-                <p className="appr-project">{e.project?.name}</p>
-                <dl className="appr-meta">
-                  {e.contractor && (
-                    <div>
-                      <dt>المقاول</dt>
-                      <dd>{e.contractor.name}</dd>
-                    </div>
-                  )}
-                  {e.bank && (
-                    <div>
-                      <dt>البنك</dt>
-                      <dd>{e.bank.name}</dd>
-                    </div>
-                  )}
-                  {e.edit_reason && (
-                    <div>
-                      <dt>سبب التعديل</dt>
-                      <dd>{e.edit_reason}</dd>
-                    </div>
-                  )}
-                  {e.reject_reason && (
-                    <div>
-                      <dt>سبب الرفض</dt>
-                      <dd className="tone-text-err">{e.reject_reason}</dd>
-                    </div>
-                  )}
-                  {e.notes && (
-                    <div>
-                      <dt>ملاحظات</dt>
-                      <dd>{e.notes}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt>سجّله</dt>
-                    <dd>{e.creator?.full_name ?? '—'}</dd>
-                  </div>
-                </dl>
-                {e.edit_reason && <EntryHistory entryId={e.id} />}
-              </div>
-              <div className="appr-side">
-                <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-                  {e.kind === 'income' ? '+' : '−'}
-                  {money(e.amount)}
-                  <small>ج.م</small>
-                </div>
-                <div className="appr-actions">
-                  <button
-                    className="btn btn-icon"
-                    disabled={busy}
-                    onClick={() => void act([e], 'approved')}
-                    aria-label={`موافقة على القيد ${e.seq}`}
-                  >
-                    <Check size={17} aria-hidden="true" />
-                    موافقة
-                  </button>
-                  {tab === 'pending' && (
-                    <button
-                      className="btn btn-ghost btn-icon"
-                      disabled={busy}
-                      onClick={() => {
-                        setRejecting(e.id)
-                        setReason('')
-                      }}
-                      aria-label={`رفض القيد ${e.seq}`}
-                    >
-                      <X size={17} aria-hidden="true" />
-                      رفض
-                    </button>
-                  )}
-                </div>
-                {rejecting === e.id && (
-                  <form
-                    className="appr-reject"
-                    onSubmit={(ev) => {
-                      ev.preventDefault()
-                      if (reason.trim().length >= 2) void act([e], 'rejected', reason)
-                    }}
-                  >
-                    <input
-                      value={reason}
-                      onChange={(ev) => setReason(ev.target.value)}
-                      placeholder="سبب الرفض (هيظهر للي سجّل القيد)"
-                      aria-label={`سبب رفض القيد ${e.seq}`}
-                      autoFocus
-                      required
-                    />
-                    <button className="btn btn-danger" disabled={busy || reason.trim().length < 2}>
-                      تأكيد الرفض
-                    </button>
-                    <button type="button" className="btn btn-ghost" onClick={() => setRejecting(null)}>
-                      إلغاء
-                    </button>
-                  </form>
-                )}
-              </div>
-            </article>
+            <ApprovalCard
+              key={e.id}
+              entry={e}
+              tab={tab === 'rejected' ? 'rejected' : 'pending'}
+              busy={busy}
+              rejecting={rejecting === e.id}
+              reason={reason}
+              onReason={setReason}
+              onApprove={() => void act([e], 'approved')}
+              onStartReject={() => {
+                setRejecting(e.id)
+                setReason('')
+              }}
+              onConfirmReject={() => void act([e], 'rejected', reason)}
+              onCancelReject={() => setRejecting(null)}
+            />
           ))}
         </div>
       )}

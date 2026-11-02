@@ -84,9 +84,9 @@ export type Database = {
         [{ foreignKeyName: 'expense_items_category_id_fkey'; columns: ['category_id']; isOneToOne: false; referencedRelation: 'expense_categories'; referencedColumns: ['id'] }]
       >
       profiles: T<
-        { created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; notify_low_balance: boolean; role: string },
-        { created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; notify_low_balance?: boolean; role?: string },
-        { created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; notify_low_balance?: boolean; role?: string }
+        { can_delete_entries: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; notify_low_balance: boolean; role: string },
+        { can_delete_entries?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; notify_low_balance?: boolean; role?: string },
+        { can_delete_entries?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; notify_low_balance?: boolean; role?: string }
       >
       projects: T<
         { budget: number; created_at: string; id: string; name: string; status: string; type: string },

@@ -17,7 +17,7 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, isStaff: isAdmin } = useAuth()
+  const { can, isStaff: isAdmin, canEditOwn, canDeleteOwn } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
@@ -208,7 +208,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     </td>
                     {canEdit && (
                       <td>
-                        {(isAdmin || e.status !== 'approved') && (
+                        {(isAdmin || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
                           <button
                             className="icon-btn"
                             aria-label={`تعديل القيد ${e.seq}`}

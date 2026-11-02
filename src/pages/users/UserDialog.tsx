@@ -6,6 +6,7 @@ import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permis
 import {
   replaceAdvanceAccess,
   replacePermissions,
+  setEntryRights,
   setLowBalanceAlert,
   updateRole,
   type AdvanceOption,
@@ -34,6 +35,8 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
       ) as Record<Module, Choice>,
   )
   const [alertOn, setAlertOn] = useState(user.notify_low_balance)
+  const [canEditOwn, setCanEditOwn] = useState(user.can_edit_entries)
+  const [canDeleteOwn, setCanDeleteOwn] = useState(user.can_delete_entries)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -54,6 +57,13 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
       if (err) {
         setSaving(false)
         return setError('تنبيه الرصيد ما اتحفظش، جرّب تاني')
+      }
+    }
+    if (canEditOwn !== user.can_edit_entries || canDeleteOwn !== user.can_delete_entries) {
+      const { error: err } = await setEntryRights(user.id, canEditOwn, canDeleteOwn)
+      if (err) {
+        setSaving(false)
+        return setError('صلاحيات القيود ما اتحفظتش، جرّب تاني')
       }
     }
     const rows = MODULES.flatMap((m) =>
@@ -131,6 +141,17 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
                 )}
               </div>
             ))}
+            <div className="perm-block">
+              <span className="strong">قيوده اللي سجّلها</span>
+              <label className="check">
+                <input type="checkbox" checked={canEditOwn} onChange={(e) => setCanEditOwn(e.target.checked)} />
+                يقدر يعدّلها
+              </label>
+              <label className="check">
+                <input type="checkbox" checked={canDeleteOwn} onChange={(e) => setCanDeleteOwn(e.target.checked)} />
+                يقدر يمسحها
+              </label>
+            </div>
             <p className="muted small">مشاهدة = يشوف بس · تعديل = يشوف ويضيف ويعدّل ويحذف في الصفحة دي.</p>
           </div>
         )}

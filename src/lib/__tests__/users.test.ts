@@ -25,6 +25,8 @@ describe('fetchUsers', () => {
     role: 'user',
     is_active: true,
     notify_low_balance: false,
+    can_edit_entries: true,
+    can_delete_entries: true,
   })
 
   it('attaches each user’s page permissions and custody access', async () => {

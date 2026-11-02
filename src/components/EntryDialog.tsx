@@ -14,6 +14,8 @@ import {
   type Category,
 } from '../lib/catalog'
 import { deleteEntry, insertEntry, updateEntry } from '../lib/entries'
+import { uploadInvoices } from '../lib/attachments'
+import InvoiceField from './InvoiceField'
 import { useAsync } from '../lib/useAsync'
 import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
@@ -52,11 +54,14 @@ export default function EntryDialog({
   const { isAdmin, isStaff, canEditOwn, canDeleteOwn } = useAuth()
   // an existing entry: the admin may have switched editing and/or deleting off for this user
   const locked = Boolean(entry) && !canEditOwn
-  const mayDelete = Boolean(entry) && canDeleteOwn
+  const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== 'approved'))
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<Named[]>(fetchBankNames)
 
+  // invoice photos picked for a new entry (stored once the entry exists); savedId: the new entry when its photos failed
+  const [files, setFiles] = useState<File[]>([])
+  const [savedId, setSavedId] = useState<string | null>(null)
   const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
   const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')
   const [itemName, setItemName] = useState(entry?.item ?? '')
@@ -157,13 +162,27 @@ export default function EntryDialog({
       notes: notes.trim() || null,
     }
     const res = entry ? await updateEntry(entry.id, entry.rev, row) : await insertEntry(row, advanceId ?? null)
+    if (res.error) {
+      setSaving(false)
+      return setError('القيد ما اتحفظش، جرّب تاني')
+    }
+    if (entry && !res.data?.length) {
+      setSaving(false)
+      return setError(CHANGED)
+    }
+    const created = (res.data as { id?: string; seq?: number }[] | null)?.[0]
+    const failed = !entry && created?.id && files.length ? await uploadInvoices(created.id, files) : 0
     setSaving(false)
-    if (res.error) return setError('القيد ما اتحفظش، جرّب تاني')
-    if (entry && !res.data?.length) return setError(CHANGED)
     onSaved()
-    if (!inline) return onClose()
+    if (failed) setError(`القيد اتسجّل لكن ${failed} صورة ما اترفعتش. ضيفها من تعديل القيد`)
+    if (!inline) {
+      if (!failed) return onClose()
+      setSavedId(created?.id ?? null) // stay open so the photos can be added again
+      return setFiles([])
+    }
     // quick entry: keep the project, kind and date for the next one
-    setDone(`اتسجّل القيد رقم ${(res.data as { seq?: number }[] | null)?.[0]?.seq ?? ''} ومستنّي موافقتك`)
+    setFiles([])
+    setDone(`اتسجّل القيد رقم ${created?.seq ?? ''} ومستنّي موافقتك`)
     setCategoryName('')
     setItemName('')
     setContractorName('')
@@ -287,6 +306,13 @@ export default function EntryDialog({
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        <InvoiceField
+          entryId={entry?.id ?? savedId ?? undefined}
+          files={files}
+          onFiles={setFiles}
+          canRemove={isStaff || entry?.status !== 'approved'}
+          readOnly={locked}
+        />
       </fieldset>
       {locked && <p className="msg span-2 muted">مفيش عندك صلاحية تعدّل القيود.</p>}
       {entry?.status === 'rejected' && entry.reject_reason && (
@@ -313,14 +339,14 @@ export default function EntryDialog({
         </p>
       )}
       <div className="dialog-actions span-2">
-        {!locked && (
+        {!locked && !savedId && (
           <button className="btn" disabled={saving}>
             {saving ? 'جارٍ الحفظ...' : entry ? 'حفظ التعديل' : 'حفظ القيد'}
           </button>
         )}
         {!inline && (
           <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
+            {savedId ? 'إغلاق' : 'إلغاء'}
           </button>
         )}
         {mayDelete && (

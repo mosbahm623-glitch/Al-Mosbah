@@ -9,6 +9,7 @@ import ApprovalsReport from './ApprovalsReport'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
+import InvoiceLink from '../../components/InvoiceLink'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -110,6 +111,7 @@ export default function Approvals() {
                     {e.kind === 'income' ? 'وارد' : 'مصروف'}
                   </span>
                   {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
+                  <InvoiceLink entry={e} />
                   <span className="muted small">
                     قيد #{e.seq} · {dateText(e.entry_date)}
                   </span>

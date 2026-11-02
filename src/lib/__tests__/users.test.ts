@@ -27,6 +27,7 @@ describe('fetchUsers', () => {
     notify_low_balance: false,
     can_edit_entries: true,
     can_delete_entries: true,
+    can_edit_approved: false,
   })
 
   it('attaches each user’s page permissions and custody access', async () => {

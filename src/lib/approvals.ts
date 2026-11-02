@@ -14,6 +14,7 @@ export type PendingEntry = {
   status: 'pending' | 'rejected'
   created_at: string
   reject_reason: string | null
+  invoices?: { count: number }[]
   project: { name: string } | null
   contractor: { name: string } | null
   bank: { name: string } | null
@@ -21,7 +22,7 @@ export type PendingEntry = {
 }
 
 const COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,invoices:entry_attachments(count),project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchByStatus = (status: 'pending' | 'rejected') =>
   supabase

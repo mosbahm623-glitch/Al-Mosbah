@@ -1,6 +1,7 @@
 import { useCallback, useState, useSyncExternalStore, type FormEvent } from 'react'
 import { Pencil, Search as SearchIcon } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import InvoiceLink from '../components/InvoiceLink'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
@@ -24,7 +25,7 @@ function SearchView({ q }: { q: string }) {
   const [draft, setDraft] = useState(q)
   const load = useCallback(async () => (q ? searchEntries(q) : { data: [] as Hit[], error: false }), [q])
   const { data, failed, loading, reload } = useAsync<Hit[]>(load)
-  const { can, isStaff: isAdmin, canEditOwn, canDeleteOwn } = useAuth()
+  const { can, canTouch } = useAuth()
   const canEdit = can('projects', 'edit')
   const [editing, setEditing] = useState<Hit | null>(null)
 
@@ -103,6 +104,7 @@ function SearchView({ q }: { q: string }) {
                     <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
+                      <InvoiceLink entry={e} />
                       {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
                         {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
@@ -123,7 +125,7 @@ function SearchView({ q }: { q: string }) {
                     <td className="num strong">{money(e.amount)}</td>
                     {canEdit && (
                       <td>
-                        {(isAdmin || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
+                        {canTouch(e.status) && (
                           <button
                             type="button"
                             className="icon-btn"

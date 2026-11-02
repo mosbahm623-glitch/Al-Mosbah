@@ -13,6 +13,8 @@ export type UserRow = {
   can_edit_entries: boolean
   /** may delete the entries he recorded */
   can_delete_entries: boolean
+  /** may edit his entries even after they were approved (they go back to the admin for approval) */
+  can_edit_approved: boolean
   permissions: { module: Module; level: Level }[]
   /** custodies this user may see (matters only when he has the العهد page) */
   advanceIds: string[]
@@ -29,7 +31,9 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
   const [profiles, perms, access] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id,full_name,email,role,is_active,notify_low_balance,can_edit_entries,can_delete_entries')
+      .select(
+        'id,full_name,email,role,is_active,notify_low_balance,can_edit_entries,can_delete_entries,can_edit_approved',
+      )
       .order('created_at')
       .returns<Profile[]>(),
     supabase
@@ -86,8 +90,11 @@ export async function createUser(input: { full_name: string; email: string; pass
 export const updateRole = (userId: string, role: UserRow['role'], isActive: boolean) =>
   supabase.from('profiles').update({ role, is_active: isActive }).eq('id', userId)
 
-export const setEntryRights = (userId: string, canEdit: boolean, canDelete: boolean) =>
-  supabase.from('profiles').update({ can_edit_entries: canEdit, can_delete_entries: canDelete }).eq('id', userId)
+export const setEntryRights = (userId: string, canEdit: boolean, canDelete: boolean, canEditApproved: boolean) =>
+  supabase
+    .from('profiles')
+    .update({ can_edit_entries: canEdit, can_delete_entries: canDelete, can_edit_approved: canEditApproved })
+    .eq('id', userId)
 
 export const setLowBalanceAlert = (userId: string, on: boolean) =>
   supabase.from('profiles').update({ notify_low_balance: on }).eq('id', userId)

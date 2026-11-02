@@ -82,7 +82,7 @@ describe('entries: writing', () => {
     await insertEntry(row, null)
     expect(callsOn(0)[0]).toEqual(['insert', [{ ...row, advance_id: 'adv1' }]])
     expect(callsOn(1)[0]).toEqual(['insert', [{ ...row, advance_id: null }]])
-    expect(callsOn(0)).toContainEqual(['select', ['seq']])
+    expect(callsOn(0)).toContainEqual(['select', ['id,seq']])
   })
   it('deletes through the database function with the revision and the reason', () => {
     rpc.mockReturnValue(query(ok(true)).query)

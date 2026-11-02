@@ -60,6 +60,7 @@ export default function EntryDialog({
   const banks = useAsync<Named[]>(fetchBankNames)
 
   // invoice photos picked for a new entry (stored once the entry exists); savedId: the new entry when its photos failed
+  const [editReason, setEditReason] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [savedId, setSavedId] = useState<string | null>(null)
   const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
@@ -161,16 +162,22 @@ export default function EntryDialog({
       entry_date: date,
       notes: notes.trim() || null,
     }
-    const res = entry ? await updateEntry(entry.id, entry.rev, row) : await insertEntry(row, advanceId ?? null)
+    if (entry && editReason.trim().length < 2) {
+      setSaving(false)
+      return setError('اكتب سبب التعديل')
+    }
+    const res = entry
+      ? await updateEntry(entry.id, entry.rev, row, editReason)
+      : await insertEntry(row, advanceId ?? null)
     if (res.error) {
       setSaving(false)
       return setError('القيد ما اتحفظش، جرّب تاني')
     }
-    if (entry && !res.data?.length) {
+    if (entry && res.data !== true) {
       setSaving(false)
       return setError(CHANGED)
     }
-    const created = (res.data as { id?: string; seq?: number }[] | null)?.[0]
+    const created = entry ? undefined : (res.data as { id?: string; seq?: number }[] | null)?.[0]
     const failed = !entry && created?.id && files.length ? await uploadInvoices(created.id, files) : 0
     setSaving(false)
     onSaved()
@@ -306,6 +313,17 @@ export default function EntryDialog({
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        {entry && !locked && (
+          <label className="field span-2">
+            سبب التعديل
+            <input
+              value={editReason}
+              onChange={(e) => setEditReason(e.target.value)}
+              placeholder="مثلًا: المبلغ كان مكتوب غلط"
+              required
+            />
+          </label>
+        )}
         <InvoiceField
           entryId={entry?.id ?? savedId ?? undefined}
           files={files}
@@ -341,7 +359,7 @@ export default function EntryDialog({
       <div className="dialog-actions span-2">
         {!locked && !savedId && (
           <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : entry ? 'حفظ التعديل' : 'حفظ القيد'}
+            {saving ? 'جارٍ الحفظ...' : entry ? (isAdmin ? 'حفظ التعديل' : 'حفظ وإعادة إرسال') : 'حفظ القيد'}
           </button>
         )}
         {!inline && (

@@ -66,15 +66,9 @@ const row: EntryInput = {
 
 describe('entries: writing', () => {
   it('saves an edit only at the revision that was shown', async () => {
-    plan({})
-    await updateEntry('e1', 4, row)
-    expect(used[0].table).toBe('entries')
-    expect(callsOn()).toEqual([
-      ['update', [row]],
-      ['eq', ['id', 'e1']],
-      ['eq', ['rev', 4]],
-      ['select', ['id']],
-    ])
+    rpc.mockReturnValue(query(ok(true)).query)
+    await updateEntry('e1', 4, row, '  المبلغ غلط ')
+    expect(rpc).toHaveBeenCalledWith('edit_entry', { p_id: 'e1', p_rev: 4, p_reason: 'المبلغ غلط', p_row: row })
   })
   it('records a new entry with the custody it was paid from, or none', async () => {
     plan({})

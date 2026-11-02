@@ -89,9 +89,9 @@ export type Database = {
         [{ foreignKeyName: 'expense_items_category_id_fkey'; columns: ['category_id']; isOneToOne: false; referencedRelation: 'expense_categories'; referencedColumns: ['id'] }]
       >
       profiles: T<
-        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; notify_low_balance: boolean; role: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; notify_low_balance?: boolean; role?: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; notify_low_balance?: boolean; role?: string }
+        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; must_change_password: boolean; notify_low_balance: boolean; role: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; must_change_password?: boolean; notify_low_balance?: boolean; role?: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; must_change_password?: boolean; notify_low_balance?: boolean; role?: string }
       >
       projects: T<
         { budget: number; created_at: string; id: string; name: string; status: string; type: string },
@@ -118,6 +118,7 @@ export type Database = {
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: any }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
+      password_changed: { Args: Record<string, never>; Returns: undefined }
       project_deleted_entries: { Args: { p_project: string }; Returns: any }
       deleted_entries: { Args: never; Returns: any }
       entry_history_of: { Args: { p_id: string }; Returns: any }

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth/AuthProvider'
 import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
+import ChangePassword from './pages/ChangePassword'
 import Pending from './pages/Pending'
 const Projects = lazy(() => import('./pages/projects/Projects'))
 const ProjectDetail = lazy(() => import('./pages/projects/ProjectDetail'))
@@ -77,6 +78,7 @@ function Gate() {
   }
   if (!session) return <AuthScreen />
   if (!profile?.is_active) return <Pending />
+  if (profile.must_change_password) return <ChangePassword />
   return (
     <Layout>
       <Suspense fallback={<p className="muted">جارٍ التحميل...</p>}>

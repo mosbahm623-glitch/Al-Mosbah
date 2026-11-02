@@ -4,7 +4,16 @@ import { query } from './supabaseMock'
 vi.mock('../supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }))
 
 import { supabase } from '../supabase'
-import { countPending, decide, fetchByStatus, restoreEntry } from '../approvals'
+import {
+  NO_FILTER,
+  countPending,
+  decide,
+  fetchByStatus,
+  filterEntries,
+  isFiltering,
+  restoreEntry,
+  type PendingEntry,
+} from '../approvals'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)
@@ -129,5 +138,52 @@ describe('restoreEntry', () => {
     expect(await restoreEntry('e1')).toBe(false)
     rpc.mockReturnValueOnce(query({ data: null, error: new Error('x') }).query)
     expect(await restoreEntry('e1')).toBe(false)
+  })
+})
+
+describe('filterEntries', () => {
+  const e = (over: Partial<PendingEntry>) =>
+    ({
+      id: 'x',
+      amount: 100,
+      item: null,
+      category: 'خامات',
+      notes: null,
+      entry_date: '2026-11-01',
+      creator: { full_name: 'Ahmed' },
+      bank: null,
+      ...over,
+    }) as PendingEntry
+  const rows = [
+    e({ id: 'a', amount: 800, item: 'نقل خامات', bank: { name: 'الأهلي' } }),
+    e({ id: 'b', amount: 2000, item: 'أعمال نقاشة', creator: { full_name: 'Mona' }, entry_date: '2026-11-02' }),
+    e({ id: 'c', amount: 500, item: 'إيجار معدّات', notes: 'شهر نوفمبر', bank: { name: 'CIB' } }),
+  ]
+  const ids = (f: Partial<typeof NO_FILTER>) => filterEntries(rows, { ...NO_FILTER, ...f }).map((r) => r.id)
+
+  it('keeps everything when nothing is set', () => {
+    expect(ids({})).toEqual(['a', 'b', 'c'])
+    expect(isFiltering(NO_FILTER)).toBe(false)
+    expect(isFiltering({ ...NO_FILTER, bank: 'CIB' })).toBe(true)
+  })
+  it('finds words in the description, category or notes, ignoring Arabic spelling variants', () => {
+    expect(ids({ text: 'نقاشه' })).toEqual(['b'])
+    expect(ids({ text: 'ايجار معدات' })).toEqual(['c'])
+    expect(ids({ text: 'نوفمبر' })).toEqual(['c'])
+    expect(ids({ text: 'نقل خامات' })).toEqual(['a'])
+  })
+  it('filters by who recorded it, the bank and the day of the entry', () => {
+    expect(ids({ who: 'Mona' })).toEqual(['b'])
+    expect(ids({ bank: 'الأهلي' })).toEqual(['a'])
+    expect(ids({ day: '2026-11-02' })).toEqual(['b'])
+  })
+  it('filters by an amount range with both ends included, or an exact amount', () => {
+    expect(ids({ min: '500', max: '800' })).toEqual(['a', 'c'])
+    expect(ids({ min: '2000' })).toEqual(['b'])
+    expect(ids({ max: '499' })).toEqual([])
+    expect(ids({ min: '800', max: '800' })).toEqual(['a'])
+  })
+  it('combines the filters', () => {
+    expect(ids({ who: 'Ahmed', min: '600' })).toEqual(['a'])
   })
 })

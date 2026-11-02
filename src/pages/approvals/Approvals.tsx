@@ -1,8 +1,16 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import { Check, X } from 'lucide-react'
 import Segmented from '../../components/Segmented'
-import { decide, fetchByStatus, type PendingEntry } from '../../lib/approvals'
+import {
+  NO_FILTER,
+  decide,
+  fetchByStatus,
+  filterEntries,
+  isFiltering,
+  type ApprovalFilter,
+  type PendingEntry,
+} from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money, todayISO } from '../../lib/format'
 import ApprovalsReport from './ApprovalsReport'
@@ -39,7 +47,22 @@ export default function Approvals() {
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const rows = list.data ?? []
+  const all = useMemo(() => list.data ?? [], [list.data])
+  const [filter, setFilter] = useState<ApprovalFilter>(NO_FILTER)
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  const rows = useMemo(() => filterEntries(all, filter), [all, filter])
+  const filtering = isFiltering(filter)
+  // only what is on screen can be chosen: an entry hidden by a filter is never approved by mistake
+  const chosen = rows.filter((r) => picked.has(r.id))
+  const names = [...new Set(all.map((r) => r.creator?.full_name).filter((n): n is string => Boolean(n)))]
+  const banks = [...new Set(all.map((r) => r.bank?.name).filter((n): n is string => Boolean(n)))]
+  const setF = (patch: Partial<ApprovalFilter>) => setFilter((f) => ({ ...f, ...patch }))
+  const toggle = (id: string) =>
+    setPicked((s) => {
+      const next = new Set(s)
+      if (!next.delete(id)) next.add(id)
+      return next
+    })
 
   async function act(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
     setBusy(true)
@@ -50,6 +73,7 @@ export default function Approvals() {
       why,
     )
     setBusy(false)
+    setPicked(new Set())
     setRejecting(null)
     setReason('')
     if (r.failed) setError('ما اتنفّذش، جرّب تاني')
@@ -64,18 +88,34 @@ export default function Approvals() {
       <PageHead
         title="الموافقات"
         actions={
-          tab === 'pending' &&
-          rows.length > 1 && (
-            <button className="btn btn-icon" disabled={busy} onClick={() => void act(rows, 'approved')}>
+          !other &&
+          (chosen.length > 0 || (tab === 'pending' && rows.length > 1)) && (
+            <button
+              className="btn btn-icon"
+              disabled={busy}
+              onClick={() => void act(chosen.length ? chosen : rows, 'approved')}
+            >
               <Check size={18} aria-hidden="true" />
-              موافقة على الكل ({rows.length})
+              {chosen.length
+                ? `موافقة على المحدد (${chosen.length})`
+                : filtering
+                  ? `موافقة على المعروض (${rows.length})`
+                  : `موافقة على الكل (${rows.length})`}
             </button>
           )
         }
       />
 
       <div className="toolbar">
-        <Segmented label="الحالة" value={tab} options={tabs} onChange={setTab} />
+        <Segmented
+          label="الحالة"
+          value={tab}
+          options={tabs}
+          onChange={(t) => {
+            setTab(t)
+            setPicked(new Set())
+          }}
+        />
         {tab === 'deleted' ? null : tab === 'decided' ? (
           <label className="field toolbar-note">
             اليوم
@@ -87,7 +127,9 @@ export default function Approvals() {
             />
           </label>
         ) : (
-          <span className="toolbar-note muted small">{rows.length} قيد</span>
+          <span className="toolbar-note muted small">
+            {filtering ? `${rows.length} من ${all.length}` : rows.length} قيد
+          </span>
         )}
       </div>
 
@@ -97,14 +139,97 @@ export default function Approvals() {
       {error && <p className="msg msg-error">{error}</p>}
       {!other && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
       {!other && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
-      {!other && list.data && rows.length === 0 && (
+      {!other && list.data && all.length === 0 && (
         <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>
+      )}
+
+      {!other && all.length > 0 && (
+        <section className="card appr-filters" aria-label="فلتر القيود">
+          <label className="field">
+            كلمة في البيان
+            <input value={filter.text} onChange={(e) => setF({ text: e.target.value })} placeholder="مثلًا: نقاشة" />
+          </label>
+          <label className="field">
+            سجّله
+            <select value={filter.who} onChange={(e) => setF({ who: e.target.value })}>
+              <option value="">الكل</option>
+              {names.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            البنك
+            <select value={filter.bank} onChange={(e) => setF({ bank: e.target.value })}>
+              <option value="">الكل</option>
+              {banks.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            يوم القيد
+            <input type="date" value={filter.day} onChange={(e) => setF({ day: e.target.value })} />
+          </label>
+          <label className="field">
+            المبلغ من
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              value={filter.min}
+              onChange={(e) => setF({ min: e.target.value })}
+            />
+          </label>
+          <label className="field">
+            المبلغ إلى
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              value={filter.max}
+              onChange={(e) => setF({ max: e.target.value })}
+            />
+          </label>
+          {filtering && (
+            <button type="button" className="btn btn-ghost appr-filters-clear" onClick={() => setFilter(NO_FILTER)}>
+              مسح الفلتر
+            </button>
+          )}
+        </section>
+      )}
+
+      {!other && all.length > 0 && rows.length === 0 && <div className="card empty">مفيش قيود بالفلتر ده.</div>}
+
+      {!other && rows.length > 0 && (
+        <label className="check appr-pick-all">
+          <input
+            type="checkbox"
+            checked={chosen.length === rows.length}
+            onChange={(e) => setPicked(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+          />
+          تحديد كل المعروض ({rows.length})
+        </label>
       )}
 
       {rows.length > 0 && (
         <div className="appr-list">
           {rows.map((e) => (
-            <article className="appr-card" key={e.id}>
+            <article className={`appr-card${picked.has(e.id) ? ' is-picked' : ''}`} key={e.id}>
+              <label className="appr-pick">
+                <input
+                  type="checkbox"
+                  checked={picked.has(e.id)}
+                  onChange={() => toggle(e.id)}
+                  aria-label={`تحديد القيد ${e.seq}`}
+                />
+              </label>
               <div className="appr-main">
                 <div className="appr-tags">
                   <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>

@@ -37,6 +37,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
   const [alertOn, setAlertOn] = useState(user.notify_low_balance)
   const [canEditOwn, setCanEditOwn] = useState(user.can_edit_entries)
   const [canDeleteOwn, setCanDeleteOwn] = useState(user.can_delete_entries)
+  const [canEditApproved, setCanEditApproved] = useState(user.can_edit_approved)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -59,8 +60,12 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
         return setError('تنبيه الرصيد ما اتحفظش، جرّب تاني')
       }
     }
-    if (canEditOwn !== user.can_edit_entries || canDeleteOwn !== user.can_delete_entries) {
-      const { error: err } = await setEntryRights(user.id, canEditOwn, canDeleteOwn)
+    if (
+      canEditOwn !== user.can_edit_entries ||
+      canDeleteOwn !== user.can_delete_entries ||
+      canEditApproved !== user.can_edit_approved
+    ) {
+      const { error: err } = await setEntryRights(user.id, canEditOwn, canDeleteOwn, canEditApproved)
       if (err) {
         setSaving(false)
         return setError('صلاحيات القيود ما اتحفظتش، جرّب تاني')
@@ -150,6 +155,15 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
               <label className="check">
                 <input type="checkbox" checked={canDeleteOwn} onChange={(e) => setCanDeleteOwn(e.target.checked)} />
                 يقدر يمسحها
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={canEditApproved}
+                  disabled={!canEditOwn}
+                  onChange={(e) => setCanEditApproved(e.target.checked)}
+                />
+                يقدر يعدّل القيد بعد ما يتوافق عليه (بيرجع للأدمن يوافق تاني)
               </label>
             </div>
             <p className="muted small">مشاهدة = يشوف بس · تعديل = يشوف ويضيف ويعدّل ويحذف في الصفحة دي.</p>

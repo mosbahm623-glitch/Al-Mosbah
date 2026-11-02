@@ -3,6 +3,7 @@ import { Pencil, RotateCcw } from 'lucide-react'
 import { restoreEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
+import InvoiceLink from '../../components/InvoiceLink'
 import Segmented from '../../components/Segmented'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
@@ -16,7 +17,7 @@ const KINDS = [
 type Props = { entries: Entry[]; canEdit: boolean; onEdit: (e: Entry) => void; onRestored?: () => void }
 
 export default function EntryList({ entries, canEdit, onEdit, onRestored }: Props) {
-  const { isAdmin, isStaff, canEditOwn, canDeleteOwn } = useAuth()
+  const { isAdmin, canTouch } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
 
@@ -118,6 +119,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
+                      <InvoiceLink entry={e} />
                       {e.advance_id && (
                         <>
                           {' '}
@@ -177,7 +179,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                                 <RotateCcw size={17} />
                               </button>
                             )
-                          : (isStaff || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
+                          : canTouch(e.status) && (
                               <button
                                 type="button"
                                 className="icon-btn"

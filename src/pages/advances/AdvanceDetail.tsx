@@ -3,6 +3,7 @@ import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
+import InvoiceLink from '../../components/InvoiceLink'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
@@ -17,7 +18,7 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, isStaff: isAdmin, canEditOwn, canDeleteOwn } = useAuth()
+  const { can, isStaff: isAdmin, canTouch } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
@@ -178,6 +179,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     <td className="sm-hide">{e.category}</td>
                     <td className="strong">
                       {e.item}
+                      <InvoiceLink entry={e} />
                       {e.status === 'pending' && (
                         <>
                           {' '}
@@ -209,7 +211,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                     </td>
                     {canEdit && (
                       <td>
-                        {(isAdmin || (e.status !== 'approved' && (canEditOwn || canDeleteOwn))) && (
+                        {canTouch(e.status) && (
                           <button
                             className="icon-btn"
                             aria-label={`تعديل القيد ${e.seq}`}

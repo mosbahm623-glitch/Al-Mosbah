@@ -7,6 +7,11 @@ type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relat
 export type Database = {
   public: {
     Tables: {
+      entry_attachments: T<
+        { id: string; entry_id: string; path: string; file_name: string | null; created_by: string | null; created_at: string },
+        { id?: string; entry_id: string; path: string; file_name?: string | null; created_by?: string | null; created_at?: string },
+        { file_name?: string | null }
+      >
       notifications: T<
         { id: number; user_id: string; kind: string; title: string; body: string | null; url: string | null; entry_id: string | null; created_at: string; read_at: string | null },
         { id?: never; user_id: string; kind: string; title: string; body?: string | null; url?: string | null; entry_id?: string | null; created_at?: string; read_at?: string | null },
@@ -84,9 +89,9 @@ export type Database = {
         [{ foreignKeyName: 'expense_items_category_id_fkey'; columns: ['category_id']; isOneToOne: false; referencedRelation: 'expense_categories'; referencedColumns: ['id'] }]
       >
       profiles: T<
-        { can_delete_entries: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; notify_low_balance: boolean; role: string },
-        { can_delete_entries?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; notify_low_balance?: boolean; role?: string },
-        { can_delete_entries?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; notify_low_balance?: boolean; role?: string }
+        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; notify_low_balance: boolean; role: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; notify_low_balance?: boolean; role?: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; notify_low_balance?: boolean; role?: string }
       >
       projects: T<
         { budget: number; created_at: string; id: string; name: string; status: string; type: string },

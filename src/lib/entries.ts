@@ -20,12 +20,12 @@ export type EntryInput = {
 export const updateEntry = (id: string, rev: number, row: EntryInput) =>
   supabase.from('entries').update(row).eq('id', id).eq('rev', rev).select('id')
 
-/** A new entry, optionally paid out of a custody (عهدة). Returns its number. */
+/** A new entry, optionally paid out of a custody (عهدة). Returns its id and number. */
 export const insertEntry = (row: EntryInput, advanceId: string | null) =>
   supabase
     .from('entries')
     .insert({ ...row, advance_id: advanceId })
-    .select('seq')
+    .select('id,seq')
 
 /** Soft delete with a reason; false in `data` means the entry changed meanwhile. */
 export const deleteEntry = (id: string, rev: number, reason: string) =>

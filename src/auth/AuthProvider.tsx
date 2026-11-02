@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
+import { notifyDataChanged } from '../lib/events'
 import { allows, type Level, type Module, type Permissions } from './permissions'
 
 export type Profile = {
@@ -109,6 +110,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sub.subscription.unsubscribe()
     }
   }, [loadProfile])
+
+  // Permission, role or active-state changes made by the admin reach this user at once (no re-login or refresh needed)
+  const uid = session?.user.id ?? null
+  useEffect(() => {
+    if (!uid) return
+    let timer: number | undefined
+    const reload = () => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        void loadProfile(uid).then(notifyDataChanged) // the data he may see can change too (e.g. custody access)
+      }, 250)
+    }
+    const mine = (payload: { new: Record<string, unknown>; old: Record<string, unknown> }, key: string) => {
+      const row = (payload.new?.[key] ? payload.new : payload.old) as Record<string, unknown>
+      // a delete only carries the primary key, so when the owner is unknown we reload to be safe
+      return !row?.[key] || row[key] === uid
+    }
+    const channel = supabase
+      .channel(`auth-live-${uid}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (e) => {
+        if (mine(e, 'id')) reload()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_permissions' }, (e) => {
+        if (mine(e, 'user_id')) reload()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_advance_access' }, (e) => {
+        if (mine(e, 'user_id')) reload()
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') reload() // catch up on anything missed while offline
+      })
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') reload()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('online', reload)
+    return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('online', reload)
+      void supabase.removeChannel(channel)
+    }
+  }, [uid, loadProfile])
 
   const value = useMemo<AuthState>(
     () => ({

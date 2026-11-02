@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import { createContractor } from '../../lib/catalog'
 
 export default function ContractorDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
@@ -26,14 +27,7 @@ export default function ContractorDialog({ onClose, onSaved }: { onClose: () => 
           <input value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
         </label>
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-        </div>
+        <FormActions saving={saving} onClose={onClose} />
       </form>
     </Dialog>
   )

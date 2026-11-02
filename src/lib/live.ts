@@ -29,8 +29,12 @@ export function startLive(): () => void {
   const channel = supabase.channel('live-data')
   for (const table of TABLES) channel.on('postgres_changes', { event: '*', schema: 'public', table }, fire)
   // after a reconnect, anything missed while offline is picked up by a refresh
+  let connectedBefore = false
   channel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') fire()
+    if (status !== 'SUBSCRIBED') return
+    // the first connection happens right after the pages loaded their data: nothing was missed yet
+    if (connectedBefore) fire()
+    connectedBefore = true
   })
 
   // phones put the connection to sleep in the background: catch up when the app is opened again

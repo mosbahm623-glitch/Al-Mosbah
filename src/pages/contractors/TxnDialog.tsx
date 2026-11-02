@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
+import FormActions from '../../components/FormActions'
 import { deleteContractorTxn, saveContractorTxn, type LedgerTxn } from '../../lib/contractors'
 import { todayISO } from '../../lib/format'
 import type { Named } from '../../lib/lookups'
@@ -93,19 +94,12 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
         {error && <p className="msg msg-error">{error}</p>}
-        <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
-            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>
-            إلغاء
-          </button>
-          {row && (
-            <button type="button" className="btn btn-danger" onClick={() => void remove()} disabled={saving}>
-              {confirmDelete ? 'تأكيد الحذف نهائياً' : 'حذف'}
-            </button>
-          )}
-        </div>
+        <FormActions
+          saving={saving}
+          onClose={onClose}
+          onDelete={row ? () => void remove() : undefined}
+          confirmingDelete={confirmDelete}
+        />
       </form>
     </Dialog>
   )

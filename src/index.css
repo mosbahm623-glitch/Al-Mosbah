@@ -2452,3 +2452,22 @@ a.btn[aria-disabled='true'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
 }
+
+/* contractors: filter row */
+.contractor-filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.contractor-filters .field {
+  flex: 1 1 220px;
+}
+
+.panel-note {
+  margin: 0;
+  padding: 12px 16px;
+}
+.panel-head select {
+  max-width: 260px;
+}

@@ -242,45 +242,49 @@ export default function Approvals() {
                     قيد #{e.seq} · {dateText(e.entry_date)}
                   </span>
                 </div>
-                <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
-                <p className="appr-project">{e.project?.name}</p>
-                <dl className="appr-meta">
-                  {e.contractor && (
+                <h2 className="appr-title">
+                  {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
+                  <span className="appr-project">{e.project?.name}</span>
+                </h2>
+                <div className="appr-line">
+                  <dl className="appr-meta">
+                    {e.contractor && (
+                      <div>
+                        <dt>المقاول</dt>
+                        <dd>{e.contractor.name}</dd>
+                      </div>
+                    )}
+                    {e.bank && (
+                      <div>
+                        <dt>البنك</dt>
+                        <dd>{e.bank.name}</dd>
+                      </div>
+                    )}
+                    {e.edit_reason && (
+                      <div>
+                        <dt>سبب التعديل</dt>
+                        <dd>{e.edit_reason}</dd>
+                      </div>
+                    )}
+                    {e.reject_reason && (
+                      <div>
+                        <dt>سبب الرفض</dt>
+                        <dd className="tone-text-err">{e.reject_reason}</dd>
+                      </div>
+                    )}
+                    {e.notes && (
+                      <div>
+                        <dt>ملاحظات</dt>
+                        <dd>{e.notes}</dd>
+                      </div>
+                    )}
                     <div>
-                      <dt>المقاول</dt>
-                      <dd>{e.contractor.name}</dd>
+                      <dt>سجّله</dt>
+                      <dd>{e.creator?.full_name ?? '—'}</dd>
                     </div>
-                  )}
-                  {e.bank && (
-                    <div>
-                      <dt>البنك</dt>
-                      <dd>{e.bank.name}</dd>
-                    </div>
-                  )}
-                  {e.edit_reason && (
-                    <div>
-                      <dt>سبب التعديل</dt>
-                      <dd>{e.edit_reason}</dd>
-                    </div>
-                  )}
-                  {e.reject_reason && (
-                    <div>
-                      <dt>سبب الرفض</dt>
-                      <dd className="tone-text-err">{e.reject_reason}</dd>
-                    </div>
-                  )}
-                  {e.notes && (
-                    <div>
-                      <dt>ملاحظات</dt>
-                      <dd>{e.notes}</dd>
-                    </div>
-                  )}
-                  <div>
-                    <dt>سجّله</dt>
-                    <dd>{e.creator?.full_name ?? '—'}</dd>
-                  </div>
-                </dl>
-                {e.edit_reason && <EntryHistory entryId={e.id} />}
+                  </dl>
+                  {e.edit_reason && <EntryHistory entryId={e.id} />}
+                </div>
               </div>
               <div className="appr-side">
                 <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>

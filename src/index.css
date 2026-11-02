@@ -1453,15 +1453,15 @@ a.btn[aria-disabled='true'] {
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  align-items: stretch;
-  padding: 16px 20px;
+  align-items: center;
+  padding: 10px 16px;
   background: var(--surface, #fff);
   border: 1px solid var(--line);
   border-radius: 12px;
 }
 .appr-main {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
   flex: 1;
   align-content: start;
@@ -1474,18 +1474,35 @@ a.btn[aria-disabled='true'] {
 }
 .appr-title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 .appr-project {
-  margin: 0;
   color: var(--muted);
   font-weight: 600;
+  font-size: 0.9rem;
+  margin-inline-start: 10px;
+}
+.appr-project::before {
+  content: '—';
+  margin-inline-end: 10px;
+}
+.appr-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 22px;
+}
+.appr-line .entry-history {
+  margin: 0;
+}
+.appr-line .entry-history[open] {
+  flex: 1 1 100%;
 }
 .appr-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 24px;
-  margin: 6px 0 0;
+  gap: 2px 20px;
+  margin: 0;
 }
 .appr-meta div {
   display: flex;
@@ -1506,12 +1523,12 @@ a.btn[aria-disabled='true'] {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 .appr-amount {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 800;
   white-space: nowrap;
 }
@@ -1528,6 +1545,13 @@ a.btn[aria-disabled='true'] {
 @media (max-width: 640px) {
   .appr-card {
     flex-direction: column;
+    align-items: stretch;
+    position: relative;
+  }
+  .appr-pick {
+    position: absolute;
+    top: 10px;
+    inset-inline-end: 12px;
   }
   .appr-side {
     flex-direction: row;
@@ -2411,11 +2435,11 @@ a.btn[aria-disabled='true'] {
 }
 .appr-pick-all {
   justify-self: start;
+  min-height: 32px;
 }
 .appr-pick {
   display: flex;
-  align-items: flex-start;
-  padding-top: 2px;
+  align-items: center;
   cursor: pointer;
 }
 .appr-pick input {

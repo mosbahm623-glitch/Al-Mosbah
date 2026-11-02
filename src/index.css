@@ -2351,3 +2351,42 @@ a.btn[aria-disabled='true'] {
   cursor: pointer;
   vertical-align: middle;
 }
+
+/* approvals: filters and choosing several entries */
+.appr-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.appr-filters select {
+  min-height: 44px;
+  font: inherit;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.appr-filters-clear {
+  min-height: 44px;
+}
+.appr-pick-all {
+  justify-self: start;
+}
+.appr-pick {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+  cursor: pointer;
+}
+.appr-pick input {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  cursor: pointer;
+}
+.appr-card.is-picked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}

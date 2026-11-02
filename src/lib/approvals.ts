@@ -47,6 +47,53 @@ export async function decide(items: { id: string; rev: number }[], status: 'appr
   return { failed, done, skipped: items.length - done - results.filter((r) => r.error).length }
 }
 
+/** What the approvals list can be narrowed by; an empty field does not filter. */
+export type ApprovalFilter = {
+  /** words that must all appear in the البيان / البند / notes */
+  text: string
+  /** name of the person who recorded the entry */
+  who: string
+  bank: string
+  /** the date of the entry (YYYY-MM-DD) */
+  day: string
+  /** amount range, both ends included */
+  min: string
+  max: string
+}
+
+export const NO_FILTER: ApprovalFilter = { text: '', who: '', bank: '', day: '', min: '', max: '' }
+
+export const isFiltering = (f: ApprovalFilter) => Object.values(f).some((v) => v.trim() !== '')
+
+// Arabic spelling variants should not hide a match (أ/إ/آ, ى/ي, ة/ه, diacritics)
+const plain = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+
+const bound = (v: string) => (v.trim() === '' || !Number.isFinite(Number(v)) ? null : Number(v))
+
+export function filterEntries(rows: PendingEntry[], f: ApprovalFilter): PendingEntry[] {
+  const words = plain(f.text).split(/\s+/).filter(Boolean)
+  const min = bound(f.min)
+  const max = bound(f.max)
+  return rows.filter((e) => {
+    if (words.length) {
+      const hay = plain([e.item, e.category, e.notes].filter(Boolean).join(' '))
+      if (!words.every((w) => hay.includes(w))) return false
+    }
+    if (f.who && (e.creator?.full_name ?? '') !== f.who) return false
+    if (f.bank && (e.bank?.name ?? '') !== f.bank) return false
+    if (f.day && e.entry_date !== f.day) return false
+    if (min !== null && e.amount < min) return false
+    if (max !== null && e.amount > max) return false
+    return true
+  })
+}
+
 export async function countPending() {
   const { count } = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending')
   return count ?? 0

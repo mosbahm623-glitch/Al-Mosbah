@@ -11,3 +11,4 @@ export const fetchPeople = () =>
     .select('id,full_name')
     .order('full_name')
     .returns<{ id: string; full_name: string | null }[]>()
+export const fetchProjectNames = () => supabase.from('projects').select('id,name').order('name').returns<Named[]>()

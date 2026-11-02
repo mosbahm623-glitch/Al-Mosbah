@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
+import Contractors from './pages/contractors/Contractors'
+import ContractorDetail from './pages/contractors/ContractorDetail'
 import Dashboard from './pages/Dashboard'
 import Pending from './pages/Pending'
 import Search from './pages/Search'
@@ -50,6 +52,9 @@ function Content() {
   if (route === 'banks') return <Banks />
   const bank = /^banks\/([0-9a-f-]{36})$/.exec(route)
   if (bank) return <BankDetail id={bank[1]} />
+  if (route === 'contractors') return <Contractors />
+  const contractor = /^contractors\/([0-9a-f-]{36})$/.exec(route)
+  if (contractor) return <ContractorDetail id={contractor[1]} />
   if (route === 'advances') return <Advances />
   const advanceReport = /^advances\/([0-9a-f-]{36})\/report$/.exec(route)
   if (advanceReport) return <AdvanceReport id={advanceReport[1]} />

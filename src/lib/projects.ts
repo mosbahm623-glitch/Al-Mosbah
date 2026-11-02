@@ -33,6 +33,8 @@ export type Entry = {
   status: 'pending' | 'approved' | 'rejected' | 'deleted'
   /** how many invoice photos are attached (embedded count) */
   invoices?: { count: number }[]
+  /** why the entry was last edited (kept for good in the entry history) */
+  edit_reason?: string | null
   /** why the admin rejected the entry (rejected entries only) */
   reject_reason?: string | null
   /** why a deleted entry was deleted (deleted entries only) */
@@ -58,7 +60,7 @@ export const saveProject = (row: ProjectInput, id?: string) =>
   id ? supabase.from('projects').update(row).eq('id', id) : supabase.from('projects').insert(row)
 
 export const ENTRY_COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,edit_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchEntries = (projectId: string) =>
   supabase

@@ -71,6 +71,9 @@ export default function EntryHistory({ entryId }: { entryId: string }) {
                 {d}
               </div>
             ))}
+            {c.action === 'edit' && typeof c.new_row?.edit_reason === 'string' && c.new_row.edit_reason && (
+              <div className="small">سبب التعديل: {c.new_row.edit_reason}</div>
+            )}
           </li>
         ))}
       </ul>

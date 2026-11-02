@@ -16,9 +16,12 @@ export type EntryInput = {
   notes: string | null
 }
 
-/** Saves an edit only if nobody changed the entry since it was shown (same `rev`). Returns the updated ids. */
-export const updateEntry = (id: string, rev: number, row: EntryInput) =>
-  supabase.from('entries').update(row).eq('id', id).eq('rev', rev).select('id')
+/**
+ * Saves an edit through the database function, which refuses it without a reason and keeps the reason in the entry
+ * history. Saves only if nobody changed the entry since it was shown (same `rev`); `data` is false when they did.
+ */
+export const updateEntry = (id: string, rev: number, row: EntryInput, reason: string) =>
+  supabase.rpc('edit_entry', { p_id: id, p_rev: rev, p_reason: reason.trim(), p_row: row })
 
 /** A new entry, optionally paid out of a custody (عهدة). Returns its id and number. */
 export const insertEntry = (row: EntryInput, advanceId: string | null) =>

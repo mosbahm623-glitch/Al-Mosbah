@@ -10,6 +10,7 @@ import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
 import InvoiceLink from '../../components/InvoiceLink'
+import EntryHistory from '../../components/EntryHistory'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -131,6 +132,12 @@ export default function Approvals() {
                       <dd>{e.bank.name}</dd>
                     </div>
                   )}
+                  {e.edit_reason && (
+                    <div>
+                      <dt>سبب التعديل</dt>
+                      <dd>{e.edit_reason}</dd>
+                    </div>
+                  )}
                   {e.reject_reason && (
                     <div>
                       <dt>سبب الرفض</dt>
@@ -148,6 +155,7 @@ export default function Approvals() {
                     <dd>{e.creator?.full_name ?? '—'}</dd>
                   </div>
                 </dl>
+                {e.edit_reason && <EntryHistory entryId={e.id} />}
               </div>
               <div className="appr-side">
                 <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>

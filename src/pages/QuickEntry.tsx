@@ -25,7 +25,7 @@ export default function QuickEntry() {
   const active = (projects.data ?? []).filter((p) => p.status === 'active')
 
   return (
-    <div className="page-stack">
+    <div className="page-stack quick-page">
       <PageHead title="تسجيل قيد سريع" note="اختار المشروع وسجّل القيد من هنا. القيد بيستنّى موافقتك قبل ما يتحسب." />
       <div className="qe-tabs" role="tablist">
         <button

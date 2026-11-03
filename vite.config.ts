@@ -12,7 +12,18 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
-      workbox: { importScripts: ['push-sw.js'] },
+      workbox: {
+        importScripts: ['push-sw.js'],
+        // the Excel library is big and rarely needed: it is cached the first time someone exports, not at install
+        globIgnores: ['**/exceljs*.js', '**/xlsx*.js'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /\/assets\/(exceljs|xlsx)[^/]*\.js$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: { cacheName: 'heavy-libs', expiration: { maxEntries: 4 } },
+          },
+        ],
+      },
       manifest: {
         name: 'المصباح',
         short_name: 'المصباح',

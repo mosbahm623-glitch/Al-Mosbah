@@ -9,6 +9,8 @@ import Segmented from '../../components/Segmented'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 
+const PAGE = 60
+
 const KINDS = [
   { value: 'all', label: 'الكل' },
   { value: 'income', label: 'وارد' },
@@ -21,6 +23,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   const { isAdmin, canTouch } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
+  const [limit, setLimit] = useState(PAGE)
 
   async function restore(id: string) {
     if (await restoreEntry(id)) notifyApprovalsChanged()
@@ -58,7 +61,10 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
             type="button"
             className={`cat-chip ${category === null ? 'cat-chip-on' : ''}`}
             aria-pressed={category === null}
-            onClick={() => setCategory(null)}
+            onClick={() => {
+              setCategory(null)
+              setLimit(PAGE)
+            }}
           >
             الكل · {money(expenseTotal)}
           </button>
@@ -68,7 +74,10 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               type="button"
               className={`cat-chip ${category === name ? 'cat-chip-on' : ''}`}
               aria-pressed={category === name}
-              onClick={() => setCategory(category === name ? null : name)}
+              onClick={() => {
+                setCategory(category === name ? null : name)
+                setLimit(PAGE)
+              }}
             >
               {name} · {money(total)}
             </button>
@@ -78,7 +87,15 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
 
       <div className="toolbar">
         <h2 className="section-title">القيود</h2>
-        <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
+        <Segmented
+          label="نوع القيد"
+          value={kind}
+          options={KINDS}
+          onChange={(k) => {
+            setKind(k)
+            setLimit(PAGE)
+          }}
+        />
         <span className="toolbar-note muted small">{shown.length} قيد</span>
       </div>
 
@@ -109,7 +126,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                 </tr>
               </thead>
               <tbody>
-                {shown.map((e) => (
+                {shown.slice(0, limit).map((e) => (
                   <tr key={e.id} className={e.status === 'deleted' ? 'row-deleted' : undefined}>
                     <td className="strong num">#{e.seq}</td>
                     <td className="num muted">
@@ -201,6 +218,13 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               </tbody>
             </table>
           </div>
+          {shown.length > limit && (
+            <div className="more-row">
+              <button type="button" className="btn btn-ghost" onClick={() => setLimit((n) => n + PAGE)}>
+                عرض المزيد ({shown.length - limit})
+              </button>
+            </div>
+          )}
         </section>
       )}
     </>

@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { fetchPaged } from './paged'
 import type { ProjectType } from './format'
 
 type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
@@ -77,10 +78,17 @@ export const saveProject = (row: ProjectInput, id?: string) =>
 export const ENTRY_COLUMNS =
   'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,edit_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
-export const fetchEntries = (projectId: string) =>
-  supabase
-    .from('entries')
-    .select(ENTRY_COLUMNS)
-    .eq('project_id', projectId)
-    .order('seq', { ascending: false })
-    .returns<Entry[]>()
+/** All of a project's entries, newest first. Read page by page, because the API stops at 1000 rows per request. */
+export async function fetchEntries(projectId: string): Promise<{ data: Entry[] | null; error: boolean }> {
+  const data = await fetchPaged<Entry>((from, to) =>
+    supabase
+      .from('entries')
+      .select(ENTRY_COLUMNS)
+      .eq('project_id', projectId)
+      .order('seq', { ascending: false })
+      .order('id')
+      .range(from, to)
+      .returns<Entry[]>(),
+  )
+  return { data, error: data === null }
+}

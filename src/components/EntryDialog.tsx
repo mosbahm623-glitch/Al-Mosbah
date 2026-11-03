@@ -8,9 +8,10 @@ import EntryHistory from './EntryHistory'
 import { createCategory as saveCategory, fetchCategories, type Category } from '../lib/catalog'
 import { deleteEntry } from '../lib/entries'
 import InvoiceField from './InvoiceField'
+import BankPicker from './BankPicker'
 import { saveEntry, type SaveError } from '../lib/entrySave'
 import { useAsync } from '../lib/useAsync'
-import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type Named } from '../lib/lookups'
+import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
 const KINDS = [
@@ -66,7 +67,7 @@ export default function EntryDialog({
   const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== 'approved'))
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Named[]>(fetchContractorNames)
-  const banks = useAsync<Named[]>(fetchBankNames)
+  const banks = useAsync<BankChoice[]>(fetchBankNames)
   // an owner picks from the banks the admin gave him; everyone else may type any bank
   // (memoized: useAsync runs again whenever the function it gets changes)
   const ownerId = isOwner ? (profile?.id ?? null) : null
@@ -266,33 +267,22 @@ export default function EntryDialog({
           </label>
         )}
         {!fromAdvance && (
-          <label className="field">
+          <div className="field">
             البنك / الحساب
-            {isOwner ? (
-              <select value={bankName} onChange={(e) => setBankName(e.target.value)} required>
-                <option value="">اختار البنك</option>
-                {ownerBanks.map((b) => (
-                  <option key={b.id} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <>
-                <input
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  list="bank-names"
-                  placeholder={kind === 'income' ? 'اتودّع في أنهي بنك (اختياري)' : 'مدفوع من أنهي بنك (اختياري)'}
-                />
-                <datalist id="bank-names">
-                  {banks.data?.map((b) => (
-                    <option key={b.id} value={b.name} />
-                  ))}
-                </datalist>
-              </>
-            )}
-          </label>
+            <BankPicker
+              value={bankName}
+              onChange={setBankName}
+              banks={isOwner ? ownerBanks : (banks.data ?? [])}
+              allowNew={!isOwner}
+              placeholder={
+                isOwner
+                  ? 'اختار البنك'
+                  : kind === 'income'
+                    ? 'اتودّع في أنهي بنك (اختياري)'
+                    : 'مدفوع من أنهي بنك (اختياري)'
+              }
+            />
+          </div>
         )}
 
         <div className="field-row">

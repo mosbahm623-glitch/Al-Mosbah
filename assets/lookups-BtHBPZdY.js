@@ -1,1 +1,0 @@
-import{s as e}from"./useAsync-DPB1FQpp.js";var t=()=>e.from(`contractors`).select(`id,name`).order(`name`).returns(),n=()=>e.from(`bank_accounts`).select(`id,name`).order(`name`).returns(),r=()=>e.from(`profiles`).select(`id,full_name`).order(`full_name`).returns(),i=()=>e.from(`projects`).select(`id,name`).order(`name`).returns();export{i,t as n,r,n as t};

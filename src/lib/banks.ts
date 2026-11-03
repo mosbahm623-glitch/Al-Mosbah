@@ -1,6 +1,13 @@
 import { supabase } from './supabase'
 
-export type BankSummary = { id: string; name: string; opening_balance: number; income: number; expenses: number }
+export type BankSummary = {
+  id: string
+  name: string
+  logo: string | null
+  opening_balance: number
+  income: number
+  expenses: number
+}
 
 export type BankMovement = {
   id: string

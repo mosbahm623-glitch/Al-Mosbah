@@ -75,6 +75,40 @@ describe('saveEntry: checks', () => {
   })
 })
 
+describe('saveEntry: owner banks', () => {
+  const banks = [{ id: 'b1', name: 'الأهلي' }]
+  it('takes a bank from his list and never creates one', async () => {
+    await saveEntry(base({ bankName: 'الأهلي', banks, banksOnly: true }))
+    expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ bank_id: 'b1' })
+    expect(m.createBank).not.toHaveBeenCalled()
+  })
+  it('refuses a bank that is not on his list, online or offline', async () => {
+    expect(await saveEntry(base({ bankName: 'مصر', banks, banksOnly: true }))).toEqual({
+      status: 'error',
+      error: 'bank-denied',
+    })
+    m.online = false
+    expect(await saveEntry(base({ bankName: 'مصر', banks, banksOnly: true }))).toEqual({
+      status: 'error',
+      error: 'bank-denied',
+    })
+    expect(m.createBank).not.toHaveBeenCalled()
+    expect(m.insertEntry).not.toHaveBeenCalled()
+  })
+  it('keeps the chosen bank id on the device when offline', async () => {
+    m.online = false
+    await saveEntry(base({ bankName: 'الأهلي', banks, banksOnly: true }))
+    expect(m.queueEntry.mock.calls[0][0]).toMatchObject({ row: { bank_id: 'b1' }, bankName: '' })
+  })
+  it('turns the server refusal into bank-denied', async () => {
+    m.insertEntry.mockResolvedValue({ data: null, error: { message: 'bank not allowed', code: 'P0001' } })
+    expect(await saveEntry(base({ bankName: 'الأهلي', banks, banksOnly: true }))).toEqual({
+      status: 'error',
+      error: 'bank-denied',
+    })
+  })
+})
+
 describe('saveEntry: saving', () => {
   it('inserts a new entry with its own id and reports the number it got', async () => {
     const r = await saveEntry(base({ advanceId: 'a1' }))

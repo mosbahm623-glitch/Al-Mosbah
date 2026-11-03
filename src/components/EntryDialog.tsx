@@ -10,7 +10,7 @@ import { deleteEntry } from '../lib/entries'
 import InvoiceField from './InvoiceField'
 import { saveEntry, type SaveError } from '../lib/entrySave'
 import { useAsync } from '../lib/useAsync'
-import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
+import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
 const KINDS = [
@@ -39,6 +39,7 @@ const SAVE_ERRORS: Record<Exclude<SaveError, 'changed'>, string> = {
   project: 'اختار المشروع',
   contractor: 'ما قدرناش نحفظ اسم المقاول، جرّب تاني',
   bank: 'ما قدرناش نحفظ اسم البنك، جرّب تاني',
+  'bank-denied': 'البنك ده مش من البنوك المسموحة ليك. اختار من القايمة أو كلّم الأدمن',
   reason: 'اكتب سبب التعديل',
   'offline-edit': 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع',
   failed: 'القيد ما اتحفظش، جرّب تاني',
@@ -58,13 +59,20 @@ export default function EntryDialog({
   onClose,
   onSaved,
 }: Props) {
-  const { isAdmin, isStaff, canEditOwn, canDeleteOwn } = useAuth()
+  const { isAdmin, isStaff, isOwner, profile, canEditOwn, canDeleteOwn } = useAuth()
   // an existing entry: the admin may have switched editing and/or deleting off for this user
   const locked = Boolean(entry) && !canEditOwn
   const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== 'approved'))
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<Named[]>(fetchBankNames)
+  // an owner picks from the banks the admin gave him; everyone else may type any bank
+  const myBankIds = useAsync<string[]>(() =>
+    isOwner && profile ? fetchMyBankIds(profile.id) : Promise.resolve({ data: [], error: null }),
+  )
+  const ownerBanks = isOwner
+    ? (banks.data ?? []).filter((b) => myBankIds.data?.includes(b.id) || b.name === entry?.bank?.name)
+    : []
 
   // invoice photos picked for a new entry (stored once the entry exists); savedId: the new entry when its photos failed
   const [editReason, setEditReason] = useState('')
@@ -149,7 +157,8 @@ export default function EntryDialog({
       editReason,
       files,
       contractors: contractors.data ?? undefined,
-      banks: banks.data ?? undefined,
+      banks: (isOwner ? ownerBanks : banks.data) ?? undefined,
+      banksOnly: isOwner,
       newId: crypto.randomUUID(),
     })
     setSaving(false)
@@ -254,17 +263,30 @@ export default function EntryDialog({
         {!fromAdvance && (
           <label className="field">
             البنك / الحساب
-            <input
-              value={bankName}
-              onChange={(e) => setBankName(e.target.value)}
-              list="bank-names"
-              placeholder={kind === 'income' ? 'اتودّع في أنهي بنك (اختياري)' : 'مدفوع من أنهي بنك (اختياري)'}
-            />
-            <datalist id="bank-names">
-              {banks.data?.map((b) => (
-                <option key={b.id} value={b.name} />
-              ))}
-            </datalist>
+            {isOwner ? (
+              <select value={bankName} onChange={(e) => setBankName(e.target.value)}>
+                <option value="">من غير بنك</option>
+                {ownerBanks.map((b) => (
+                  <option key={b.id} value={b.name}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <>
+                <input
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  list="bank-names"
+                  placeholder={kind === 'income' ? 'اتودّع في أنهي بنك (اختياري)' : 'مدفوع من أنهي بنك (اختياري)'}
+                />
+                <datalist id="bank-names">
+                  {banks.data?.map((b) => (
+                    <option key={b.id} value={b.name} />
+                  ))}
+                </datalist>
+              </>
+            )}
           </label>
         )}
 

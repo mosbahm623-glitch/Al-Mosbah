@@ -4,6 +4,7 @@ import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES } from '../../auth/permissions'
 import { fetchAdvanceOptions, fetchUsers, type AdvanceOption, type UserRow } from '../../lib/users'
+import { fetchBankNames, type Named } from '../../lib/lookups'
 import { useAsync } from '../../lib/useAsync'
 import NewUserDialog from './NewUserDialog'
 import UserDialog from './UserDialog'
@@ -29,6 +30,7 @@ export default function Users() {
   const { profile, isAdmin } = useAuth()
   const users = useAsync<UserRow[]>(fetchUsers)
   const advances = useAsync<AdvanceOption[]>(fetchAdvanceOptions)
+  const banks = useAsync<Named[]>(fetchBankNames)
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<UserRow | null>(null)
 
@@ -108,10 +110,11 @@ export default function Users() {
       )}
 
       {adding && <NewUserDialog onClose={() => setAdding(false)} onCreated={users.reload} />}
-      {editing && advances.data && (
+      {editing && advances.data && banks.data && (
         <UserDialog
           user={editing}
           advances={advances.data}
+          banks={banks.data}
           isSelf={editing.id === profile?.id}
           onClose={() => setEditing(null)}
           onSaved={users.reload}

@@ -1,6 +1,5 @@
--- البنوك اللي المالك (أو أي مستخدم غير الأدمن) يصرف منها: الأدمن بيحدّدها لكل واحد.
--- لو الواحد ملوش صفوف هنا يصرف من أي بنك زي ما كان. لو ليه صفوف يبقى المصروفات اللي بيسجّلها بتتقيّد بالبنوك دي بس.
--- القيد من غير بنك (أو من عهدة) والوارد (اتودّع في بنك) مش متقيّدين: القيد هو الصرف من بنك.
+-- البنوك اللي المالك يختار منها: الأدمن بيحدّدها لكل مالك، والمالك مبيكتبش اسم بنك من دماغه ولا بينشئ بنك.
+-- المالك من غير بنوك محددة ما يقدرش يسجّل قيد ببنك (القيد من غير بنك أو من عهدة عادي). الأدمن والمستخدم العادي زي ما هم.
 create table public.user_bank_access (
   user_id uuid not null references public.profiles (id) on delete cascade,
   bank_id uuid not null references public.bank_accounts (id) on delete cascade,
@@ -9,7 +8,7 @@ create table public.user_bank_access (
 create index user_bank_access_bank_id_idx on public.user_bank_access (bank_id);
 alter table public.user_bank_access enable row level security;
 
--- the person sees his own limits (the form needs them); only the admin sets them, so nobody can lift his own limit
+-- the owner sees his own list (the form needs it); only the admin sets it, so nobody can widen his own list
 create policy user_bank_access_select on public.user_bank_access for select to authenticated
   using (user_id = (select auth.uid()) or (select private.is_admin()));
 create policy user_bank_access_insert on public.user_bank_access for insert to authenticated
@@ -17,8 +16,8 @@ create policy user_bank_access_insert on public.user_bank_access for insert to a
 create policy user_bank_access_delete on public.user_bank_access for delete to authenticated
   using ((select private.is_admin()));
 
--- an expense can be recorded only against a bank the person may spend from. The admin is never limited, and an old
--- entry keeps its bank when it is edited (the check runs only when the bank or the kind changes).
+-- an owner's entry (income or expense) can carry only a bank from his list. An old entry keeps its bank when it is
+-- edited (the check runs only when the bank changes), and a signed-out call (the database itself) is never blocked.
 create function private.entry_bank_access()
 returns trigger
 language plpgsql
@@ -28,14 +27,16 @@ as $$
 declare
   uid uuid := (select auth.uid());
 begin
-  if uid is null or new.kind <> 'expense' or new.bank_id is null or private.is_admin() then
+  if uid is null or new.bank_id is null then
     return new;
   end if;
-  if tg_op = 'UPDATE' and new.bank_id is not distinct from old.bank_id and new.kind = old.kind then
+  if tg_op = 'UPDATE' and new.bank_id is not distinct from old.bank_id then
     return new;
   end if;
-  if exists (select 1 from public.user_bank_access where user_id = uid)
-     and not exists (select 1 from public.user_bank_access where user_id = uid and bank_id = new.bank_id) then
+  if not exists (select 1 from public.profiles where id = uid and role = 'owner') then
+    return new;
+  end if;
+  if not exists (select 1 from public.user_bank_access where user_id = uid and bank_id = new.bank_id) then
     raise exception 'bank not allowed' using errcode = 'P0001';
   end if;
   return new;
@@ -45,7 +46,7 @@ revoke execute on function private.entry_bank_access() from public, anon, authen
 create trigger entry_bank_access before insert or update on public.entries
   for each row execute function private.entry_bank_access();
 
--- the reset (037) wipes the banks: the limits that point at them go with them
+-- the reset (037) wipes the banks: the lists that point at them go with them
 create or replace function public.reset_data(
   p_groups text[] default array['entries', 'contractor_dues', 'projects', 'contractors', 'advances', 'banks', 'categories', 'notifications']
 )

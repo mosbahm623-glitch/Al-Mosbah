@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Pencil, RotateCcw } from 'lucide-react'
-import { restoreEntry } from '../../lib/approvals'
+import { Pencil, RotateCcw, Undo2 } from 'lucide-react'
+import { reopenEntry, restoreEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import InvoiceLink from '../../components/InvoiceLink'
@@ -23,6 +23,11 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
 
   async function restore(id: string) {
     if (await restoreEntry(id)) notifyApprovalsChanged()
+    onRestored?.()
+  }
+
+  async function reopen(e: Entry) {
+    if (await reopenEntry(e.id, e.rev)) notifyApprovalsChanged()
     onRestored?.()
   }
 
@@ -167,19 +172,21 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     </td>
                     {canEdit && (
                       <td>
-                        {e.status === 'deleted'
-                          ? isAdmin && (
-                              <button
-                                type="button"
-                                className="icon-btn"
-                                aria-label={`استرجاع القيد ${e.seq}`}
-                                title="استرجاع"
-                                onClick={() => void restore(e.id)}
-                              >
-                                <RotateCcw size={17} />
-                              </button>
-                            )
-                          : canTouch(e.status) && (
+                        {e.status === 'deleted' ? (
+                          isAdmin && (
+                            <button
+                              type="button"
+                              className="icon-btn"
+                              aria-label={`استرجاع القيد ${e.seq}`}
+                              title="استرجاع"
+                              onClick={() => void restore(e.id)}
+                            >
+                              <RotateCcw size={17} />
+                            </button>
+                          )
+                        ) : (
+                          <>
+                            {canTouch(e.status) && (
                               <button
                                 type="button"
                                 className="icon-btn"
@@ -189,6 +196,19 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                                 <Pencil size={17} />
                               </button>
                             )}
+                            {isAdmin && e.status === 'approved' && (
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                aria-label={`رجّع القيد ${e.seq} للموافقات`}
+                                title="رجّع للموافقات"
+                                onClick={() => void reopen(e)}
+                              >
+                                <Undo2 size={17} />
+                              </button>
+                            )}
+                          </>
+                        )}
                       </td>
                     )}
                   </tr>

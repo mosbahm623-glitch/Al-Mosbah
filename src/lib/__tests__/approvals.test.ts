@@ -11,6 +11,7 @@ import {
   fetchByStatus,
   filterEntries,
   isFiltering,
+  reopenEntry,
   restoreEntry,
   type PendingEntry,
 } from '../approvals'
@@ -21,6 +22,25 @@ const rpc = vi.mocked(supabase.rpc)
 beforeEach(() => {
   from.mockReset()
   rpc.mockReset()
+})
+
+describe('reopenEntry', () => {
+  it('only flips the status, at the revision shown (date, number and recorded time are not touched)', async () => {
+    const q = query({ data: [{ id: 'a' }], error: null })
+    from.mockReturnValueOnce(q.query)
+    expect(await reopenEntry('a', 4)).toBe(true)
+    expect(q.calls).toEqual([
+      ['update', [{ status: 'pending' }]],
+      ['eq', ['id', 'a']],
+      ['eq', ['rev', 4]],
+      ['select', ['id']],
+    ])
+  })
+
+  it('reports false when someone changed the entry meanwhile', async () => {
+    from.mockReturnValueOnce(query({ data: [], error: null }).query)
+    expect(await reopenEntry('a', 4)).toBe(false)
+  })
 })
 
 describe('decide', () => {

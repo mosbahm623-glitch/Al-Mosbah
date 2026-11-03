@@ -45,9 +45,9 @@ export type Database = {
         { created_at?: string; holder_name?: string; id?: string; notes?: string | null; status?: string }
       >
       bank_accounts: T<
-        { created_at: string; id: string; name: string; opening_balance: number },
-        { created_at?: string; id?: string; name: string; opening_balance?: number },
-        { created_at?: string; id?: string; name?: string; opening_balance?: number }
+        { created_at: string; id: string; logo: string | null; name: string; opening_balance: number },
+        { created_at?: string; id?: string; logo?: string | null; name: string; opening_balance?: number },
+        { created_at?: string; id?: string; logo?: string | null; name?: string; opening_balance?: number }
       >
       contractor_transactions: T<
         { amount: number; contractor_id: string; created_at: string; id: string; kind: string; notes: string | null; project_id: string | null; txn_date: string },

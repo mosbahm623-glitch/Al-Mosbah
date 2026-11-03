@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
+import BankLogo from '../../components/BankLogo'
 import { Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { bankBalance, fetchBankSummaries, type BankSummary } from '../../lib/banks'
@@ -64,7 +65,8 @@ export default function Banks() {
                   return (
                     <tr key={b.id}>
                       <td className="strong">
-                        <a className="row-link" href={`#/banks/${b.id}`}>
+                        <a className="row-link bank-name" href={`#/banks/${b.id}`}>
+                          <BankLogo logo={b.logo} name={b.name} />
                           {b.name}
                         </a>
                         <span className="sub">افتتاحي {money(b.opening_balance)}</span>

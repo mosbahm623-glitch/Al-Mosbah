@@ -355,3 +355,25 @@
   display: grid;
   gap: 0.15rem;
 }
+
+/* bank logo */
+.bank-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.bank-logo {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #fff;
+}
+.bank-logo-empty {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  color: var(--muted, #667);
+  background: rgb(120 130 150 / 0.15);
+}

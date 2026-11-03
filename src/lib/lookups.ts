@@ -4,7 +4,9 @@ export type Named = { id: string; name: string }
 
 export const fetchContractorNames = () =>
   supabase.from('contractors').select('id,name').order('name').returns<Named[]>()
-export const fetchBankNames = () => supabase.from('bank_accounts').select('id,name').order('name').returns<Named[]>()
+export type BankChoice = Named & { logo: string | null }
+export const fetchBankNames = () =>
+  supabase.from('bank_accounts').select('id,name,logo').order('name').returns<BankChoice[]>()
 /** The banks the admin let this person choose from (ids). The database shows him only his own list. */
 export async function fetchMyBankIds(userId: string): Promise<{ data: string[] | null; error: unknown }> {
   const { data, error } = await supabase.from('user_bank_access').select('bank_id').eq('user_id', userId)

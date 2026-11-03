@@ -1,0 +1,136 @@
+/* ===== Dialog ===== */
+.dialog {
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg);
+  overflow: auto;
+}
+.dialog::backdrop {
+  background: var(--scrim);
+}
+.dialog-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--line-2);
+}
+.dialog-head h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.dialog-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.field {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.field input {
+  min-height: 44px;
+}
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.dialog-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+.table td.num {
+  white-space: nowrap;
+}
+.field label {
+  display: grid;
+  gap: 0.4rem;
+  font: inherit;
+}
+select {
+  font: inherit;
+  min-height: 44px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+}
+select:disabled {
+  opacity: 0.6;
+}
+.add-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.add-row input {
+  flex: 1 1 10rem;
+}
+.add-row .btn {
+  padding-inline: 1rem;
+}
+
+/* wide entry dialog: two columns on desktop so nothing scrolls */
+@media (min-width: 720px) {
+  .dialog-wide {
+    width: min(46rem, calc(100vw - 4rem));
+  }
+  .dialog-wide .dialog-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.25rem;
+  }
+  .dialog-wide .field-row {
+    display: contents;
+  }
+  .dialog-wide .span-2 {
+    grid-column: 1 / -1;
+  }
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.btn-danger {
+  background: var(--err-bg);
+  color: var(--err);
+  margin-inline-start: auto;
+}
+.switcher select {
+  min-width: 12rem;
+  background: var(--surface);
+}
+@media (max-width: 719px) {
+  .head-actions {
+    width: 100%;
+  }
+  .switcher {
+    flex: 1 1 100%;
+  }
+  .switcher select {
+    min-width: 0;
+  }
+  .page-head > div:first-child {
+    min-width: 0;
+  }
+}
+.page-stack > * {
+  min-width: 0;
+}
+.table-wrap {
+  position: relative;
+}

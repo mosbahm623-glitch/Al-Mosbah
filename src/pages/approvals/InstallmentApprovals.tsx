@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
+import StatusChip from '../../components/StatusChip'
 import { decideInstallments, type PendingInstallment } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money } from '../../lib/format'
@@ -37,7 +38,7 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
             <div className="appr-main">
               <div className="appr-tags">
                 <span className="chip chip-neutral">دفعة عهدة</span>
-                {p.status === 'rejected' && <span className="chip chip-err">مرفوضة</span>}
+                {p.status === 'rejected' && <StatusChip status="rejected" kind="payment" />}
                 <span className="muted small">{dateText(p.paid_on)}</span>
               </div>
               <h2 className="appr-title">

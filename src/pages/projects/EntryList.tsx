@@ -4,6 +4,7 @@ import { reopenEntry, restoreEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import InvoiceLink from '../../components/InvoiceLink'
+import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import Segmented from '../../components/Segmented'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
@@ -131,23 +132,11 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                           <span className="chip chip-neutral">من عهدة</span>
                         </>
                       )}
-                      {e.status === 'pending' && (
-                        <>
-                          {' '}
-                          <span className="sm-hide chip chip-warn">قيد الموافقة</span>
-                        </>
-                      )}
-                      {e.status === 'rejected' && (
-                        <>
-                          {' '}
-                          <span className="sm-hide chip chip-err">مرفوض</span>
-                          {e.reject_reason && <span className="reject-reason">سبب الرفض: {e.reject_reason}</span>}
-                        </>
-                      )}
+                      <EntryFlag status={e.status} reason={e.reject_reason} />
                       {e.status === 'deleted' && (
                         <>
                           {' '}
-                          <span className="chip chip-neutral">محذوف</span>
+                          <StatusChip status="deleted" />
                           {e.deleteReason && <span className="small"> · السبب: {e.deleteReason}</span>}
                         </>
                       )}
@@ -165,11 +154,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       {e.kind === 'income' ? '+' : '−'}
                       {money(e.amount)}
                     </td>
-                    <td className="sm-only">
-                      {e.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
-                      {e.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
-                      {e.status === 'approved' && <span className="chip chip-ok">معتمد</span>}
-                    </td>
+                    <td className="sm-only">{e.status !== 'deleted' && <StatusChip status={e.status} />}</td>
                     {canEdit && (
                       <td>
                         {e.status === 'deleted' ? (

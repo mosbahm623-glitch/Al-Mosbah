@@ -25,7 +25,7 @@ export type AdvanceReturn = { id: string; amount: number; returned_on: string; n
 export const advanceBalance = (a: Pick<AdvanceSummary, 'given' | 'spent' | 'returned'>) =>
   a.given - a.spent - a.returned
 
-export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries')
+export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries').returns<AdvanceSummary[]>()
 
 export const fetchInstallments = (advanceId: string) =>
   supabase

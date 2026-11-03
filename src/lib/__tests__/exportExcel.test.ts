@@ -1,14 +1,14 @@
 import type { Workbook, Worksheet } from 'exceljs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../excelCommon', async (original) => ({
-  ...(await original<typeof import('../excelCommon')>()),
+vi.mock('../export/excelCommon', async (original) => ({
+  ...(await original<typeof import('../export/excelCommon')>()),
   downloadWorkbook: vi.fn(async () => {}),
 }))
 
-import { MONEY, downloadWorkbook, toDate } from '../excelCommon'
-import { exportJournalExcel } from '../exportJournalExcel'
-import { exportTableExcel } from '../exportTableExcel'
+import { MONEY, downloadWorkbook, toDate } from '../export/excelCommon'
+import { exportJournalExcel } from '../export/exportJournalExcel'
+import { exportTableExcel } from '../export/exportTableExcel'
 import type { Movement } from '../movements'
 import type { Section } from '../tableTypes'
 

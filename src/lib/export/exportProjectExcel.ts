@@ -1,5 +1,5 @@
-import type { Entry, ProjectSummary } from './projects'
-import { TYPE_LABEL, todayISO, todayText } from './format'
+import type { Entry, ProjectSummary } from '../projects'
+import { TYPE_LABEL, todayISO, todayText } from '../format'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
 type Options = {

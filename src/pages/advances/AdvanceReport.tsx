@@ -9,17 +9,21 @@ import PrintTables from '../../components/PrintTables'
 import type { Section } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 
+type Parts = { given: boolean; spent: boolean; returned: boolean }
+
 /** Printable statement of one custody: what the holder received, spent (per project) and returned. */
 export default function AdvanceReport({
   id,
   embedded,
 }: {
   id: string
-  embedded?: { withContractor: boolean; withNotes: boolean }
+  embedded?: { withContractor: boolean; withNotes: boolean; parts?: Parts }
 }) {
   const preparedBy = usePreparedBy()
   const withContractor = embedded?.withContractor ?? true
   const withNotes = embedded?.withNotes ?? true
+  // which parts of the statement to show (all by default)
+  const parts = embedded?.parts ?? { given: true, spent: true, returned: true }
   const { advance, installments, returns, entries, loading, failed } = useAdvanceData(id)
   const [today] = useState(() => todayText())
 
@@ -36,8 +40,9 @@ export default function AdvanceReport({
     .sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
 
-  const gridSections: Section[] = [
+  const allSections: (Section & { part: keyof Parts })[] = [
     {
+      part: 'given',
       heading: 'الدفعات المستلمة',
       cols: [
         { h: 'التاريخ', kind: 'date' },
@@ -48,6 +53,7 @@ export default function AdvanceReport({
       empty: 'مفيش دفعات.',
     },
     {
+      part: 'spent',
       heading: 'المصروفات',
       cols: [
         { h: 'رقم', kind: 'int' },
@@ -79,6 +85,7 @@ export default function AdvanceReport({
     ...(back.length > 0
       ? [
           {
+            part: 'returned' as const,
             heading: 'المرتجع',
             cols: [{ h: 'التاريخ', kind: 'date' as const }, { h: 'ملاحظات' }, { h: 'المبلغ', kind: 'money' as const }],
             rows: back.map((r) => [r.returned_on, r.notes, r.amount]),
@@ -87,6 +94,8 @@ export default function AdvanceReport({
         ]
       : []),
   ]
+
+  const gridSections: Section[] = allSections.filter((s) => parts[s.part]).map(({ part: _part, ...s }) => s)
 
   return (
     <div className="page-stack report-page">

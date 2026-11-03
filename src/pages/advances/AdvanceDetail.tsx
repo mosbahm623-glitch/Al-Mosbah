@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
-import { FileText, Pencil, Plus, Undo2 } from 'lucide-react'
+import { FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import InvoiceLink from '../../components/InvoiceLink'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
-import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
 import EntryDialog from '../../components/EntryDialog'
+import AdvanceEntriesPanel from './AdvanceEntriesPanel'
+import InstallmentsPanel from './InstallmentsPanel'
+import ReturnsPanel from './ReturnsPanel'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
 import MoneyDialog from './MoneyDialog'
@@ -18,7 +19,7 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, isStaff: isAdmin, isAdmin: isRealAdmin, canTouch } = useAuth()
+  const { can, isStaff, isAdmin, canTouch } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
@@ -61,7 +62,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
               <FileText size={18} aria-hidden="true" />
               كشف / طباعة
             </a>
-            {isAdmin && (
+            {isStaff && (
               <>
                 <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
                   <Pencil size={18} aria-hidden="true" />
@@ -85,217 +86,28 @@ export default function AdvanceDetail({ id }: { id: string }) {
         ]}
       />
 
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="section-title">الدفعات</h2>
-          {isAdmin && (
-            <button className="btn btn-icon" onClick={() => setMoney({ kind: 'installment' })}>
-              <Plus size={18} aria-hidden="true" />
-              دفعة جديدة
-            </button>
-          )}
-        </div>
-        {installments?.length ? (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>المبلغ</th>
-                  <th>الحالة</th>
-                  {isAdmin && (
-                    <th>
-                      <span className="sr-only">إجراءات</span>
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {installments.map((i) => (
-                  <tr key={i.id}>
-                    <td className="num muted">{dateText(i.paid_on)}</td>
-                    <td className="num strong">{money(i.amount)}</td>
-                    <td>
-                      {i.status === 'pending' && <span className="chip chip-warn">مستنية الموافقة</span>}
-                      {i.status === 'rejected' && (
-                        <>
-                          <span className="chip chip-err">مرفوضة</span>
-                          {i.reject_reason && <span className="reject-reason">السبب: {i.reject_reason}</span>}
-                        </>
-                      )}
-                      {i.status === 'approved' && <span className="chip chip-ok">معتمدة</span>}
-                    </td>
-                    {isAdmin && (
-                      <td>
-                        {(isRealAdmin || i.status !== 'approved') && (
-                          <button
-                            className="icon-btn"
-                            aria-label="تعديل الدفعة"
-                            onClick={() => setMoney({ kind: 'installment', row: i })}
-                          >
-                            <Pencil size={16} aria-hidden="true" />
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="empty muted">مفيش دفعات لسه.</p>
-        )}
-      </section>
+      <InstallmentsPanel
+        installments={installments}
+        isStaff={isStaff}
+        isAdmin={isAdmin}
+        onAdd={() => setMoney({ kind: 'installment' })}
+        onEdit={(row) => setMoney({ kind: 'installment', row })}
+      />
 
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="section-title">المصروفات من العهدة</h2>
-          {canEdit && (
-            <button className="btn btn-icon" onClick={() => setSpending(true)}>
-              <Plus size={18} aria-hidden="true" />
-              مصروف من العهدة
-            </button>
-          )}
-        </div>
-        {entries?.length ? (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>رقم</th>
-                  <th>التاريخ</th>
-                  <th className="sm-hide">المشروع</th>
-                  <th className="sm-hide">البند</th>
-                  <th>البيان</th>
-                  <th className="sm-hide">المقاول</th>
-                  <th className="sm-hide">ملاحظات</th>
-                  <th className="sm-hide">سجّله</th>
-                  <th>المبلغ</th>
-                  <th className="sm-only">الحالة</th>
-                  {canEdit && (
-                    <th>
-                      <span className="sr-only">إجراءات</span>
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((e) => (
-                  <tr key={e.id}>
-                    <td className="strong num">#{e.seq}</td>
-                    <td className="num muted">
-                      <span className="sm-hide">{dateText(e.entry_date)}</span>
-                      <span className="sm-only">{dateShort(e.entry_date)}</span>
-                    </td>
-                    <td className="sm-hide">{e.project?.name}</td>
-                    <td className="sm-hide">{e.category}</td>
-                    <td className="strong">
-                      {e.item}
-                      <InvoiceLink entry={e} />
-                      {e.status === 'pending' && (
-                        <>
-                          {' '}
-                          <span className="sm-hide chip chip-warn">قيد الموافقة</span>
-                        </>
-                      )}
-                      {e.status === 'rejected' && (
-                        <>
-                          {' '}
-                          <span className="sm-hide chip chip-err">مرفوض</span>
-                          {e.reject_reason && <span className="reject-reason">سبب الرفض: {e.reject_reason}</span>}
-                        </>
-                      )}
-                      {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
-                      <span className="sub">
-                        {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
-                      </span>
-                      {e.notes && <span className="sub">{e.notes}</span>}
-                      {e.creator?.full_name && <span className="sub">سجّله {e.creator.full_name}</span>}
-                    </td>
-                    <td className="muted sm-hide">{e.contractor?.name}</td>
-                    <td className="muted sm-hide">{e.notes}</td>
-                    <td className="muted sm-hide">{e.creator?.full_name}</td>
-                    <td className="num strong tone-text-err">−{money(e.amount)}</td>
-                    <td className="sm-only">
-                      {e.status === 'pending' && <span className="chip chip-warn">معلّق</span>}
-                      {e.status === 'rejected' && <span className="chip chip-err">مرفوض</span>}
-                      {e.status === 'approved' && <span className="chip chip-ok">معتمد</span>}
-                    </td>
-                    {canEdit && (
-                      <td>
-                        {canTouch(e.status) && (
-                          <button
-                            className="icon-btn"
-                            aria-label={`تعديل القيد ${e.seq}`}
-                            onClick={() => setEditingEntry(e)}
-                          >
-                            <Pencil size={16} aria-hidden="true" />
-                          </button>
-                        )}
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="empty muted">مفيش مصروفات من العهدة لسه.</p>
-        )}
-      </section>
+      <AdvanceEntriesPanel
+        entries={entries}
+        canEdit={canEdit}
+        canTouch={canTouch}
+        onSpend={() => setSpending(true)}
+        onEdit={setEditingEntry}
+      />
 
-      <section className="panel">
-        <div className="panel-head">
-          <h2 className="section-title">رد العهدة</h2>
-          {isAdmin && (
-            <button className="btn btn-ghost btn-icon" onClick={() => setMoney({ kind: 'return' })}>
-              <Undo2 size={18} aria-hidden="true" />
-              رد عهدة
-            </button>
-          )}
-        </div>
-        {returns?.length ? (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>التاريخ</th>
-                  <th>المبلغ</th>
-                  <th>ملاحظات</th>
-                  {isAdmin && (
-                    <th>
-                      <span className="sr-only">إجراءات</span>
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {returns.map((r) => (
-                  <tr key={r.id}>
-                    <td className="num muted">{dateText(r.returned_on)}</td>
-                    <td className="num strong">{money(r.amount)}</td>
-                    <td className="muted">{r.notes}</td>
-                    {isAdmin && (
-                      <td>
-                        <button
-                          className="icon-btn"
-                          aria-label="تعديل المرتجع"
-                          onClick={() => setMoney({ kind: 'return', row: r })}
-                        >
-                          <Pencil size={16} aria-hidden="true" />
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="empty muted">مفيش مرتجعات.</p>
-        )}
-      </section>
+      <ReturnsPanel
+        returns={returns}
+        isStaff={isStaff}
+        onAdd={() => setMoney({ kind: 'return' })}
+        onEdit={(row) => setMoney({ kind: 'return', row })}
+      />
 
       {money_ && (
         <MoneyDialog

@@ -6,7 +6,7 @@ import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
 import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
-import { startSync } from '../lib/offlineQueue'
+import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
 import { applyTheme, currentTheme, type Theme } from './theme'
 

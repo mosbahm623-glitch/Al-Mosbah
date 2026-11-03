@@ -1,5 +1,5 @@
-import { KIND_LABEL, totalsOfDay, type Movement } from './movements'
-import { dateText } from './format'
+import { KIND_LABEL, totalsOfDay, type Movement } from '../movements'
+import { dateText } from '../format'
 import { MONEY, SOFT_FILL, border, downloadWorkbook, header, solid } from './excelCommon'
 
 type Options = { day: string; rows: Movement[]; withContractor: boolean; withBank: boolean; withNotes: boolean }

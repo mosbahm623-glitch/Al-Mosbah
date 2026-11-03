@@ -1,11 +1,11 @@
 import { isNetworkError, isOnline } from './connection'
-import { createBank, createContractor } from './catalog'
-import { insertEntry, type EntryInput } from './entries'
-import { uploadInvoices } from './attachments'
-import { notifyDataChanged } from './events'
-import { fetchBankNames, fetchContractorNames, type Named } from './lookups'
-import { currentUserId } from './offlineAuth'
-import { kvDelete, kvSet, kvValues } from './offlineStore'
+import { createBank, createContractor } from '../catalog'
+import { insertEntry, type EntryInput } from '../entries'
+import { uploadInvoices } from '../attachments'
+import { notifyDataChanged } from '../events'
+import { fetchBankNames, fetchContractorNames, type Named } from '../lookups'
+import { currentUserId } from './auth'
+import { kvDelete, kvSet, kvValues } from './store'
 
 /**
  * New entries recorded without a network wait here, on the device, and go to the server by themselves when the network

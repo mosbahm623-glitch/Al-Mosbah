@@ -5,19 +5,10 @@ import Dialog from './Dialog'
 import Segmented from './Segmented'
 import CreatableSelect from './CreatableSelect'
 import EntryHistory from './EntryHistory'
-import {
-  addExpenseItem,
-  createBank,
-  createCategory as saveCategory,
-  createContractor,
-  fetchCategories,
-  type Category,
-} from '../lib/catalog'
-import { deleteEntry, insertEntry, updateEntry, type EntryInput } from '../lib/entries'
-import { isNetworkError, isOnline } from '../lib/connection'
-import { queueEntry } from '../lib/offlineQueue'
-import { uploadInvoices } from '../lib/attachments'
+import { createCategory as saveCategory, fetchCategories, type Category } from '../lib/catalog'
+import { deleteEntry } from '../lib/entries'
 import InvoiceField from './InvoiceField'
+import { saveEntry, type SaveError } from '../lib/entrySave'
 import { useAsync } from '../lib/useAsync'
 import { fetchBankNames, fetchContractorNames, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
@@ -38,6 +29,20 @@ type Props = {
   inline?: boolean
   onClose: () => void
   onSaved: () => void
+}
+
+const SAVE_ERRORS: Record<Exclude<SaveError, 'changed'>, string> = {
+  category: 'اختار البند',
+  item: 'اكتب البيان',
+  income: 'اكتب بيان الوارد',
+  amount: 'المبلغ لازم يكون أكبر من صفر',
+  project: 'اختار المشروع',
+  contractor: 'ما قدرناش نحفظ اسم المقاول، جرّب تاني',
+  bank: 'ما قدرناش نحفظ اسم البنك، جرّب تاني',
+  reason: 'اكتب سبب التعديل',
+  'offline-edit': 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع',
+  failed: 'القيد ما اتحفظش، جرّب تاني',
+  device: 'ما قدرناش نحفظ القيد على الجهاز',
 }
 
 const CHANGED =
@@ -95,18 +100,6 @@ export default function EntryDialog({
     return name
   }
 
-  async function findOrCreateContractor(name: string) {
-    const existing = contractors.data?.find((c) => c.name.trim().toLowerCase() === name.toLowerCase())
-    if (existing) return existing.id
-    return createContractor(name)
-  }
-
-  async function findOrCreateBank(name: string) {
-    const existing = banks.data?.find((b) => b.name.trim().toLowerCase() === name.toLowerCase())
-    if (existing) return existing.id
-    return createBank(name)
-  }
-
   async function remove() {
     if (!entry) return
     if (!confirmDelete) return setConfirmDelete(true)
@@ -136,107 +129,43 @@ export default function EntryDialog({
 
   async function submit(e: FormEvent) {
     e.preventDefault()
-    // chosen once per try, so a try whose answer got lost can never become a second entry
-    const newId = crypto.randomUUID()
-
-    async function keepOnDevice(row: EntryInput, names: { contractor: string; bank: string }) {
-      const kept = await queueEntry({
-        id: newId,
-        row,
-        advanceId: advanceId ?? null,
-        contractorName: names.contractor,
-        bankName: names.bank,
-        files,
-        label: `${row.item ?? row.category} · ${row.amount}`,
-      })
-      setSaving(false)
-      if (!kept) return setError('ما قدرناش نحفظ القيد على الجهاز')
-      onSaved()
-      if (!inline) return onClose()
-      resetForNext('مفيش نت: القيد اتحفظ على جهازك وهيتبعت لوحده لما النت يرجع')
-    }
-
-    const value = Number(amount)
-    const isExpense = kind === 'expense'
-    if (isExpense && !category) return setError('اختار البند')
-    if (isExpense && !itemName.trim()) return setError('اكتب البيان')
-    if (!isExpense && !incomeLabel.trim()) return setError('اكتب بيان الوارد')
-    if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
-    if (!targetProject) return setError('اختار المشروع')
     setSaving(true)
     setError(null)
     setDone(null)
-    const typedContractor = isExpense ? contractorName.trim() : ''
-    const typedBank = fromAdvance ? '' : bankName.trim()
-    const baseRow = {
-      project_id: targetProject,
+    const r = await saveEntry({
+      entry,
+      advanceId,
+      fromAdvance,
       kind,
-      category: isExpense ? category!.name : incomeLabel.trim(),
-      item: isExpense ? itemName.trim() : null,
-      contractor_id: null as string | null,
-      bank_id: null as string | null,
-      amount: value,
-      entry_date: date,
-      notes: notes.trim() || null,
-    }
-    // a new entry recorded without a network waits on this device and is sent by itself when the network is back
-    const offlineNew = !entry && !isOnline()
-    if (offlineNew) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
-    let contractorId: string | null = null
-    if (typedContractor) {
-      contractorId = await findOrCreateContractor(typedContractor)
-      if (!contractorId) {
-        if (!entry && !isOnline()) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
-        setSaving(false)
-        return setError('ما قدرناش نحفظ اسم المقاول، جرّب تاني')
-      }
-    }
-    let bankId: string | null = null
-    if (typedBank) {
-      bankId = await findOrCreateBank(typedBank)
-      if (!bankId) {
-        if (!entry && !isOnline()) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
-        setSaving(false)
-        return setError('ما قدرناش نحفظ اسم البنك، جرّب تاني')
-      }
-    }
-    if (isExpense && category && !category.expense_items.some((i) => i.name === itemName.trim())) {
-      // remember the name so it shows up as a suggestion next time; the entry does not depend on it
-      await addExpenseItem(itemName.trim(), category.id)
-    }
-    const row = { ...baseRow, contractor_id: contractorId, bank_id: bankId }
-    if (entry && editReason.trim().length < 2) {
-      setSaving(false)
-      return setError('اكتب سبب التعديل')
-    }
-    const res = entry
-      ? await updateEntry(entry.id, entry.rev, row, editReason)
-      : await insertEntry(row, advanceId ?? null, newId)
-    if (res.error) {
-      // the network dropped while saving: keep the new entry on the device (same id, so it can never be doubled)
-      if (!entry && isNetworkError(res.error)) return keepOnDevice(row, { contractor: '', bank: '' })
-      setSaving(false)
-      return setError(
-        isNetworkError(res.error)
-          ? 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع'
-          : 'القيد ما اتحفظش، جرّب تاني',
-      )
-    }
-    if (entry && res.data !== true) {
-      setSaving(false)
-      return setError(CHANGED)
-    }
-    const created = entry ? undefined : (res.data as { id?: string; seq?: number }[] | null)?.[0]
-    const failed = !entry && created?.id && files.length ? await uploadInvoices(created.id, files) : 0
+      category,
+      itemName,
+      incomeLabel,
+      contractorName,
+      bankName,
+      amount,
+      date,
+      notes,
+      targetProject,
+      editReason,
+      files,
+      contractors: contractors.data ?? undefined,
+      banks: banks.data ?? undefined,
+      newId: crypto.randomUUID(),
+    })
     setSaving(false)
+    if (r.status === 'error') return setError(r.error === 'changed' ? CHANGED : SAVE_ERRORS[r.error])
     onSaved()
-    if (failed) setError(`القيد اتسجّل لكن ${failed} صورة ما اترفعتش. ضيفها من تعديل القيد`)
+    if (r.status === 'queued') {
+      if (!inline) return onClose()
+      return resetForNext('مفيش نت: القيد اتحفظ على جهازك وهيتبعت لوحده لما النت يرجع')
+    }
+    if (r.failedPhotos) setError(`القيد اتسجّل لكن ${r.failedPhotos} صورة ما اترفعتش. ضيفها من تعديل القيد`)
     if (!inline) {
-      if (!failed) return onClose()
-      setSavedId(created?.id ?? null) // stay open so the photos can be added again
+      if (!r.failedPhotos) return onClose()
+      setSavedId(r.id ?? null) // stay open so the photos can be added again
       return setFiles([])
     }
-    resetForNext(`اتسجّل القيد رقم ${created?.seq ?? ''} ومستنّي موافقتك`)
+    resetForNext(`اتسجّل القيد رقم ${r.seq ?? ''} ومستنّي موافقتك`)
   }
 
   const form = (

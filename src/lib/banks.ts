@@ -20,8 +20,9 @@ export type BankMovement = {
 export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses'>) =>
   b.opening_balance + b.income - b.expenses
 
-export const fetchBankSummaries = () => supabase.rpc('bank_summaries')
-export const fetchBankMovements = (bankId: string) => supabase.rpc('bank_movements', { p_bank: bankId })
+export const fetchBankSummaries = () => supabase.rpc('bank_summaries').returns<BankSummary[]>()
+export const fetchBankMovements = (bankId: string) =>
+  supabase.rpc('bank_movements', { p_bank: bankId }).returns<BankMovement[]>()
 
 export type BankInput = { name: string; opening_balance: number }
 

@@ -17,58 +17,8 @@ import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
+import { GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
 import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
-
-type ReportType =
-  | 'journal'
-  | 'period'
-  | 'project'
-  | 'category'
-  | 'budget'
-  | 'advance'
-  | 'contractor'
-  | 'contractors'
-  | 'bank'
-  | 'pending'
-  | 'approvals'
-
-const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[] = [
-  {
-    label: 'اليومية والفترات',
-    items: [
-      { value: 'journal', label: 'اليومية' },
-      { value: 'period', label: 'تقرير فترة' },
-    ],
-  },
-  {
-    label: 'المشاريع',
-    items: [
-      { value: 'project', label: 'تقرير مشروع' },
-      { value: 'category', label: 'المصروفات حسب البند' },
-      { value: 'budget', label: 'متابعة الميزانيات' },
-    ],
-  },
-  {
-    label: 'الحسابات',
-    items: [
-      { value: 'advance', label: 'كشف عهدة' },
-      { value: 'contractor', label: 'كشف حساب مقاول' },
-      { value: 'contractors', label: 'ملخص كل المقاولين' },
-      { value: 'bank', label: 'كشف حساب بنك' },
-    ],
-  },
-  {
-    label: 'المتابعة',
-    items: [
-      { value: 'approvals', label: 'الموافقات (قرارات يوم)' },
-      { value: 'pending', label: 'حالة القيود (معلّقة / مقبولة / مرفوضة)' },
-    ],
-  },
-]
-
-const hasPeriod = (t: ReportType) =>
-  t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
-const hasColumns = (t: ReportType) => t === 'journal' || t === 'project' || t === 'advance' || t === 'period'
 
 export default function Reports() {
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
@@ -92,6 +42,8 @@ export default function Reports() {
   const [withContractor, setWithContractor] = useState(true)
   const [withBank, setWithBank] = useState(true)
   const [withNotes, setWithNotes] = useState(true)
+  // custody statement: which parts to show (the received payments, the spending, the returns)
+  const [parts, setParts] = useState({ given: true, spent: true, returned: true })
   // nothing is drawn until "عرض التقرير" is pressed; changing any choice hides it again
   const [shown, setShown] = useState<{ key: string; n: number } | null>(null)
 
@@ -103,6 +55,7 @@ export default function Reports() {
   const bank = banks.data?.find((b) => b.id === pickedBank)
 
   const rangeOk = !hasPeriod(type) || !from || !to || from <= to
+  const partsOk = type !== 'advance' || parts.given || parts.spent || parts.returned
   const target = {
     journal: day,
     period: 'all',
@@ -127,6 +80,7 @@ export default function Reports() {
         type === 'budget' ? budgetMode : '',
         type === 'pending' ? [pendingStatus, creatorId] : '',
         hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes] : '',
+        type === 'advance' ? parts : '',
       ]),
     [
       type,
@@ -141,9 +95,10 @@ export default function Reports() {
       withContractor,
       withBank,
       withNotes,
+      parts,
     ],
   )
-  const visible = shown?.key === key && Boolean(target) && rangeOk
+  const visible = shown?.key === key && Boolean(target) && rangeOk && partsOk
   const cols = { withContractor, withBank, withNotes }
   const n = shown?.n ?? 0
 
@@ -324,6 +279,37 @@ export default function Reports() {
           {hasPeriod(type) && <p className="muted small">سيب التواريخ فاضية لو عايز كل الفترات.</p>}
           {!rangeOk && <p className="msg msg-error">تاريخ البداية بعد تاريخ النهاية.</p>}
 
+          {type === 'advance' && (
+            <fieldset className="cols">
+              <legend>اعرض في الكشف</legend>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={parts.given}
+                  onChange={(e) => setParts({ ...parts, given: e.target.checked })}
+                />
+                الوارد (الدفعات المستلمة)
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={parts.spent}
+                  onChange={(e) => setParts({ ...parts, spent: e.target.checked })}
+                />
+                المصروفات
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={parts.returned}
+                  onChange={(e) => setParts({ ...parts, returned: e.target.checked })}
+                />
+                المرتجع
+              </label>
+              {!partsOk && <p className="msg msg-error">اختار قسم واحد على الأقل.</p>}
+            </fieldset>
+          )}
+
           {hasColumns(type) && (
             <fieldset className="cols">
               <legend>أعمدة التقرير</legend>
@@ -346,7 +332,7 @@ export default function Reports() {
 
           <button
             className="btn btn-primary"
-            disabled={!target || !rangeOk}
+            disabled={!target || !rangeOk || !partsOk}
             onClick={() => setShown({ key, n: n + 1 })}
           >
             عرض التقرير
@@ -374,7 +360,7 @@ export default function Reports() {
           {visible && type === 'project' && <ProjectReport key={n} id={pickedProject} embedded={cols} />}
           {visible && type === 'category' && <CategoryReport key={n} from={from} to={to} type={kindFilter} />}
           {visible && type === 'budget' && <BudgetReport key={n} mode={budgetMode} />}
-          {visible && type === 'advance' && <AdvanceReport key={n} id={pickedAdvance} embedded={cols} />}
+          {visible && type === 'advance' && <AdvanceReport key={n} id={pickedAdvance} embedded={{ ...cols, parts }} />}
           {visible && type === 'contractor' && (
             <ContractorStatement
               key={n}

@@ -2,9 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { notifyDataChanged } from '../lib/events'
-import { isOnline } from '../lib/connection'
-import { readStoredSession } from '../lib/offlineAuth'
-import { clearReadCache } from '../lib/offlineFetch'
+import { isOnline } from '../lib/offline/connection'
+import { readStoredSession } from '../lib/offline/auth'
+import { clearReadCache } from '../lib/offline/fetch'
 import { allows, type Level, type Module, type Permissions } from './permissions'
 
 export type Profile = {

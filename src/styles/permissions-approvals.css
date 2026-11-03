@@ -1,0 +1,229 @@
+/* user permissions dialog */
+.perm-list {
+  display: grid;
+  gap: 10px;
+}
+.perm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.perm-block {
+  display: grid;
+  gap: 8px;
+}
+.perm-rights {
+  display: grid;
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  overflow: hidden;
+}
+.perm-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.perm-right + .perm-right {
+  border-top: 1px solid var(--border, rgba(0, 0, 0, 0.12));
+}
+.perm-right input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 2px 0 0;
+  padding: 0;
+  flex: none;
+}
+.perm-right span {
+  display: grid;
+  gap: 2px;
+}
+.perm-right b {
+  font-size: 0.92rem;
+}
+.perm-right small {
+  color: var(--muted, #6b6b6b);
+  font-size: 0.8rem;
+}
+.perm-right.is-off {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.perm-sub {
+  display: grid;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--soft, rgba(0, 0, 0, 0.04));
+}
+
+/* approvals: one card per entry */
+.appr-list {
+  display: grid;
+  gap: 12px;
+}
+.appr-card {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.appr-main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  align-content: start;
+}
+.appr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.appr-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.appr-project {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-inline-start: 10px;
+}
+.appr-project::before {
+  content: '—';
+  margin-inline-end: 10px;
+}
+.appr-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 22px;
+}
+.appr-line .entry-history {
+  margin: 0;
+}
+.appr-line .entry-history[open] {
+  flex: 1 1 100%;
+}
+.appr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 20px;
+  margin: 0;
+}
+.appr-meta div {
+  display: flex;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+.appr-meta dt {
+  color: var(--muted);
+}
+.appr-meta dt::after {
+  content: ':';
+}
+.appr-meta dd {
+  margin: 0;
+  font-weight: 600;
+}
+.appr-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.appr-amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.appr-amount small {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-inline-start: 6px;
+  color: var(--muted);
+}
+.appr-actions {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .appr-card {
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+  }
+  .appr-pick {
+    position: absolute;
+    top: 10px;
+    inset-inline-end: 12px;
+  }
+  .appr-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+
+/* phones: date pickers and the report paper must fit the screen */
+.ctl .field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+}
+.ctl .field,
+.ctl input,
+.ctl select {
+  min-width: 0;
+  max-width: 100%;
+}
+.ctl input[type='date'] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: start;
+}
+@media (max-width: 640px) {
+  .ctl .field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .paper {
+    padding: 0.8rem;
+  }
+  .paper-head {
+    align-items: flex-start;
+  }
+  .paper-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    width: 100%;
+  }
+  .paper-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sign {
+    gap: 0.7rem;
+  }
+}
+@media print {
+  .paper-table {
+    display: table;
+    overflow: visible;
+  }
+}

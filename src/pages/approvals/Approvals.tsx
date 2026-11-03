@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
-import { Check, Pencil, X } from 'lucide-react'
+import { Check } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import {
   NO_FILTER,
@@ -14,14 +14,14 @@ import {
   type PendingInstallment,
 } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText, money, todayISO } from '../../lib/format'
+import { todayISO } from '../../lib/format'
+import ApprovalFilters from './ApprovalFilters'
+import EntryApprovalCard from './EntryApprovalCard'
 import InstallmentApprovals from './InstallmentApprovals'
 import ApprovalsReport from './ApprovalsReport'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
-import InvoiceLink from '../../components/InvoiceLink'
-import EntryHistory from '../../components/EntryHistory'
 import EntryDialog from '../../components/EntryDialog'
 
 const TABS = [
@@ -72,7 +72,6 @@ export default function Approvals() {
   const chosen = rows.filter((r) => picked.has(r.id))
   const names = [...new Set(all.map((r) => r.creator?.full_name).filter((n): n is string => Boolean(n)))]
   const banks = [...new Set(all.map((r) => r.bank?.name).filter((n): n is string => Boolean(n)))]
-  const setF = (patch: Partial<ApprovalFilter>) => setFilter((f) => ({ ...f, ...patch }))
   const toggle = (id: string) =>
     setPicked((s) => {
       const next = new Set(s)
@@ -161,67 +160,7 @@ export default function Approvals() {
 
       {!other && <InstallmentApprovals rows={paymentRows} onChanged={payments.reload} />}
 
-      {!other && all.length > 0 && (
-        <section className="card appr-filters" aria-label="فلتر القيود">
-          <label className="field">
-            كلمة في البيان
-            <input value={filter.text} onChange={(e) => setF({ text: e.target.value })} placeholder="مثلًا: نقاشة" />
-          </label>
-          <label className="field">
-            سجّله
-            <select value={filter.who} onChange={(e) => setF({ who: e.target.value })}>
-              <option value="">الكل</option>
-              {names.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            البنك
-            <select value={filter.bank} onChange={(e) => setF({ bank: e.target.value })}>
-              <option value="">الكل</option>
-              {banks.map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            يوم القيد
-            <input type="date" value={filter.day} onChange={(e) => setF({ day: e.target.value })} />
-          </label>
-          <label className="field">
-            المبلغ من
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              value={filter.min}
-              onChange={(e) => setF({ min: e.target.value })}
-            />
-          </label>
-          <label className="field">
-            المبلغ إلى
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              value={filter.max}
-              onChange={(e) => setF({ max: e.target.value })}
-            />
-          </label>
-          {filtering && (
-            <button type="button" className="btn btn-ghost appr-filters-clear" onClick={() => setFilter(NO_FILTER)}>
-              مسح الفلتر
-            </button>
-          )}
-        </section>
-      )}
+      {!other && all.length > 0 && <ApprovalFilters filter={filter} onChange={setFilter} names={names} banks={banks} />}
 
       {!other && all.length > 0 && rows.length === 0 && <div className="card empty">مفيش قيود بالفلتر ده.</div>}
 
@@ -239,137 +178,25 @@ export default function Approvals() {
       {rows.length > 0 && (
         <div className="appr-list">
           {rows.map((e) => (
-            <article className={`appr-card${picked.has(e.id) ? ' is-picked' : ''}`} key={e.id}>
-              <label className="appr-pick">
-                <input
-                  type="checkbox"
-                  checked={picked.has(e.id)}
-                  onChange={() => toggle(e.id)}
-                  aria-label={`تحديد القيد ${e.seq}`}
-                />
-              </label>
-              <div className="appr-main">
-                <div className="appr-tags">
-                  <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
-                    <span className="dot" />
-                    {e.kind === 'income' ? 'وارد' : 'مصروف'}
-                  </span>
-                  {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
-                  <InvoiceLink entry={e} />
-                  <span className="muted small">
-                    قيد #{e.seq} · {dateText(e.entry_date)}
-                  </span>
-                </div>
-                <h2 className="appr-title">
-                  {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
-                  <span className="appr-project">{e.project?.name}</span>
-                </h2>
-                <div className="appr-line">
-                  <dl className="appr-meta">
-                    {e.contractor && (
-                      <div>
-                        <dt>المقاول</dt>
-                        <dd>{e.contractor.name}</dd>
-                      </div>
-                    )}
-                    {e.bank && (
-                      <div>
-                        <dt>البنك</dt>
-                        <dd>{e.bank.name}</dd>
-                      </div>
-                    )}
-                    {e.edit_reason && (
-                      <div>
-                        <dt>سبب التعديل</dt>
-                        <dd>{e.edit_reason}</dd>
-                      </div>
-                    )}
-                    {e.reject_reason && (
-                      <div>
-                        <dt>سبب الرفض</dt>
-                        <dd className="tone-text-err">{e.reject_reason}</dd>
-                      </div>
-                    )}
-                    {e.notes && (
-                      <div>
-                        <dt>ملاحظات</dt>
-                        <dd>{e.notes}</dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt>سجّله</dt>
-                      <dd>{e.creator?.full_name ?? '—'}</dd>
-                    </div>
-                  </dl>
-                  {e.edit_reason && <EntryHistory entryId={e.id} />}
-                </div>
-              </div>
-              <div className="appr-side">
-                <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-                  {e.kind === 'income' ? '+' : '−'}
-                  {money(e.amount)}
-                  <small>ج.م</small>
-                </div>
-                <div className="appr-actions">
-                  <button
-                    className="btn btn-icon"
-                    disabled={busy}
-                    onClick={() => void act([e], 'approved')}
-                    aria-label={`موافقة على القيد ${e.seq}`}
-                  >
-                    <Check size={17} aria-hidden="true" />
-                    موافقة
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-icon"
-                    disabled={busy}
-                    onClick={() => setEditing(e)}
-                    aria-label={`تعديل القيد ${e.seq}`}
-                  >
-                    <Pencil size={17} aria-hidden="true" />
-                    تعديل
-                  </button>
-                  {tab === 'pending' && (
-                    <button
-                      className="btn btn-ghost btn-icon"
-                      disabled={busy}
-                      onClick={() => {
-                        setRejecting(e.id)
-                        setReason('')
-                      }}
-                      aria-label={`رفض القيد ${e.seq}`}
-                    >
-                      <X size={17} aria-hidden="true" />
-                      رفض
-                    </button>
-                  )}
-                </div>
-                {rejecting === e.id && (
-                  <form
-                    className="appr-reject"
-                    onSubmit={(ev) => {
-                      ev.preventDefault()
-                      if (reason.trim().length >= 2) void act([e], 'rejected', reason)
-                    }}
-                  >
-                    <input
-                      value={reason}
-                      onChange={(ev) => setReason(ev.target.value)}
-                      placeholder="سبب الرفض (هيظهر للي سجّل القيد)"
-                      aria-label={`سبب رفض القيد ${e.seq}`}
-                      autoFocus
-                      required
-                    />
-                    <button className="btn btn-danger" disabled={busy || reason.trim().length < 2}>
-                      تأكيد الرفض
-                    </button>
-                    <button type="button" className="btn btn-ghost" onClick={() => setRejecting(null)}>
-                      إلغاء
-                    </button>
-                  </form>
-                )}
-              </div>
-            </article>
+            <EntryApprovalCard
+              key={e.id}
+              entry={e}
+              picked={picked.has(e.id)}
+              busy={busy}
+              canReject={tab === 'pending'}
+              rejecting={rejecting === e.id}
+              reason={reason}
+              onToggle={() => toggle(e.id)}
+              onApprove={() => void act([e], 'approved')}
+              onEdit={() => setEditing(e)}
+              onStartReject={() => {
+                setRejecting(e.id)
+                setReason('')
+              }}
+              onCancelReject={() => setRejecting(null)}
+              onReason={setReason}
+              onConfirmReject={() => void act([e], 'rejected', reason)}
+            />
           ))}
         </div>
       )}

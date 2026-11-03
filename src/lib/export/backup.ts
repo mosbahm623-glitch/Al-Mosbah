@@ -1,7 +1,7 @@
-import { supabase } from './supabase'
-import { fetchPaged } from './paged'
+import { supabase } from '../supabase'
+import { fetchPaged } from '../paged'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
-import { todayISO } from './format'
+import { todayISO } from '../format'
 
 type Row = Record<string, unknown>
 type Kind = 'text' | 'money' | 'date' | 'time' | 'int' | 'tech'
@@ -254,6 +254,8 @@ export async function downloadBackup(userId: string): Promise<boolean> {
         col('التاريخ', 'paid_on', 'date'),
         { h: 'صاحب العهدة', w: 24, get: (r) => H(r.advance_id) },
         col('المبلغ', 'amount', 'money'),
+        { h: 'الحالة', w: 12, get: (r) => tr(STATUS, r.status) },
+        col('سبب الرفض', 'reject_reason'),
         id(),
       ],
     },

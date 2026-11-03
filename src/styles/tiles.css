@@ -1,0 +1,87 @@
+/* ===== Tiles ===== */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.7rem;
+  align-content: space-between;
+}
+.tile-big {
+  grid-column: 1 / -1;
+  padding: 1.1rem 1.2rem;
+}
+.tile-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.tile-value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.tile-value strong {
+  font-size: 1.3rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.tile-big .tile-value strong {
+  font-size: clamp(1.9rem, 8vw, 2.3rem);
+}
+
+.chip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.tone-ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+.tone-err {
+  background: var(--err-bg);
+  color: var(--err);
+}
+.tone-warn {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.tone-blue {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+.tone-neutral {
+  background: var(--neutral-bg);
+  color: var(--neutral);
+}
+.tone-text-ok {
+  color: var(--ok);
+}
+.tone-text-err {
+  color: var(--err);
+}
+
+@media (min-width: 720px) {
+  .tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .tile-big {
+    grid-column: auto;
+  }
+  .tile-big .tile-value strong {
+    font-size: 1.7rem;
+  }
+}

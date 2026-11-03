@@ -1,10 +1,12 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/Al-Mosbah/',
+  // the tests never reach a real server: placeholders keep them runnable without a local .env file
+  test: { env: { VITE_SUPABASE_URL: 'https://example.supabase.co', VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key' } },
   plugins: [
     react(),
     VitePWA({

@@ -178,7 +178,7 @@ export type DeletedEntry = {
   created_by_name: string | null
 }
 
-export const fetchDeleted = () => supabase.rpc('deleted_entries')
+export const fetchDeleted = () => supabase.rpc('deleted_entries').returns<DeletedEntry[]>()
 
 export async function restoreEntry(id: string) {
   const { data, error } = await supabase.rpc('restore_entry', { p_id: id })
@@ -186,4 +186,4 @@ export async function restoreEntry(id: string) {
 }
 
 export const fetchProjectDeleted = (projectId: string) =>
-  supabase.rpc('project_deleted_entries', { p_project: projectId })
+  supabase.rpc('project_deleted_entries', { p_project: projectId }).returns<DeletedEntry[]>()

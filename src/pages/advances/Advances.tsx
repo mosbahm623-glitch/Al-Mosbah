@@ -17,7 +17,7 @@ const STATUS = [
 ] as const
 
 export default function Advances() {
-  const { isStaff: isAdmin } = useAuth()
+  const { isStaff } = useAuth()
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')
@@ -37,7 +37,7 @@ export default function Advances() {
       <PageHead
         title="العهد"
         actions={
-          isAdmin && (
+          isStaff && (
             <button className="btn btn-icon" onClick={() => setAdding(true)}>
               <Plus size={18} aria-hidden="true" />
               عهدة جديدة

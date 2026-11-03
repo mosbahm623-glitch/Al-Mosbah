@@ -26,6 +26,8 @@ export type SaveInput = {
   files: File[]
   contractors?: Named[]
   banks?: Named[]
+  /** an owner picks the bank from his list only: a name that is not in `banks` is refused, never created */
+  banksOnly?: boolean
   /** chosen once per try, so a try whose answer got lost can never become a second entry */
   newId: string
 }
@@ -38,6 +40,7 @@ export type SaveError =
   | 'project'
   | 'contractor'
   | 'bank'
+  | 'bank-denied'
   | 'reason'
   | 'offline-edit'
   | 'failed'
@@ -96,9 +99,19 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
     return kept ? { status: 'queued' } : fail('device')
   }
   const typed = { contractor: typedContractor, bank: typedBank }
+  let ownerBankId: string | null = null
+  if (input.banksOnly && typedBank) {
+    ownerBankId = input.banks?.find((x) => x.name.trim().toLowerCase() === typedBank.toLowerCase())?.id ?? null
+    if (!ownerBankId) return fail('bank-denied')
+  }
 
   // a new entry recorded without a network waits on this device and is sent by itself when the network is back
-  if (!entry && !isOnline()) return keepOnDevice(baseRow, typed)
+  if (!entry && !isOnline()) {
+    // an owner's bank is already an id from his list: nothing is looked up or created when it is sent
+    return ownerBankId
+      ? keepOnDevice({ ...baseRow, bank_id: ownerBankId }, { contractor: typedContractor, bank: '' })
+      : keepOnDevice(baseRow, typed)
+  }
 
   let contractorId: string | null = null
   if (typedContractor) {
@@ -107,8 +120,11 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   }
   let bankId: string | null = null
   if (typedBank) {
-    bankId = await findOrCreate(input.banks, typedBank, createBank)
-    if (!bankId) return !entry && !isOnline() ? keepOnDevice(baseRow, typed) : fail('bank')
+    bankId = input.banksOnly
+      ? (input.banks?.find((x) => x.name.trim().toLowerCase() === typedBank.toLowerCase())?.id ?? null)
+      : await findOrCreate(input.banks, typedBank, createBank)
+    if (!bankId)
+      return input.banksOnly ? fail('bank-denied') : !entry && !isOnline() ? keepOnDevice(baseRow, typed) : fail('bank')
   }
   if (isExpense && category && !category.expense_items.some((i) => i.name === input.itemName.trim())) {
     // remember the name so it shows up as a suggestion next time; the entry does not depend on it
@@ -123,6 +139,7 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   if (res.error) {
     // the network dropped while saving: keep the new entry on the device (same id, so it can never be doubled)
     if (!entry && isNetworkError(res.error)) return keepOnDevice(row, { contractor: '', bank: '' })
+    if ((res.error as { message?: string }).message?.includes('bank not allowed')) return fail('bank-denied')
     return fail(isNetworkError(res.error) ? 'offline-edit' : 'failed')
   }
   if (entry && res.data !== true) return fail('changed')

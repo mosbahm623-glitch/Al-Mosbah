@@ -3,8 +3,10 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
+import type { Named } from '../../lib/lookups'
 import {
   replaceAdvanceAccess,
+  replaceBankAccess,
   replacePermissions,
   setEntryRights,
   setLowBalanceAlert,
@@ -21,10 +23,17 @@ const ROLES = [
   { value: 'admin', label: 'أدمن' },
 ] as const
 
-type Props = { user: UserRow; advances: AdvanceOption[]; isSelf: boolean; onClose: () => void; onSaved: () => void }
+type Props = {
+  user: UserRow
+  advances: AdvanceOption[]
+  banks: Named[]
+  isSelf: boolean
+  onClose: () => void
+  onSaved: () => void
+}
 
-/** Role, status and one level (none / view / edit) per page. */
-export default function UserDialog({ user, advances, isSelf, onClose, onSaved }: Props) {
+/** Role, status and one level (none / view / edit) per page; for an owner, the banks he may choose from. */
+export default function UserDialog({ user, advances, banks, isSelf, onClose, onSaved }: Props) {
   const { isAdmin } = useAuth()
   const [role, setRole] = useState<'admin' | 'owner' | 'user'>(user.role)
   const [active, setActive] = useState(user.is_active)
@@ -39,6 +48,7 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
   const [canDeleteOwn, setCanDeleteOwn] = useState(user.can_delete_entries)
   const [canEditApproved, setCanEditApproved] = useState(user.can_edit_approved)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
+  const [bankIds, setBankIds] = useState<string[]>(user.bankIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -77,7 +87,13 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
     const { cleared, saved } = await replacePermissions(user.id, rows)
     const wanted = levels.advances === 'none' || role !== 'user' ? [] : advanceIds
     const { cleared: clearedAccess, saved: savedAccess } = await replaceAdvanceAccess(user.id, wanted)
+    // only an owner has a list of banks; leaving the owner role clears it. Written only when it changed.
+    const wantedBanks = role === 'owner' ? bankIds : []
+    const sameBanks = [...wantedBanks].sort().join() === [...user.bankIds].sort().join()
+    const bankSave = sameBanks ? null : await replaceBankAccess(user.id, wantedBanks)
     setSaving(false)
+    if (bankSave && (bankSave.cleared.error || bankSave.saved.error))
+      return setError('البنوك المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
     if (clearedAccess.error || savedAccess.error)
       return setError('العهد المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
     if (cleared.error || saved.error) return setError('الصلاحيات ما اتحفظتش، افتح المستخدم تاني وراجعها')
@@ -108,11 +124,37 @@ export default function UserDialog({ user, advances, isSelf, onClose, onSaved }:
         {isSelf && <p className="muted small">مينفعش تغيّر دورك أو توقف حسابك بنفسك.</p>}
 
         {role !== 'user' ? (
-          <p className="muted">
-            {role === 'admin'
-              ? 'الأدمن عنده كل الصلاحيات على كل الصفحات، وهو الوحيد اللي بيوافق على القيود.'
-              : 'المالك عنده كل الصلاحيات على كل الصفحات، لكن قيوده بتستنى موافقة الأدمن ومش بيوافق على حاجة.'}
-          </p>
+          <>
+            <p className="muted">
+              {role === 'admin'
+                ? 'الأدمن عنده كل الصلاحيات على كل الصفحات، وهو الوحيد اللي بيوافق على القيود.'
+                : 'المالك عنده كل الصلاحيات على كل الصفحات، لكن قيوده بتستنى موافقة الأدمن ومش بيوافق على حاجة.'}
+            </p>
+            {role === 'owner' && (
+              <div className="perm-block">
+                <span className="strong">البنوك اللي يختار منها</span>
+                <div className="perm-sub">
+                  <span className="muted small">
+                    المالك بيختار البنك من القايمة دي بس، ومش بيكتب بنك من عنده. من غير ما تختار بنك مش هيقدر يسجّل قيد
+                    ببنك.
+                  </span>
+                  {banks.length === 0 && <span className="muted small">مفيش بنوك لسه.</span>}
+                  {banks.map((b) => (
+                    <label className="check" key={b.id}>
+                      <input
+                        type="checkbox"
+                        checked={bankIds.includes(b.id)}
+                        onChange={(e) =>
+                          setBankIds((ids) => (e.target.checked ? [...ids, b.id] : ids.filter((x) => x !== b.id)))
+                        }
+                      />
+                      {b.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="perm-list">
             {MODULES.map((m) => (

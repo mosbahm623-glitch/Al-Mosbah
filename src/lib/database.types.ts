@@ -105,6 +105,11 @@ export type Database = {
         { advance_id: string; user_id: string },
         { advance_id?: string; user_id?: string }
       >
+      user_bank_access: T<
+        { bank_id: string; user_id: string },
+        { bank_id: string; user_id: string },
+        { bank_id?: string; user_id?: string }
+      >
       user_permissions: T<
         { level: string; module: string; user_id: string },
         { level: string; module: string; user_id: string },

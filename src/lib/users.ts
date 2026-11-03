@@ -18,9 +18,11 @@ export type UserRow = {
   permissions: { module: Module; level: Level }[]
   /** custodies this user may see (matters only when he has the العهد page) */
   advanceIds: string[]
+  /** the banks an owner may choose from (the admin sets them; matters only for an owner) */
+  bankIds: string[]
 }
 
-type Profile = Omit<UserRow, 'permissions' | 'advanceIds'>
+type Profile = Omit<UserRow, 'permissions' | 'advanceIds' | 'bankIds'>
 export type AdvanceOption = { id: string; holder_name: string }
 
 export const fetchAdvanceOptions = () =>
@@ -28,7 +30,7 @@ export const fetchAdvanceOptions = () =>
 
 /** Every account with its page permissions (admins only; other users cannot read this). */
 export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unknown }> {
-  const [profiles, perms, access] = await Promise.all([
+  const [profiles, perms, access, bankAccess] = await Promise.all([
     supabase
       .from('profiles')
       .select(
@@ -44,19 +46,23 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
       .from('user_advance_access')
       .select('user_id,advance_id')
       .returns<{ user_id: string; advance_id: string }[]>(),
+    supabase.from('user_bank_access').select('user_id,bank_id').returns<{ user_id: string; bank_id: string }[]>(),
   ])
-  if (profiles.error || perms.error || access.error || !profiles.data)
-    return { data: null, error: profiles.error ?? perms.error ?? access.error }
+  if (profiles.error || perms.error || access.error || bankAccess.error || !profiles.data)
+    return { data: null, error: profiles.error ?? perms.error ?? access.error ?? bankAccess.error }
   const byUser = new Map<string, UserRow['permissions']>()
   for (const p of perms.data ?? [])
     byUser.set(p.user_id, [...(byUser.get(p.user_id) ?? []), { module: p.module, level: p.level }])
   const advByUser = new Map<string, string[]>()
   for (const a of access.data ?? []) advByUser.set(a.user_id, [...(advByUser.get(a.user_id) ?? []), a.advance_id])
+  const bankByUser = new Map<string, string[]>()
+  for (const b of bankAccess.data ?? []) bankByUser.set(b.user_id, [...(bankByUser.get(b.user_id) ?? []), b.bank_id])
   return {
     data: profiles.data.map((u) => ({
       ...u,
       permissions: byUser.get(u.id) ?? [],
       advanceIds: advByUser.get(u.id) ?? [],
+      bankIds: bankByUser.get(u.id) ?? [],
     })),
     error: null,
   }
@@ -113,6 +119,15 @@ export async function replaceAdvanceAccess(userId: string, advanceIds: string[])
     ? await supabase
         .from('user_advance_access')
         .insert(advanceIds.map((advance_id) => ({ user_id: userId, advance_id })))
+    : { error: null }
+  return { cleared, saved }
+}
+
+/** Replaces the banks one owner may choose from. */
+export async function replaceBankAccess(userId: string, bankIds: string[]) {
+  const cleared = await supabase.from('user_bank_access').delete().eq('user_id', userId)
+  const saved = bankIds.length
+    ? await supabase.from('user_bank_access').insert(bankIds.map((bank_id) => ({ user_id: userId, bank_id })))
     : { error: null }
   return { cleared, saved }
 }

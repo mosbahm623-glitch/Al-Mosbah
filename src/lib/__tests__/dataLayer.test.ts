@@ -27,7 +27,7 @@ import {
   type EntryInput,
 } from '../entries'
 import { fetchDashboardSummary, saveProject } from '../projects'
-import { replaceAdvanceAccess, replacePermissions, setLowBalanceAlert, updateRole } from '../users'
+import { replaceAdvanceAccess, replaceBankAccess, replacePermissions, setLowBalanceAlert, updateRole } from '../users'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)
@@ -303,5 +303,11 @@ describe('user access writes', () => {
         ],
       ],
     ])
+  })
+  it('grants the chosen banks to an owner', async () => {
+    plan({})
+    await replaceBankAccess('u1', ['b1'])
+    expect(used.map((u) => u.table)).toEqual(['user_bank_access', 'user_bank_access'])
+    expect(callsOn(1)[0]).toEqual(['insert', [[{ user_id: 'u1', bank_id: 'b1' }]]])
   })
 })

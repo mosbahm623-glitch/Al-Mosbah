@@ -81,6 +81,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
     profiles,
     perms,
     access,
+    bankAccess,
     history,
     log,
     counters,
@@ -98,6 +99,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
     need('profiles'),
     need('user_permissions', 'user_id'),
     need('user_advance_access', 'user_id'),
+    need('user_bank_access', 'user_id'),
     need('entry_history'),
     need('backup_log'),
     need('entry_counters', 'year'),
@@ -119,6 +121,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
       profiles,
       perms,
       access,
+      bankAccess,
       history,
       log,
       counters,
@@ -297,6 +300,14 @@ export async function downloadBackup(userId: string): Promise<boolean> {
       cols: [
         { h: 'المستخدم', w: 24, get: (r) => U(r.user_id) },
         { h: 'العهدة', w: 24, get: (r) => H(r.advance_id) },
+      ],
+    },
+    {
+      name: 'بنوك المالك',
+      rows: T(bankAccess),
+      cols: [
+        { h: 'المستخدم', w: 24, get: (r) => U(r.user_id) },
+        { h: 'البنك', w: 24, get: (r) => B(r.bank_id) },
       ],
     },
     {

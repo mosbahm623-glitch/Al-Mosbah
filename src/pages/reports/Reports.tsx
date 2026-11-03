@@ -17,58 +17,8 @@ import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
+import { GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
 import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
-
-type ReportType =
-  | 'journal'
-  | 'period'
-  | 'project'
-  | 'category'
-  | 'budget'
-  | 'advance'
-  | 'contractor'
-  | 'contractors'
-  | 'bank'
-  | 'pending'
-  | 'approvals'
-
-const GROUPS: { label: string; items: { value: ReportType; label: string }[] }[] = [
-  {
-    label: 'اليومية والفترات',
-    items: [
-      { value: 'journal', label: 'اليومية' },
-      { value: 'period', label: 'تقرير فترة' },
-    ],
-  },
-  {
-    label: 'المشاريع',
-    items: [
-      { value: 'project', label: 'تقرير مشروع' },
-      { value: 'category', label: 'المصروفات حسب البند' },
-      { value: 'budget', label: 'متابعة الميزانيات' },
-    ],
-  },
-  {
-    label: 'الحسابات',
-    items: [
-      { value: 'advance', label: 'كشف عهدة' },
-      { value: 'contractor', label: 'كشف حساب مقاول' },
-      { value: 'contractors', label: 'ملخص كل المقاولين' },
-      { value: 'bank', label: 'كشف حساب بنك' },
-    ],
-  },
-  {
-    label: 'المتابعة',
-    items: [
-      { value: 'approvals', label: 'الموافقات (قرارات يوم)' },
-      { value: 'pending', label: 'حالة القيود (معلّقة / مقبولة / مرفوضة)' },
-    ],
-  },
-]
-
-const hasPeriod = (t: ReportType) =>
-  t === 'period' || t === 'category' || t === 'contractor' || t === 'contractors' || t === 'bank'
-const hasColumns = (t: ReportType) => t === 'journal' || t === 'project' || t === 'advance' || t === 'period'
 
 export default function Reports() {
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)

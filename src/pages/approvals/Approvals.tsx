@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
-import { Check, X } from 'lucide-react'
+import { Check, Pencil, X } from 'lucide-react'
 import Segmented from '../../components/Segmented'
 import {
   NO_FILTER,
@@ -19,6 +19,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
 import InvoiceLink from '../../components/InvoiceLink'
 import EntryHistory from '../../components/EntryHistory'
+import EntryDialog from '../../components/EntryDialog'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -47,6 +48,8 @@ export default function Approvals() {
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // the entry being edited before a decision (the edit asks for a reason and stays in the entry history)
+  const [editing, setEditing] = useState<PendingEntry | null>(null)
   const all = useMemo(() => list.data ?? [], [list.data])
   const [filter, setFilter] = useState<ApprovalFilter>(NO_FILTER)
   const [picked, setPicked] = useState<Set<string>>(new Set())
@@ -302,6 +305,15 @@ export default function Approvals() {
                     <Check size={17} aria-hidden="true" />
                     موافقة
                   </button>
+                  <button
+                    className="btn btn-ghost btn-icon"
+                    disabled={busy}
+                    onClick={() => setEditing(e)}
+                    aria-label={`تعديل القيد ${e.seq}`}
+                  >
+                    <Pencil size={17} aria-hidden="true" />
+                    تعديل
+                  </button>
                   {tab === 'pending' && (
                     <button
                       className="btn btn-ghost btn-icon"
@@ -345,6 +357,19 @@ export default function Approvals() {
             </article>
           ))}
         </div>
+      )}
+
+      {editing && (
+        <EntryDialog
+          projectId={editing.project_id}
+          projectName={editing.project?.name ?? ''}
+          entry={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            list.reload()
+            notifyApprovalsChanged()
+          }}
+        />
       )}
     </div>
   )

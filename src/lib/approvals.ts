@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 
 export type PendingEntry = {
   id: string
+  project_id: string
   seq: number
   rev: number
   kind: 'income' | 'expense'
@@ -23,7 +24,7 @@ export type PendingEntry = {
 }
 
 const COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,edit_reason,invoices:entry_attachments(count),project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,project_id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,edit_reason,invoices:entry_attachments(count),project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 export const fetchByStatus = (status: 'pending' | 'rejected') =>
   supabase

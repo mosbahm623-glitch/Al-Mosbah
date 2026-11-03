@@ -31,7 +31,9 @@ export default function AdvanceReport({
   const spent = [...(entries ?? [])]
     .filter((e) => e.status === 'approved')
     .sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
-  const given = [...(installments ?? [])].sort((a, b) => a.paid_on.localeCompare(b.paid_on))
+  const given = [...(installments ?? [])]
+    .filter((i) => i.status === 'approved')
+    .sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
 
   const gridSections: Section[] = [

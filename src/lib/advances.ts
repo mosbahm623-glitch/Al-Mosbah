@@ -11,7 +11,14 @@ export type AdvanceSummary = {
   returned: number
 }
 
-export type Installment = { id: string; amount: number; paid_on: string }
+export type Installment = {
+  id: string
+  amount: number
+  paid_on: string
+  /** a payment recorded by the owner waits for the admin; only approved ones count in the totals */
+  status: 'pending' | 'approved' | 'rejected'
+  reject_reason: string | null
+}
 export type AdvanceReturn = { id: string; amount: number; returned_on: string; notes: string | null }
 
 /** What the holder still has: received − spent − returned (negative = the company owes him). */
@@ -23,7 +30,7 @@ export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries')
 export const fetchInstallments = (advanceId: string) =>
   supabase
     .from('advance_installments')
-    .select('id,amount,paid_on')
+    .select('id,amount,paid_on,status,reject_reason')
     .eq('advance_id', advanceId)
     .order('paid_on', { ascending: false })
     .returns<Installment[]>()

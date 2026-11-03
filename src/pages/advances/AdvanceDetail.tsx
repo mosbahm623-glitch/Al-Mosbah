@@ -18,7 +18,7 @@ import MoneyDialog from './MoneyDialog'
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, isStaff: isAdmin, canTouch } = useAuth()
+  const { can, isStaff: isAdmin, isAdmin: isRealAdmin, canTouch } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
@@ -102,6 +102,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                 <tr>
                   <th>التاريخ</th>
                   <th>المبلغ</th>
+                  <th>الحالة</th>
                   {isAdmin && (
                     <th>
                       <span className="sr-only">إجراءات</span>
@@ -114,15 +115,27 @@ export default function AdvanceDetail({ id }: { id: string }) {
                   <tr key={i.id}>
                     <td className="num muted">{dateText(i.paid_on)}</td>
                     <td className="num strong">{money(i.amount)}</td>
+                    <td>
+                      {i.status === 'pending' && <span className="chip chip-warn">مستنية الموافقة</span>}
+                      {i.status === 'rejected' && (
+                        <>
+                          <span className="chip chip-err">مرفوضة</span>
+                          {i.reject_reason && <span className="reject-reason">السبب: {i.reject_reason}</span>}
+                        </>
+                      )}
+                      {i.status === 'approved' && <span className="chip chip-ok">معتمدة</span>}
+                    </td>
                     {isAdmin && (
                       <td>
-                        <button
-                          className="icon-btn"
-                          aria-label="تعديل الدفعة"
-                          onClick={() => setMoney({ kind: 'installment', row: i })}
-                        >
-                          <Pencil size={16} aria-hidden="true" />
-                        </button>
+                        {(isRealAdmin || i.status !== 'approved') && (
+                          <button
+                            className="icon-btn"
+                            aria-label="تعديل الدفعة"
+                            onClick={() => setMoney({ kind: 'installment', row: i })}
+                          >
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                        )}
                       </td>
                     )}
                   </tr>

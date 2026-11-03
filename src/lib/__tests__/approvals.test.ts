@@ -8,6 +8,8 @@ import {
   NO_FILTER,
   countPending,
   decide,
+  decideInstallments,
+  fetchInstallmentsByStatus,
   fetchByStatus,
   filterEntries,
   isFiltering,
@@ -124,15 +126,51 @@ describe('decide', () => {
 })
 
 describe('countPending', () => {
-  it('returns the number of pending entries', async () => {
-    const q = query({ count: 4 })
-    from.mockReturnValueOnce(q.query)
-    expect(await countPending()).toBe(4)
-    expect(q.calls).toContainEqual(['eq', ['status', 'pending']])
+  it('counts the entries and the custody payments that wait (the red badge)', async () => {
+    const entries = query({ count: 4 })
+    const payments = query({ count: 2 })
+    from.mockReturnValueOnce(entries.query).mockReturnValueOnce(payments.query)
+    expect(await countPending()).toBe(6)
+    expect(from).toHaveBeenCalledWith('entries')
+    expect(from).toHaveBeenCalledWith('advance_installments')
+    expect(entries.calls).toContainEqual(['eq', ['status', 'pending']])
+    expect(payments.calls).toContainEqual(['eq', ['status', 'pending']])
   })
-  it('is zero when the count is missing (request failed)', async () => {
-    from.mockReturnValueOnce(query({ count: null }).query)
+  it('is zero when the counts are missing (request failed)', async () => {
+    from.mockReturnValueOnce(query({ count: null }).query).mockReturnValueOnce(query({ count: null }).query)
     expect(await countPending()).toBe(0)
+  })
+})
+
+describe('custody payments', () => {
+  it('lists the oldest first', async () => {
+    const q = query({ data: [], error: null })
+    from.mockReturnValueOnce(q.query)
+    await fetchInstallmentsByStatus('pending')
+    expect(from).toHaveBeenCalledWith('advance_installments')
+    expect(q.calls).toContainEqual(['eq', ['status', 'pending']])
+    expect(q.calls).toContainEqual(['order', ['created_at', { ascending: true }]])
+  })
+
+  it('approves a payment only while it is still in the status it was shown in', async () => {
+    const q = query({ data: [{ id: 'p' }], error: null })
+    from.mockReturnValueOnce(q.query)
+    const r = await decideInstallments([{ id: 'p', status: 'pending' }], 'approved')
+    expect(q.calls).toEqual([
+      ['update', [{ status: 'approved' }]],
+      ['eq', ['id', 'p']],
+      ['eq', ['status', 'pending']],
+      ['select', ['id']],
+    ])
+    expect(r).toEqual({ failed: false, done: 1, skipped: 0 })
+  })
+
+  it('sends the reason along with a rejection and counts a changed payment as skipped', async () => {
+    const q = query({ data: [], error: null })
+    from.mockReturnValueOnce(q.query)
+    const r = await decideInstallments([{ id: 'p', status: 'pending' }], 'rejected', ' مبلغ غلط ')
+    expect(q.calls[0]).toEqual(['update', [{ status: 'rejected', reject_reason: 'مبلغ غلط' }]])
+    expect(r).toEqual({ failed: false, done: 0, skipped: 1 })
   })
 })
 

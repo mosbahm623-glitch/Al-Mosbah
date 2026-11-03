@@ -70,7 +70,7 @@ do $$ begin
 end $$;
 update public.advance_installments set status = 'rejected', reject_reason = 'مبلغ غلط' where amount = 60;
 select pg_temp.chk('rejected_has_reason', (select reject_reason from public.advance_installments where amount = 60), 'مبلغ غلط');
-select pg_temp.chk('rejected_not_counted', (select (x->>'given')::numeric from jsonb_array_elements(public.advance_summaries()) x where x->>'id' = (select adv::text from ids)), 850::numeric);
+select pg_temp.chk('rejected_not_counted', (select (x->>'given')::numeric from jsonb_array_elements(public.advance_summaries()) x where x->>'id' = (select adv::text from ids)), 890::numeric); -- 850 + the admin's own 40, without the rejected 60
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
 select pg_temp.chk('O_notified_of_rejection', (select count(*) >= 1 from public.notifications where user_id = '00000000-0000-0000-0000-0000000000a1' and kind = 'rejected' and body like '%مبلغ غلط%'), true);
 update public.advance_installments set amount = 55 where amount = 60;

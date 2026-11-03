@@ -6,13 +6,16 @@ import {
   NO_FILTER,
   decide,
   fetchByStatus,
+  fetchInstallmentsByStatus,
   filterEntries,
   isFiltering,
   type ApprovalFilter,
   type PendingEntry,
+  type PendingInstallment,
 } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money, todayISO } from '../../lib/format'
+import InstallmentApprovals from './InstallmentApprovals'
 import ApprovalsReport from './ApprovalsReport'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
@@ -42,6 +45,16 @@ export default function Approvals() {
       [tab],
     ),
   )
+  const payments = useAsync<PendingInstallment[]>(
+    useCallback(
+      () =>
+        tab === 'decided' || tab === 'deleted'
+          ? Promise.resolve({ data: [] as PendingInstallment[], error: null })
+          : fetchInstallmentsByStatus(tab),
+      [tab],
+    ),
+  )
+  const paymentRows = payments.data ?? []
   const [day, setDay] = useState(todayISO)
   const [busy, setBusy] = useState(false)
   // the entry being rejected (its reason is typed first; the user sees the reason next to the entry)
@@ -142,9 +155,11 @@ export default function Approvals() {
       {error && <p className="msg msg-error">{error}</p>}
       {!other && list.failed && <p className="msg msg-error">مقدرناش نحمّل الموافقات، جرّب تاني</p>}
       {!other && list.loading && !list.data && <p className="muted">جارٍ التحميل...</p>}
-      {!other && list.data && all.length === 0 && (
+      {!other && list.data && payments.data && all.length === 0 && paymentRows.length === 0 && (
         <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>
       )}
+
+      {!other && <InstallmentApprovals rows={paymentRows} onChanged={payments.reload} />}
 
       {!other && all.length > 0 && (
         <section className="card appr-filters" aria-label="فلتر القيود">

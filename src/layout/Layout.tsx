@@ -6,6 +6,8 @@ import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
 import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
+import { startSync } from '../lib/offlineQueue'
+import OfflineBar from './OfflineBar'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -29,6 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(currentTheme)
 
   useEffect(() => startLive(), [])
+  useEffect(() => startSync(), [])
 
   const searchTimer = useRef<number | undefined>(undefined)
   const goSearch = (raw: string) => {
@@ -196,7 +199,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         </nav>
       </aside>
 
-      <main className="content">{children}</main>
+      <main className="content">
+        <OfflineBar />
+        {children}
+      </main>
     </div>
   )
 }

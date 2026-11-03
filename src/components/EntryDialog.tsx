@@ -13,7 +13,9 @@ import {
   fetchCategories,
   type Category,
 } from '../lib/catalog'
-import { deleteEntry, insertEntry, updateEntry } from '../lib/entries'
+import { deleteEntry, insertEntry, updateEntry, type EntryInput } from '../lib/entries'
+import { isNetworkError, isOnline } from '../lib/connection'
+import { queueEntry } from '../lib/offlineQueue'
 import { uploadInvoices } from '../lib/attachments'
 import InvoiceField from './InvoiceField'
 import { useAsync } from '../lib/useAsync'
@@ -119,8 +121,41 @@ export default function EntryDialog({
     onClose()
   }
 
+  /** quick entry: keep the project, kind and date for the next one */
+  function resetForNext(message: string) {
+    setFiles([])
+    setDone(message)
+    setCategoryName('')
+    setItemName('')
+    setContractorName('')
+    setBankName('')
+    setIncomeLabel('')
+    setAmount('')
+    setNotes('')
+  }
+
   async function submit(e: FormEvent) {
     e.preventDefault()
+    // chosen once per try, so a try whose answer got lost can never become a second entry
+    const newId = crypto.randomUUID()
+
+    async function keepOnDevice(row: EntryInput, names: { contractor: string; bank: string }) {
+      const kept = await queueEntry({
+        id: newId,
+        row,
+        advanceId: advanceId ?? null,
+        contractorName: names.contractor,
+        bankName: names.bank,
+        files,
+        label: `${row.item ?? row.category} · ${row.amount}`,
+      })
+      setSaving(false)
+      if (!kept) return setError('ما قدرناش نحفظ القيد على الجهاز')
+      onSaved()
+      if (!inline) return onClose()
+      resetForNext('مفيش نت: القيد اتحفظ على جهازك وهيتبعت لوحده لما النت يرجع')
+    }
+
     const value = Number(amount)
     const isExpense = kind === 'expense'
     if (isExpense && !category) return setError('اختار البند')
@@ -131,18 +166,36 @@ export default function EntryDialog({
     setSaving(true)
     setError(null)
     setDone(null)
+    const typedContractor = isExpense ? contractorName.trim() : ''
+    const typedBank = fromAdvance ? '' : bankName.trim()
+    const baseRow = {
+      project_id: targetProject,
+      kind,
+      category: isExpense ? category!.name : incomeLabel.trim(),
+      item: isExpense ? itemName.trim() : null,
+      contractor_id: null as string | null,
+      bank_id: null as string | null,
+      amount: value,
+      entry_date: date,
+      notes: notes.trim() || null,
+    }
+    // a new entry recorded without a network waits on this device and is sent by itself when the network is back
+    const offlineNew = !entry && !isOnline()
+    if (offlineNew) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
     let contractorId: string | null = null
-    if (isExpense && contractorName.trim()) {
-      contractorId = await findOrCreateContractor(contractorName.trim())
+    if (typedContractor) {
+      contractorId = await findOrCreateContractor(typedContractor)
       if (!contractorId) {
+        if (!entry && !isOnline()) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
         setSaving(false)
         return setError('ما قدرناش نحفظ اسم المقاول، جرّب تاني')
       }
     }
     let bankId: string | null = null
-    if (!fromAdvance && bankName.trim()) {
-      bankId = await findOrCreateBank(bankName.trim())
+    if (typedBank) {
+      bankId = await findOrCreateBank(typedBank)
       if (!bankId) {
+        if (!entry && !isOnline()) return keepOnDevice(baseRow, { contractor: typedContractor, bank: typedBank })
         setSaving(false)
         return setError('ما قدرناش نحفظ اسم البنك، جرّب تاني')
       }
@@ -151,27 +204,23 @@ export default function EntryDialog({
       // remember the name so it shows up as a suggestion next time; the entry does not depend on it
       await addExpenseItem(itemName.trim(), category.id)
     }
-    const row = {
-      project_id: targetProject,
-      kind,
-      category: isExpense ? category!.name : incomeLabel.trim(),
-      item: isExpense ? itemName.trim() : null,
-      contractor_id: contractorId,
-      bank_id: bankId,
-      amount: value,
-      entry_date: date,
-      notes: notes.trim() || null,
-    }
+    const row = { ...baseRow, contractor_id: contractorId, bank_id: bankId }
     if (entry && editReason.trim().length < 2) {
       setSaving(false)
       return setError('اكتب سبب التعديل')
     }
     const res = entry
       ? await updateEntry(entry.id, entry.rev, row, editReason)
-      : await insertEntry(row, advanceId ?? null)
+      : await insertEntry(row, advanceId ?? null, newId)
     if (res.error) {
+      // the network dropped while saving: keep the new entry on the device (same id, so it can never be doubled)
+      if (!entry && isNetworkError(res.error)) return keepOnDevice(row, { contractor: '', bank: '' })
       setSaving(false)
-      return setError('القيد ما اتحفظش، جرّب تاني')
+      return setError(
+        isNetworkError(res.error)
+          ? 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع'
+          : 'القيد ما اتحفظش، جرّب تاني',
+      )
     }
     if (entry && res.data !== true) {
       setSaving(false)
@@ -187,16 +236,7 @@ export default function EntryDialog({
       setSavedId(created?.id ?? null) // stay open so the photos can be added again
       return setFiles([])
     }
-    // quick entry: keep the project, kind and date for the next one
-    setFiles([])
-    setDone(`اتسجّل القيد رقم ${created?.seq ?? ''} ومستنّي موافقتك`)
-    setCategoryName('')
-    setItemName('')
-    setContractorName('')
-    setBankName('')
-    setIncomeLabel('')
-    setAmount('')
-    setNotes('')
+    resetForNext(`اتسجّل القيد رقم ${created?.seq ?? ''} ومستنّي موافقتك`)
   }
 
   const form = (

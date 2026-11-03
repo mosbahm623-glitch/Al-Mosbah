@@ -109,9 +109,54 @@ export function filterEntries(rows: PendingEntry[], f: ApprovalFilter): PendingE
   })
 }
 
+/** Everything waiting for the admin: entries and custody payments (this is the number on the red badge). */
 export async function countPending() {
-  const { count } = await supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-  return count ?? 0
+  const [entries, payments] = await Promise.all([
+    supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('advance_installments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+  ])
+  return (entries.count ?? 0) + (payments.count ?? 0)
+}
+
+/** A custody payment (دفعة عهدة) recorded by the owner, waiting for the admin or sent back with a reason. */
+export type PendingInstallment = {
+  id: string
+  advance_id: string
+  amount: number
+  paid_on: string
+  status: 'pending' | 'rejected'
+  created_at: string
+  reject_reason: string | null
+  advance: { holder_name: string } | null
+  creator: { full_name: string | null } | null
+}
+
+const INSTALLMENT_COLUMNS =
+  'id,advance_id,amount,paid_on,status,created_at,reject_reason,advance:advances(holder_name),creator:profiles!advance_installments_created_by_fkey(full_name)'
+
+export const fetchInstallmentsByStatus = (status: 'pending' | 'rejected') =>
+  supabase
+    .from('advance_installments')
+    .select(INSTALLMENT_COLUMNS)
+    .eq('status', status)
+    .order('created_at', { ascending: true })
+    .returns<PendingInstallment[]>()
+
+/** Approve or reject custody payments as they were shown (still in the same status). A rejection carries its reason. */
+export async function decideInstallments(
+  items: { id: string; status: 'pending' | 'rejected' }[],
+  status: 'approved' | 'rejected',
+  reason?: string,
+) {
+  const patch = status === 'rejected' ? { status, reject_reason: reason?.trim() ?? '' } : { status }
+  const results = await Promise.all(
+    items.map((it) =>
+      supabase.from('advance_installments').update(patch).eq('id', it.id).eq('status', it.status).select('id'),
+    ),
+  )
+  const failed = results.some((r) => r.error)
+  const done = results.filter((r) => !r.error && (r.data?.length ?? 0) > 0).length
+  return { failed, done, skipped: items.length - done - results.filter((r) => r.error).length }
 }
 
 export type DeletedEntry = {

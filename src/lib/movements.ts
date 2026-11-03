@@ -171,6 +171,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
       supabase
         .from('advance_installments')
         .select(INSTALLMENT_SELECT)
+        .eq('status', 'approved')
         .order('created_at', { ascending: false })
         .limit(n)
         .returns<InstallmentRow[]>(),
@@ -215,6 +216,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
           supabase
             .from('advance_installments')
             .select(INSTALLMENT_SELECT)
+            .eq('status', 'approved')
             .gte('paid_on', from)
             .lte('paid_on', to)
             .order('id')

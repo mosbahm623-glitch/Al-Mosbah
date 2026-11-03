@@ -4,6 +4,18 @@ import { fetchPaged } from './paged'
 import { ENTRY_COLUMNS, type Entry } from './projects'
 
 /** What an entry form saves, for a new entry and for an edit alike. */
+type Snapshot = Record<string, unknown> | null
+
+/** One line of an entry's history: who changed what and when (admin only). */
+export type EntryChange = {
+  id: number
+  action: string
+  old_row: Snapshot
+  new_row: Snapshot
+  changed_at: string
+  changed_by_name: string | null
+}
+
 export type EntryInput = {
   project_id: string
   kind: 'income' | 'expense'
@@ -38,7 +50,8 @@ export const deleteEntry = (id: string, rev: number, reason: string) =>
   supabase.rpc('delete_entry', { p_id: id, p_rev: rev, p_reason: reason })
 
 /** Admin only: who did what to this entry, oldest first. */
-export const fetchEntryHistory = (entryId: string) => supabase.rpc('entry_history_of', { p_id: entryId })
+export const fetchEntryHistory = (entryId: string) =>
+  supabase.rpc('entry_history_of', { p_id: entryId }).returns<EntryChange[]>()
 
 export type MyEntry = {
   id: string

@@ -1,25 +1,11 @@
 import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
-import { fetchDashboardSummary } from '../lib/projects'
+import { fetchDashboardSummary, type DashboardSummary } from '../lib/projects'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
 import { LatestMovements, MonthlyChart } from './DashboardExtras'
 
-type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
-
-type Summary = {
-  total_income: number
-  total_expenses: number
-  total_advances: number
-  advances_balance: number
-  contractor_dues: number
-  active_projects: number
-  net_cash: number
-  over_count: number
-  budget_rows: BudgetRow[]
-}
-
 export default function Dashboard() {
-  const { data, failed, loading, reload } = useAsync<Summary>(fetchDashboardSummary)
+  const { data, failed, loading, reload } = useAsync<DashboardSummary>(fetchDashboardSummary)
   const error = failed ? 'مقدرناش نحمّل الأرقام، جرّب تاني' : null
 
   return (

@@ -1,17 +1,7 @@
 import { useCallback } from 'react'
-import { fetchEntryHistory } from '../lib/entries'
+import { fetchEntryHistory, type EntryChange } from '../lib/entries'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
-
-type Snapshot = Record<string, unknown> | null
-type Change = {
-  id: number
-  action: string
-  old_row: Snapshot
-  new_row: Snapshot
-  changed_at: string
-  changed_by_name: string | null
-}
 
 const ACTION: Record<string, string> = {
   edit: 'تعديل',
@@ -45,7 +35,7 @@ const show = (key: string, v: unknown) => {
   return String(v)
 }
 
-const diff = (c: Change) =>
+const diff = (c: EntryChange) =>
   c.old_row && c.new_row
     ? FIELDS.filter(([k]) => c.old_row![k] !== c.new_row![k]).map(
         ([k, label]) => `${label}: ${show(k, c.old_row![k])} ← ${show(k, c.new_row![k])}`,
@@ -54,7 +44,7 @@ const diff = (c: Change) =>
 
 /** Admin only: who did what to this entry, oldest first. */
 export default function EntryHistory({ entryId }: { entryId: string }) {
-  const { data } = useAsync<Change[]>(useCallback(() => fetchEntryHistory(entryId), [entryId]))
+  const { data } = useAsync<EntryChange[]>(useCallback(() => fetchEntryHistory(entryId), [entryId]))
   if (!data || data.length === 0) return null
   return (
     <details className="span-2 entry-history">

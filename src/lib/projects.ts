@@ -1,6 +1,21 @@
 import { supabase } from './supabase'
 import type { ProjectType } from './format'
 
+export type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
+
+/** The numbers on the dashboard, worked out by the database. */
+export type DashboardSummary = {
+  total_income: number
+  total_expenses: number
+  total_advances: number
+  advances_balance: number
+  contractor_dues: number
+  active_projects: number
+  net_cash: number
+  over_count: number
+  budget_rows: BudgetRow[]
+}
+
 export type ProjectSummary = {
   id: string
   name: string
@@ -48,10 +63,10 @@ export const percentOf = (p: ProjectSummary) => (p.budget > 0 ? Math.round((p.ex
 export const isOver = (p: ProjectSummary) => p.budget > 0 && p.expenses > p.budget
 
 /** Per-project totals, computed in the database (see migration 005). */
-export const fetchSummaries = () => supabase.rpc('project_summaries')
+export const fetchSummaries = () => supabase.rpc('project_summaries').returns<ProjectSummary[]>()
 
 /** The figures on the dashboard, all computed in the database. */
-export const fetchDashboardSummary = () => supabase.rpc('dashboard_summary')
+export const fetchDashboardSummary = () => supabase.rpc('dashboard_summary').returns<DashboardSummary>()
 
 export type ProjectInput = { name: string; type: ProjectType; status: 'active' | 'closed'; budget: number }
 

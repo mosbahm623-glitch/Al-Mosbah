@@ -1,5 +1,7 @@
 // Generated from the Supabase schema (project kytaxbhajnmdstyiorus). Regenerate after every migration.
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
+/** What a database function that returns jsonb hands back; each caller in src/lib says the real shape with .returns<T>(). */
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 type Rel = { foreignKeyName: string; columns: string[]; isOneToOne: false; referencedRelation: string; referencedColumns: string[] }
 type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relationships: Rels }
@@ -111,18 +113,18 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
-      advance_summaries: { Args: never; Returns: any }
-      bank_movements: { Args: { p_bank: string }; Returns: any }
-      bank_summaries: { Args: never; Returns: any }
-      dashboard_summary: { Args: never; Returns: any }
+      advance_summaries: { Args: never; Returns: Json[] }
+      bank_movements: { Args: { p_bank: string }; Returns: Json[] }
+      bank_summaries: { Args: never; Returns: Json[] }
+      dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
-      edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: any }; Returns: boolean }
+      edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
       password_changed: { Args: Record<string, never>; Returns: undefined }
-      project_deleted_entries: { Args: { p_project: string }; Returns: any }
-      deleted_entries: { Args: never; Returns: any }
-      entry_history_of: { Args: { p_id: string }; Returns: any }
-      project_summaries: { Args: never; Returns: any }
+      project_deleted_entries: { Args: { p_project: string }; Returns: Json[] }
+      deleted_entries: { Args: never; Returns: Json[] }
+      entry_history_of: { Args: { p_id: string }; Returns: Json[] }
+      project_summaries: { Args: never; Returns: Json[] }
     }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }

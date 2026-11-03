@@ -48,6 +48,20 @@ export async function decide(items: { id: string; rev: number }[], status: 'appr
   return { failed, done, skipped: items.length - done - results.filter((r) => r.error).length }
 }
 
+/**
+ * Send an approved entry back to the approvals list. Only the status changes, so the number, the entry date and the
+ * time it was recorded stay exactly as they were. Goes through only if nobody changed the entry since it was loaded.
+ */
+export async function reopenEntry(id: string, rev: number) {
+  const { data, error } = await supabase
+    .from('entries')
+    .update({ status: 'pending' })
+    .eq('id', id)
+    .eq('rev', rev)
+    .select('id')
+  return !error && (data?.length ?? 0) > 0
+}
+
 /** What the approvals list can be narrowed by; an empty field does not filter. */
 export type ApprovalFilter = {
   /** words that must all appear in the البيان / البند / notes */

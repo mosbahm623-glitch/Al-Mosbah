@@ -1,5 +1,5 @@
-import { todayText } from './format'
-import type { Kpi, Section } from './tableTypes'
+import { todayText } from '../format'
+import type { Kpi, Section } from '../tableTypes'
 import { HEAD_FILL, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 
 type Options = {

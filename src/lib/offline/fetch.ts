@@ -1,5 +1,5 @@
 import { setReachable } from './connection'
-import { kvClear, kvGet, kvSet } from './offlineStore'
+import { kvClear, kvGet, kvSet } from './store'
 
 /**
  * Reads work offline: every successful read from the database is kept on the device, and when the network fails the

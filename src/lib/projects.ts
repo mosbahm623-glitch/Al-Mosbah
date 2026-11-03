@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import type { ProjectType } from './format'
 
-export type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
+type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
 
 /** The numbers on the dashboard, worked out by the database. */
 export type DashboardSummary = {

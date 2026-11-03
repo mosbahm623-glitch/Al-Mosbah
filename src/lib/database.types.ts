@@ -1,7 +1,7 @@
 // Generated from the Supabase schema (project kytaxbhajnmdstyiorus). Regenerate after every migration.
 
 /** What a database function that returns jsonb hands back; each caller in src/lib says the real shape with .returns<T>(). */
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 type Rel = { foreignKeyName: string; columns: string[]; isOneToOne: false; referencedRelation: string; referencedColumns: string[] }
 type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relationships: Rels }

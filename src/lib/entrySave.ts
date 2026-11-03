@@ -1,9 +1,9 @@
 import { uploadInvoices } from './attachments'
 import { addExpenseItem, createBank, createContractor, type Category } from './catalog'
-import { isNetworkError, isOnline } from './connection'
+import { isNetworkError, isOnline } from './offline/connection'
 import { insertEntry, updateEntry, type EntryInput } from './entries'
 import type { Named } from './lookups'
-import { queueEntry } from './offlineQueue'
+import { queueEntry } from './offline/queue'
 import type { Entry } from './projects'
 
 /** What the person filled in, plus the lists the names are matched against. */

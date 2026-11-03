@@ -17,10 +17,10 @@ vi.mock('../catalog', () => ({
   createBank: m.createBank,
   createContractor: m.createContractor,
 }))
-vi.mock('../offlineQueue', () => ({ queueEntry: m.queueEntry }))
+vi.mock('../offline/queue', () => ({ queueEntry: m.queueEntry }))
 vi.mock('../attachments', () => ({ uploadInvoices: m.uploadInvoices }))
-vi.mock('../connection', async (original) => ({
-  ...(await original<typeof import('../connection')>()),
+vi.mock('../offline/connection', async (original) => ({
+  ...(await original<typeof import('../offline/connection')>()),
   isOnline: () => m.online,
 }))
 

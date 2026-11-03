@@ -1,5 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 /**
  * The sign-in the browser kept on this device. When the token has expired and there is no network to renew it, the

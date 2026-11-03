@@ -15,14 +15,14 @@ vi.mock('../entries', () => ({ insertEntry: m.insertEntry }))
 vi.mock('../attachments', () => ({ uploadInvoices: m.uploadInvoices }))
 vi.mock('../catalog', () => ({ createContractor: m.createContractor, createBank: m.createBank }))
 vi.mock('../lookups', () => ({ fetchContractorNames: m.fetchContractorNames, fetchBankNames: m.fetchBankNames }))
-vi.mock('../offlineAuth', () => ({ currentUserId: m.currentUserId }))
+vi.mock('../offline/auth', () => ({ currentUserId: m.currentUserId }))
 vi.mock('../events', () => ({ notifyDataChanged: vi.fn() }))
-vi.mock('../connection', async (original) => ({
-  ...(await original<typeof import('../connection')>()),
+vi.mock('../offline/connection', async (original) => ({
+  ...(await original<typeof import('../offline/connection')>()),
   isOnline: () => m.online,
 }))
 
-import { discardQueued, queueEntry, queueSnapshot, retryQueued, syncQueue, type QueuedEntry } from '../offlineQueue'
+import { discardQueued, queueEntry, queueSnapshot, retryQueued, syncQueue, type QueuedEntry } from '../offline/queue'
 
 const row = {
   project_id: 'p1',

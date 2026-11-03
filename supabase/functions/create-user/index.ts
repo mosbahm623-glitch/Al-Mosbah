@@ -58,7 +58,13 @@ Deno.serve(async (req) => {
     const exists = /already|registered|exists/i.test(created.error?.message ?? '')
     return reply({ error: exists ? 'email_exists' : 'create_failed' }, exists ? 409 : 500)
   }
-  // accounts created by the admin are active right away, with no page access until he grants it
-  await admin.from('profiles').update({ is_active: true, full_name: fullName }).eq('id', created.data.user.id)
+  // accounts created by the admin are active right away, with no page access until he grants it. The password he typed
+  // is temporary: the account is confirmed a moment AFTER it is inserted, so the profile trigger cannot know that,
+  // and the flag that forces the person to choose his own password is set here.
+  const saved = await admin
+    .from('profiles')
+    .update({ is_active: true, full_name: fullName, must_change_password: true })
+    .eq('id', created.data.user.id)
+  if (saved.error) return reply({ error: 'create_failed' }, 500)
   return reply({ id: created.data.user.id })
 })

@@ -120,7 +120,7 @@ export type Database = {
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
-      reset_data: { Args: never; Returns: undefined }
+      reset_data: { Args: { p_groups?: string[] }; Returns: undefined }
       password_changed: { Args: Record<string, never>; Returns: undefined }
       project_deleted_entries: { Args: { p_project: string }; Returns: Json[] }
       deleted_entries: { Args: never; Returns: Json[] }

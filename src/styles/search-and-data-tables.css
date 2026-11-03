@@ -279,6 +279,20 @@
 .reset .btn-danger {
   margin-inline-start: 0;
 }
+.reset-list {
+  display: grid;
+}
+.reset-opt {
+  align-items: flex-start;
+  padding-block: 0.35rem;
+}
+.reset-opt input {
+  margin-top: 0.2rem;
+  flex: none;
+}
+.reset-opt small {
+  display: block;
+}
 
 .row-deleted td,
 .row-deleted td * {

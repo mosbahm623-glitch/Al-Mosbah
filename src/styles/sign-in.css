@@ -190,48 +190,77 @@
   padding: 1.25rem;
   max-width: 760px;
 }
-/* quick entry on a wide screen: four columns, tight spacing, so the whole form fits without scrolling */
-@media (min-width: 900px) {
-  .quick-form {
-    max-width: none;
-    padding: 0;
+/* quick entry: tight grid so the whole form fits without scrolling (4 columns on a wide screen, 2 on a phone) */
+.quick-form {
+  max-width: none;
+  padding: 0;
+}
+.quick-form .dialog-form {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 0.6rem;
+  padding: 0.75rem;
+}
+.quick-form .field {
+  gap: 0.2rem;
+  font-size: 0.8rem;
+}
+.quick-form .field input,
+.quick-form select {
+  min-height: 38px;
+}
+.quick-form .field-row {
+  display: contents;
+}
+.quick-form .span-2 {
+  grid-column: span 2;
+}
+.quick-form .field-row + .field {
+  grid-column: span 2;
+}
+.quick-form .msg.span-2,
+.quick-form .dialog-actions.span-2 {
+  grid-column: 1 / -1;
+}
+.quick-form .dialog-actions {
+  margin: 0;
+}
+.quick-form .msg {
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+}
+.quick-form .inv-add,
+.quick-form .inv-thumb {
+  width: 52px;
+  height: 52px;
+}
+.quick-page .qe-tabs button {
+  min-height: 38px;
+}
+@media (max-width: 899px) {
+  .quick-page .page-head .crumbs,
+  .quick-page .page-head p {
+    display: none;
   }
+  .quick-page {
+    gap: 0.6rem;
+  }
+  /* photos and the save button share one row */
+  .quick-form .inv-field.span-2,
+  .quick-form .dialog-actions.span-2 {
+    grid-column: span 1;
+  }
+  .quick-form .dialog-actions {
+    align-self: end;
+  }
+  .quick-form .dialog-actions .btn {
+    width: 100%;
+  }
+}
+@media (min-width: 900px) {
   .quick-form .dialog-form {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem 0.9rem;
     padding: 0.9rem 1.1rem;
-  }
-  .quick-form .field {
-    gap: 0.25rem;
-  }
-  .quick-form .field input,
-  .quick-form select {
-    min-height: 38px;
-  }
-  .quick-form .field-row {
-    display: contents;
-  }
-  .quick-form .span-2 {
-    grid-column: span 2;
-  }
-  .quick-form .field-row + .field {
-    grid-column: span 2;
-  }
-  .quick-form .msg.span-2,
-  .quick-form .dialog-actions.span-2 {
-    grid-column: 1 / -1;
-  }
-  .quick-form .dialog-actions {
-    margin: 0;
-  }
-  .quick-form .inv-add,
-  .quick-form .inv-thumb {
-    width: 56px;
-    height: 56px;
-  }
-  .quick-form .msg {
-    margin: 0;
-    padding: 0.4rem 0.7rem;
   }
 }
 .msg-ok {

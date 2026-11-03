@@ -276,6 +276,9 @@
 .backup-stale {
   border-color: var(--err);
 }
+.reset .btn-danger {
+  margin-inline-start: 0;
+}
 
 .row-deleted td,
 .row-deleted td * {

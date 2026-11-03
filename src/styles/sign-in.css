@@ -190,6 +190,50 @@
   padding: 1.25rem;
   max-width: 760px;
 }
+/* quick entry on a wide screen: four columns, tight spacing, so the whole form fits without scrolling */
+@media (min-width: 900px) {
+  .quick-form {
+    max-width: none;
+    padding: 0;
+  }
+  .quick-form .dialog-form {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem 0.9rem;
+    padding: 0.9rem 1.1rem;
+  }
+  .quick-form .field {
+    gap: 0.25rem;
+  }
+  .quick-form .field input,
+  .quick-form select {
+    min-height: 38px;
+  }
+  .quick-form .field-row {
+    display: contents;
+  }
+  .quick-form .span-2 {
+    grid-column: span 2;
+  }
+  .quick-form .field-row + .field {
+    grid-column: span 2;
+  }
+  .quick-form .msg.span-2,
+  .quick-form .dialog-actions.span-2 {
+    grid-column: 1 / -1;
+  }
+  .quick-form .dialog-actions {
+    margin: 0;
+  }
+  .quick-form .inv-add,
+  .quick-form .inv-thumb {
+    width: 56px;
+    height: 56px;
+  }
+  .quick-form .msg {
+    margin: 0;
+    padding: 0.4rem 0.7rem;
+  }
+}
 .msg-ok {
   background: var(--ok-bg);
   color: var(--ok);

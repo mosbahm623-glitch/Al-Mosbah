@@ -82,6 +82,12 @@ describe('saveEntry: owner banks', () => {
     expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ bank_id: 'b1' })
     expect(m.createBank).not.toHaveBeenCalled()
   })
+  it('refuses an owner entry without a bank, but not a payment from a custody', async () => {
+    expect(await saveEntry(base({ banks, banksOnly: true }))).toEqual({ status: 'error', error: 'bank-required' })
+    expect(m.insertEntry).not.toHaveBeenCalled()
+    await saveEntry(base({ banks, banksOnly: true, fromAdvance: true, advanceId: 'a1' }))
+    expect(m.insertEntry).toHaveBeenCalled()
+  })
   it('refuses a bank that is not on his list, online or offline', async () => {
     expect(await saveEntry(base({ bankName: 'مصر', banks, banksOnly: true }))).toEqual({
       status: 'error',

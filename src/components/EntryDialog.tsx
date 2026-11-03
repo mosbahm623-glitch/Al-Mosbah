@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
@@ -68,9 +68,13 @@ export default function EntryDialog({
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<Named[]>(fetchBankNames)
   // an owner picks from the banks the admin gave him; everyone else may type any bank
-  const myBankIds = useAsync<string[]>(() =>
-    isOwner && profile ? fetchMyBankIds(profile.id) : Promise.resolve({ data: [], error: null }),
+  // (memoized: useAsync runs again whenever the function it gets changes)
+  const ownerId = isOwner ? (profile?.id ?? null) : null
+  const loadMyBankIds = useCallback(
+    () => (ownerId ? fetchMyBankIds(ownerId) : Promise.resolve({ data: [] as string[], error: null })),
+    [ownerId],
   )
+  const myBankIds = useAsync<string[]>(loadMyBankIds)
   const ownerBanks = isOwner
     ? (banks.data ?? []).filter((b) => myBankIds.data?.includes(b.id) || b.name === entry?.bank?.name)
     : []

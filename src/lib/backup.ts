@@ -254,6 +254,8 @@ export async function downloadBackup(userId: string): Promise<boolean> {
         col('التاريخ', 'paid_on', 'date'),
         { h: 'صاحب العهدة', w: 24, get: (r) => H(r.advance_id) },
         col('المبلغ', 'amount', 'money'),
+        { h: 'الحالة', w: 12, get: (r) => tr(STATUS, r.status) },
+        col('سبب الرفض', 'reject_reason'),
         id(),
       ],
     },

@@ -41,6 +41,7 @@ export type SaveError =
   | 'contractor'
   | 'bank'
   | 'bank-denied'
+  | 'bank-required'
   | 'reason'
   | 'offline-edit'
   | 'failed'
@@ -74,6 +75,8 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
 
   const typedContractor = isExpense ? input.contractorName.trim() : ''
   const typedBank = input.fromAdvance ? '' : input.bankName.trim()
+  // an owner's entry always carries a bank (a payment from a custody has none)
+  if (input.banksOnly && !input.fromAdvance && !typedBank) return fail('bank-required')
   const baseRow: EntryInput = {
     project_id: input.targetProject,
     kind,
@@ -139,7 +142,9 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   if (res.error) {
     // the network dropped while saving: keep the new entry on the device (same id, so it can never be doubled)
     if (!entry && isNetworkError(res.error)) return keepOnDevice(row, { contractor: '', bank: '' })
-    if ((res.error as { message?: string }).message?.includes('bank not allowed')) return fail('bank-denied')
+    const message = (res.error as { message?: string }).message ?? ''
+    if (message.includes('bank not allowed')) return fail('bank-denied')
+    if (message.includes('bank required')) return fail('bank-required')
     return fail(isNetworkError(res.error) ? 'offline-edit' : 'failed')
   }
   if (entry && res.data !== true) return fail('changed')

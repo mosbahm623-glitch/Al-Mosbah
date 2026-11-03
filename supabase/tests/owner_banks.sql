@@ -1,4 +1,4 @@
--- Integration test for the banks an owner may choose (migration 038).
+-- Integration test for the banks an owner may choose (migrations 038, 039).
 -- Run in the Supabase SQL editor or via MCP execute_sql. It creates temporary users and rows,
 -- prints one line per check (ok = got matches expected) and ALWAYS rolls back: nothing is kept.
 begin;
@@ -48,8 +48,10 @@ select pg_temp.chk('O_expense_from_other_bank_refused',
   pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount,bank_id) values (%L,'expense','مواد','b',40,%L)$q$, (select pid from ids), (select bank_b from ids))), 'P0001');
 select pg_temp.chk('O_income_to_other_bank_refused',
   pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount,bank_id) values (%L,'income','دفعة',50,%L)$q$, (select pid from ids), (select bank_b from ids))), 'P0001');
-select pg_temp.chk('O_entry_without_bank_ok',
-  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount) values (%L,'expense','مواد','c',60)$q$, (select pid from ids))), 'ok');
+select pg_temp.chk('O_entry_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount) values (%L,'expense','مواد','c',60)$q$, (select pid from ids))), 'P0001');
+select pg_temp.chk('O_income_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount) values (%L,'income','دفعة',61)$q$, (select pid from ids))), 'P0001');
 update ids set eid = (select id from public.entries where item = 'a');
 -- edits go through edit_entry (it demands a reason), like the app does
 select pg_temp.chk('O_edit_keeps_bank_ok',

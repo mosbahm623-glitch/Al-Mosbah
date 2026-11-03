@@ -39,6 +39,7 @@ const SAVE_ERRORS: Record<Exclude<SaveError, 'changed'>, string> = {
   project: 'اختار المشروع',
   contractor: 'ما قدرناش نحفظ اسم المقاول، جرّب تاني',
   bank: 'ما قدرناش نحفظ اسم البنك، جرّب تاني',
+  'bank-required': 'اختار البنك',
   'bank-denied': 'البنك ده مش من البنوك المسموحة ليك. اختار من القايمة أو كلّم الأدمن',
   reason: 'اكتب سبب التعديل',
   'offline-edit': 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع',
@@ -264,8 +265,8 @@ export default function EntryDialog({
           <label className="field">
             البنك / الحساب
             {isOwner ? (
-              <select value={bankName} onChange={(e) => setBankName(e.target.value)}>
-                <option value="">من غير بنك</option>
+              <select value={bankName} onChange={(e) => setBankName(e.target.value)} required>
+                <option value="">اختار البنك</option>
                 {ownerBanks.map((b) => (
                   <option key={b.id} value={b.name}>
                     {b.name}

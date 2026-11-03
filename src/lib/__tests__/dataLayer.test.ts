@@ -72,11 +72,17 @@ describe('entries: writing', () => {
   })
   it('records a new entry with the custody it was paid from, or none', async () => {
     plan({})
-    await insertEntry(row, 'adv1')
-    await insertEntry(row, null)
-    expect(callsOn(0)[0]).toEqual(['insert', [{ ...row, advance_id: 'adv1' }]])
-    expect(callsOn(1)[0]).toEqual(['insert', [{ ...row, advance_id: null }]])
+    await insertEntry(row, 'adv1', 'id-1')
+    await insertEntry(row, null, 'id-2')
+    expect(callsOn(0)[0]).toEqual(['insert', [{ id: 'id-1', ...row, advance_id: 'adv1' }]])
+    expect(callsOn(1)[0]).toEqual(['insert', [{ id: 'id-2', ...row, advance_id: null }]])
     expect(callsOn(0)).toContainEqual(['select', ['id,seq']])
+  })
+  it('gives a new entry its own id when none is passed, so a retry can never double it', async () => {
+    plan({})
+    await insertEntry(row, null)
+    const [, [sent]] = callsOn(0)[0] as [string, [{ id: string }]]
+    expect(sent.id).toMatch(/^[0-9a-f-]{36}$/)
   })
   it('deletes through the database function with the revision and the reason', () => {
     rpc.mockReturnValue(query(ok(true)).query)

@@ -23,11 +23,14 @@ export type EntryInput = {
 export const updateEntry = (id: string, rev: number, row: EntryInput, reason: string) =>
   supabase.rpc('edit_entry', { p_id: id, p_rev: rev, p_reason: reason.trim(), p_row: row })
 
-/** A new entry, optionally paid out of a custody (عهدة). Returns its id and number. */
-export const insertEntry = (row: EntryInput, advanceId: string | null) =>
+/**
+ * A new entry, optionally paid out of a custody (عهدة). Returns its id and number. The id is chosen here, so sending
+ * the same entry twice (a lost answer, a retry from the offline queue) fails on the id instead of making a duplicate.
+ */
+export const insertEntry = (row: EntryInput, advanceId: string | null, id: string = crypto.randomUUID()) =>
   supabase
     .from('entries')
-    .insert({ ...row, advance_id: advanceId })
+    .insert({ id, ...row, advance_id: advanceId })
     .select('id,seq')
 
 /** Soft delete with a reason; false in `data` means the entry changed meanwhile. */

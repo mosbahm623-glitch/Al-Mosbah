@@ -2,6 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { notifyDataChanged } from '../lib/events'
+import { isOnline } from '../lib/connection'
+import { readStoredSession } from '../lib/offlineAuth'
+import { clearReadCache } from '../lib/offlineFetch'
 import { allows, type Level, type Module, type Permissions } from './permissions'
 
 export type Profile = {
@@ -110,8 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return
-      setSession(data.session)
-      const uid = data.session?.user.id ?? null
+      // offline with an expired token the client reports no session: keep working from the saved one on this device
+      const kept = data.session ?? (isOnline() ? null : readStoredSession())
+      setSession(kept)
+      const uid = kept?.user.id ?? null
       const cached = uid ? readCache(uid) : null
       if (cached) {
         // show the app at once from the last known profile; the fresh one replaces it a moment later
@@ -126,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (active) setLoading(false)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      // offline start-up with an expired token: the saved session set above stays until the network renews it
+      if (_event === 'INITIAL_SESSION' && !next && !isOnline() && readStoredSession()) return
       setSession(next)
       // start-up is handled by getSession above
       if (_event === 'INITIAL_SESSION') return
@@ -208,6 +215,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       signOut: async () => {
         await supabase.auth.signOut()
+        await clearReadCache()
       },
       setOwnPassword: async (password) => {
         const { error } = await supabase.auth.updateUser({ password })

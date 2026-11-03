@@ -1,0 +1,308 @@
+/*
+  The look of the app: Liquid Glass (as in iOS 26). Soft translucent surfaces over a colourful backdrop, bright edges,
+  big rounded corners and smooth motion. It sits over the base styles in the other files and is screen only.
+
+  Built to stay fast on phones: only the three bars that really float (top bar, side menu, dialog) are blurred;
+  cards and tables are plain translucent fills, and the colour behind them is one fixed layer that never repaints.
+  People who ask their device for less transparency or less motion get solid surfaces and no animation.
+*/
+:root {
+  --radius: 24px;
+  --radius-sm: 14px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --accent-2: #e8705a;
+  --blur: 22px;
+  --fill: rgb(255 255 255 / 0.6);
+  --fill-strong: rgb(255 255 255 / 0.78);
+  --edge: rgb(255 255 255 / 0.8);
+  --edge-dim: rgb(255 255 255 / 0.22);
+  --shadow-sm: 0 1px 2px rgb(30 20 10 / 0.06);
+  --shadow-md: 0 10px 30px -10px rgb(60 40 30 / 0.28), 0 2px 8px rgb(60 40 30 / 0.08);
+  --glow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+  --glass: color-mix(in srgb, var(--header) 66%, transparent);
+  --orb-1: rgb(255 140 110 / 0.5);
+  --orb-2: rgb(120 170 255 / 0.42);
+  --orb-3: rgb(255 205 120 / 0.4);
+}
+:root[data-theme='dark'] {
+  --fill: rgb(40 36 34 / 0.62);
+  --fill-strong: rgb(52 47 44 / 0.8);
+  --edge: rgb(255 255 255 / 0.2);
+  --edge-dim: rgb(255 255 255 / 0.06);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 14px 36px -12px rgb(0 0 0 / 0.7), 0 2px 8px rgb(0 0 0 / 0.4);
+  --glass: color-mix(in srgb, var(--header) 70%, transparent);
+  --orb-1: rgb(220 80 60 / 0.38);
+  --orb-2: rgb(70 110 220 / 0.34);
+  --orb-3: rgb(200 140 60 / 0.26);
+}
+
+@media screen {
+  /* the colour behind the glass: one fixed layer (cheaper than a fixed background, and iOS ignores that one) */
+  body {
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(520px 420px at 88% 6%, var(--orb-1), transparent 70%),
+      radial-gradient(560px 460px at 6% 38%, var(--orb-2), transparent 70%),
+      radial-gradient(520px 420px at 80% 92%, var(--orb-3), transparent 70%);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
+  }
+
+  /* numbers line up in columns and read at a glance */
+  .num,
+  .tile-value,
+  .appr-amount,
+  td.num,
+  .stat-value {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* glass surfaces: a bright edge, a soft shadow and a little light across the top */
+  .card,
+  .panel,
+  .tile,
+  .appr-card,
+  .table-wrap {
+    position: relative;
+    background: var(--fill);
+    border: 1px solid var(--edge-dim);
+    border-radius: var(--radius);
+    box-shadow:
+      var(--shadow-md),
+      inset 0 1px 0 var(--edge);
+  }
+  .card::before,
+  .panel::before,
+  .tile::before,
+  .appr-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.3), transparent 38%);
+  }
+  :root[data-theme='dark'] .card::before,
+  :root[data-theme='dark'] .panel::before,
+  :root[data-theme='dark'] .tile::before,
+  :root[data-theme='dark'] .appr-card::before {
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.08), transparent 38%);
+  }
+  .card,
+  .panel,
+  .tile,
+  .appr-card {
+    transition:
+      transform 0.25s var(--ease),
+      border-color 0.25s var(--ease);
+  }
+  .tile:hover,
+  .appr-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--edge-dim));
+  }
+  .tile-big {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%), var(--fill);
+  }
+
+  /* tables inside the glass: rows are lines of light, not boxes */
+  .table-wrap {
+    overflow: hidden;
+  }
+  .table {
+    background: transparent;
+  }
+  .table thead th {
+    background: rgb(255 255 255 / 0.18);
+  }
+  :root[data-theme='dark'] .table thead th {
+    background: rgb(255 255 255 / 0.05);
+  }
+  .table td,
+  .table th {
+    border-color: var(--edge-dim);
+  }
+  .table tbody tr:hover {
+    background: rgb(255 255 255 / 0.22);
+  }
+
+  /* the bars that float over the page are the only blurred parts */
+  .topbar {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(170%);
+    backdrop-filter: blur(var(--blur)) saturate(170%);
+    border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  }
+  .sidebar {
+    background: var(--fill-strong);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(170%);
+    backdrop-filter: blur(var(--blur)) saturate(170%);
+    border-inline-color: var(--edge-dim);
+  }
+  .dialog {
+    background: var(--fill-strong);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--edge);
+    border-radius: 28px;
+    box-shadow: var(--shadow-md);
+  }
+  .dialog::backdrop {
+    background: rgb(20 15 12 / 0.3);
+  }
+  .top-btn,
+  .nav-link {
+    border-radius: var(--radius-sm);
+    transition: background-color 0.2s var(--ease);
+  }
+  .nav-active {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, transparent), transparent);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+
+  /* buttons are pills; fields are small glass pills */
+  .btn {
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    box-shadow:
+      0 6px 16px -6px color-mix(in srgb, var(--accent) 70%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 0.22);
+    transition:
+      transform 0.2s var(--ease),
+      filter 0.2s var(--ease);
+  }
+  .btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-ghost {
+    background: var(--fill);
+    border: 1px solid var(--edge-dim);
+    box-shadow: inset 0 1px 0 var(--edge);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--fill-strong);
+    transform: none;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #d9534a, var(--err));
+  }
+  input,
+  select,
+  textarea {
+    background: rgb(255 255 255 / 0.45);
+    border: 1px solid var(--edge-dim);
+    border-radius: var(--radius-sm);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06);
+    transition:
+      border-color 0.2s var(--ease),
+      box-shadow 0.2s var(--ease);
+  }
+  :root[data-theme='dark'] input,
+  :root[data-theme='dark'] select,
+  :root[data-theme='dark'] textarea {
+    background: rgb(255 255 255 / 0.06);
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: none;
+    border-color: var(--accent-text);
+    box-shadow: var(--glow);
+  }
+  .chip {
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+  }
+}
+
+@media screen and (max-width: 640px) {
+  :root {
+    --radius: 22px;
+  }
+}
+
+/* pages ease in; the first few cards step in one after the other (the rest simply appear) */
+@media screen and (prefers-reduced-motion: no-preference) {
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .page-stack {
+    animation: rise 0.4s var(--ease) both;
+  }
+  .appr-list > :nth-child(-n + 6),
+  .tiles > :nth-child(-n + 6) {
+    animation: rise 0.45s var(--ease) both;
+  }
+  .appr-list > :nth-child(2),
+  .tiles > :nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .appr-list > :nth-child(3),
+  .tiles > :nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .appr-list > :nth-child(n + 4),
+  .tiles > :nth-child(n + 4) {
+    animation-delay: 0.15s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile:hover,
+  .appr-card:hover,
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* less transparency asked for: solid surfaces, no blur, no sheen */
+@media screen and (prefers-reduced-transparency: reduce) {
+  :root {
+    --fill: var(--surface);
+    --fill-strong: var(--surface);
+    --glass: var(--header);
+  }
+  .topbar,
+  .sidebar,
+  .dialog {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .card::before,
+  .panel::before,
+  .tile::before,
+  .appr-card::before {
+    display: none;
+  }
+}
+
+.more-row {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, BellOff, BellRing, CheckCheck, Trash2 } from 'lucide-react'
+import { Bell, BellOff, BellRing, CheckCheck, Send, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import MessageDialog from '../components/MessageDialog'
 import PageHead from '../components/PageHead'
 import { clearAll, fetchNotices, markAllRead, markRead } from '../lib/notifications'
 import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
@@ -44,10 +45,11 @@ function InstallHint() {
 const when = (iso: string) => new Date(iso).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })
 
 export default function Notifications() {
-  const { profile } = useAuth()
+  const { profile, isAdmin } = useAuth()
   const list = useAsync(useCallback(() => fetchNotices(), []))
   const [push, setPush] = useState<PushState>('off')
   const [busy, setBusy] = useState(false)
+  const [composing, setComposing] = useState(false)
   const rows = list.data ?? []
   const unread = rows.filter((n) => !n.read_at).length
 
@@ -74,22 +76,30 @@ export default function Notifications() {
       <PageHead
         title="الإشعارات"
         actions={
-          rows.length > 0 && (
-            <>
-              <button
-                className="btn btn-ghost btn-icon"
-                disabled={busy || unread === 0}
-                onClick={() => void run(markAllRead)}
-              >
-                <CheckCheck size={18} aria-hidden="true" />
-                تعليم الكل كمقروء
+          <>
+            {isAdmin && (
+              <button className="btn btn-icon" onClick={() => setComposing(true)}>
+                <Send size={18} aria-hidden="true" />
+                إرسال رسالة
               </button>
-              <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void run(clearAll)}>
-                <Trash2 size={18} aria-hidden="true" />
-                مسح الكل
-              </button>
-            </>
-          )
+            )}
+            {rows.length > 0 && (
+              <>
+                <button
+                  className="btn btn-ghost btn-icon"
+                  disabled={busy || unread === 0}
+                  onClick={() => void run(markAllRead)}
+                >
+                  <CheckCheck size={18} aria-hidden="true" />
+                  تعليم الكل كمقروء
+                </button>
+                <button className="btn btn-ghost btn-icon" disabled={busy} onClick={() => void run(clearAll)}>
+                  <Trash2 size={18} aria-hidden="true" />
+                  مسح الكل
+                </button>
+              </>
+            )}
+          </>
         }
       />
 
@@ -146,6 +156,7 @@ export default function Notifications() {
           ))}
         </ul>
       )}
+      {composing && <MessageDialog onClose={() => setComposing(false)} />}
     </div>
   )
 }

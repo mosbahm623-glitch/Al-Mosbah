@@ -189,3 +189,22 @@ select:disabled {
     overflow: visible;
   }
 }
+
+/* admin message: who gets it */
+.msg-to {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.msg-to-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0 0.75rem;
+  max-height: 11rem;
+  overflow-y: auto;
+  font-weight: 500;
+}
+.msg-to-list .check {
+  min-height: 38px;
+}

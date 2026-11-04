@@ -75,8 +75,8 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
 
   const typedContractor = isExpense ? input.contractorName.trim() : ''
   const typedBank = input.fromAdvance ? '' : input.bankName.trim()
-  // an owner's entry always carries a bank (a payment from a custody has none)
-  if (input.banksOnly && !input.fromAdvance && !typedBank) return fail('bank-required')
+  // an owner's entry, and any income, always carries a bank (a payment from a custody has none)
+  if ((input.banksOnly || !isExpense) && !input.fromAdvance && !typedBank) return fail('bank-required')
   const baseRow: EntryInput = {
     project_id: input.targetProject,
     kind,

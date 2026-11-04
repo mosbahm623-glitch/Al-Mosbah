@@ -115,6 +115,24 @@ describe('saveEntry: owner banks', () => {
   })
 })
 
+describe('saveEntry: income needs a bank', () => {
+  const income = (over: Partial<SaveInput> = {}) =>
+    base({ kind: 'income', category: undefined, itemName: '', incomeLabel: 'دفعة عميل', ...over })
+  it('refuses an income without a bank, for anyone', async () => {
+    expect(await saveEntry(income())).toEqual({ status: 'error', error: 'bank-required' })
+    expect(m.insertEntry).not.toHaveBeenCalled()
+  })
+  it('saves an income that has a bank', async () => {
+    m.createBank.mockResolvedValue('b9')
+    await saveEntry(income({ bankName: 'بنك جديد' }))
+    expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ kind: 'income', bank_id: 'b9' })
+  })
+  it('still lets an expense go without a bank', async () => {
+    await saveEntry(base())
+    expect(m.insertEntry).toHaveBeenCalled()
+  })
+})
+
 describe('saveEntry: saving', () => {
   it('inserts a new entry with its own id and reports the number it got', async () => {
     const r = await saveEntry(base({ advanceId: 'a1' }))

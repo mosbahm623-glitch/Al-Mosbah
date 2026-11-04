@@ -12,8 +12,14 @@ const GROUPS = [
   { id: 'user', label: 'المستخدمين' },
 ] as const
 
-/** The admin writes a message and picks who gets it: everyone, the owners, the users, or named people. */
-export default function MessageDialog({ onClose }: { onClose: () => void }) {
+const TEST_TITLE = 'إشعار تجريبي'
+const TEST_BODY = 'ده إشعار تجريبي من الأدمن للتأكد إن الإشعارات بتوصلك. مفيش مطلوب منك حاجة.'
+
+/**
+ * The admin writes a message and picks who gets it: everyone, the owners, the users, or named people.
+ * In test mode the text is a fixed dummy notice, to check that notifications really reach people.
+ */
+export default function MessageDialog({ onClose, test = false }: { onClose: () => void; test?: boolean }) {
   const { profile } = useAuth()
   const users = useAsync<UserRow[]>(useCallback(() => fetchUsers(), []))
   const [picked, setPicked] = useState<string[]>([])
@@ -23,10 +29,11 @@ export default function MessageDialog({ onClose }: { onClose: () => void }) {
   const [sentTo, setSentTo] = useState<number | null>(null)
   const [sending, setSending] = useState(false)
 
-  // the admin who writes is not a recipient of the group buttons (he can still tick himself)
+  // a message does not go to the admin who writes it through the group buttons (he can still tick himself);
+  // a test does, so he can check his own phone too
   const people = (users.data ?? []).filter((u) => u.is_active)
   const inGroup = (group: (typeof GROUPS)[number]['id']) =>
-    people.filter((u) => u.id !== profile?.id && (group === 'all' || u.role === group)).map((u) => u.id)
+    people.filter((u) => (test || u.id !== profile?.id) && (group === 'all' || u.role === group)).map((u) => u.id)
 
   function toggleGroup(group: (typeof GROUPS)[number]['id']) {
     const ids = inGroup(group)
@@ -39,18 +46,19 @@ export default function MessageDialog({ onClose }: { onClose: () => void }) {
     if (picked.length === 0) return setError('اختار حد يستلم الرسالة')
     setSending(true)
     setError(null)
-    const sent = await sendMessage(picked, title, body)
+    const sent = await sendMessage(picked, test ? TEST_TITLE : title, test ? TEST_BODY : body)
     setSending(false)
-    if (sent === null) return setError('الرسالة ما اتبعتتش، جرّب تاني')
+    if (sent === null) return setError(test ? 'الإشعار ما اتبعتش، جرّب تاني' : 'الرسالة ما اتبعتتش، جرّب تاني')
     setSentTo(sent)
   }
 
   return (
-    <Dialog title="إرسال رسالة" onClose={onClose}>
+    <Dialog title={test ? 'إشعار تجريبي' : 'إرسال رسالة'} onClose={onClose}>
       {sentTo !== null ? (
         <div className="dialog-form">
           <p className="msg msg-ok" role="status">
-            الرسالة اتبعتت لـ {sentTo} {sentTo === 1 ? 'مستخدم' : 'مستخدمين'}، وهتوصلهم كإشعار على التليفون.
+            {test ? 'الإشعار التجريبي' : 'الرسالة'} اتبعت لـ {sentTo} {sentTo === 1 ? 'مستخدم' : 'مستخدمين'}، وهيوصلهم
+            كإشعار في التطبيق وعلى التليفون.
           </p>
           <div className="dialog-actions">
             <button type="button" className="btn" onClick={onClose}>
@@ -61,7 +69,7 @@ export default function MessageDialog({ onClose }: { onClose: () => void }) {
       ) : (
         <form onSubmit={(e) => void submit(e)} className="dialog-form">
           <div className="msg-to">
-            هتتبعت لمين
+            {test ? 'الإشعار التجريبي هيتبعت لمين' : 'هتتبعت لمين'}
             <div className="add-row">
               {GROUPS.map((g) => {
                 const ids = inGroup(g.id)
@@ -97,20 +105,34 @@ export default function MessageDialog({ onClose }: { onClose: () => void }) {
               ))}
             </div>
           </div>
-          <label className="field">
-            العنوان
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              maxLength={MESSAGE_TITLE_MAX}
-              placeholder="مثلًا: تنبيه مهم"
-              required
-            />
-          </label>
-          <label className="field">
-            الرسالة (اختياري)
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} maxLength={MESSAGE_BODY_MAX} rows={4} />
-          </label>
+          {test ? (
+            <p className="muted small">
+              هيوصلهم إشعار عنوانه «{TEST_TITLE}» ومفيش مطلوب منهم حاجة. لو وصلك على التليفون وسمعت النغمة، يبقى
+              الإشعارات شغّالة.
+            </p>
+          ) : (
+            <>
+              <label className="field">
+                العنوان
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={MESSAGE_TITLE_MAX}
+                  placeholder="مثلًا: تنبيه مهم"
+                  required
+                />
+              </label>
+              <label className="field">
+                الرسالة (اختياري)
+                <textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  maxLength={MESSAGE_BODY_MAX}
+                  rows={4}
+                />
+              </label>
+            </>
+          )}
           {error && <p className="msg msg-error">{error}</p>}
           <div className="dialog-actions">
             <button className="btn" disabled={sending}>

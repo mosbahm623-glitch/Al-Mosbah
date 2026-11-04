@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, BellOff, BellRing, CheckCheck, Send, Trash2, Volume2, VolumeX } from 'lucide-react'
+import { Bell, BellOff, BellRing, CheckCheck, FlaskConical, Send, Trash2, Volume2, VolumeX } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import MessageDialog from '../components/MessageDialog'
 import PageHead from '../components/PageHead'
@@ -50,7 +50,7 @@ export default function Notifications() {
   const list = useAsync(useCallback(() => fetchNotices(), []))
   const [push, setPush] = useState<PushState>('off')
   const [busy, setBusy] = useState(false)
-  const [composing, setComposing] = useState(false)
+  const [composing, setComposing] = useState<'message' | 'test' | null>(null)
   const [chime, setChime] = useState(isChimeOn)
   const rows = list.data ?? []
   const unread = rows.filter((n) => !n.read_at).length
@@ -88,10 +88,16 @@ export default function Notifications() {
         actions={
           <>
             {isAdmin && (
-              <button className="btn btn-icon" onClick={() => setComposing(true)}>
-                <Send size={18} aria-hidden="true" />
-                إرسال رسالة
-              </button>
+              <>
+                <button className="btn btn-icon" onClick={() => setComposing('message')}>
+                  <Send size={18} aria-hidden="true" />
+                  إرسال رسالة
+                </button>
+                <button className="btn btn-ghost btn-icon" onClick={() => setComposing('test')}>
+                  <FlaskConical size={18} aria-hidden="true" />
+                  إشعار تجريبي
+                </button>
+              </>
             )}
             {rows.length > 0 && (
               <>
@@ -173,7 +179,7 @@ export default function Notifications() {
           ))}
         </ul>
       )}
-      {composing && <MessageDialog onClose={() => setComposing(false)} />}
+      {composing && <MessageDialog test={composing === 'test'} onClose={() => setComposing(null)} />}
     </div>
   )
 }

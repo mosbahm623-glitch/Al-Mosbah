@@ -2,7 +2,7 @@ import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, t
 import { fetchDashboardSummary, type DashboardSummary } from '../lib/projects'
 import { money } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
-import { LatestMovements, MonthlyChart } from './DashboardExtras'
+import { MonthlyChart } from './DashboardExtras'
 
 export default function Dashboard() {
   const { data, failed, loading, reload } = useAsync<DashboardSummary>(fetchDashboardSummary)
@@ -114,7 +114,6 @@ export default function Dashboard() {
           </section>
 
           <MonthlyChart />
-          <LatestMovements />
         </>
       )}
     </div>

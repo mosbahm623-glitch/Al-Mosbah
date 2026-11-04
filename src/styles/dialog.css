@@ -81,7 +81,7 @@ select:disabled {
   padding-inline: 1rem;
 }
 
-/* wide entry dialog: a tight grid so the whole form fits without scrolling (4 columns on a wide screen, 2 on a tablet) */
+/* wide entry dialog: a tight grid so the whole form fits without scrolling (3 columns on a wide screen, 2 on a tablet) */
 @media (min-width: 720px) {
   .dialog-wide {
     width: min(50rem, calc(100vw - 4rem));
@@ -127,10 +127,10 @@ select:disabled {
 }
 @media (min-width: 1000px) {
   .dialog-wide {
-    width: min(72rem, calc(100vw - 4rem));
+    width: min(60rem, calc(100vw - 4rem));
   }
   .dialog-wide .dialog-form {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   .dialog-wide .span-2 {
     grid-column: span 2;
@@ -139,12 +139,8 @@ select:disabled {
   .dialog-wide .inv-field.span-2 {
     grid-column: span 1;
   }
-  /* the photos and the buttons share one row */
-  .dialog-wide .dialog-actions.span-2 {
-    grid-column: span 3;
-    align-self: end;
-  }
   .dialog-wide .msg.span-2,
+  .dialog-wide .dialog-actions.span-2,
   .dialog-wide .entry-history {
     grid-column: 1 / -1;
   }

@@ -1,7 +1,5 @@
 // The notification sound: a short rising "lamp bell" (A major arpeggio) generated in the browser,
 // so no audio file has to be shipped or downloaded.
-const KEY = 'mosbah-chime'
-
 type AudioWindow = Window & { webkitAudioContext?: typeof AudioContext }
 
 let ctx: AudioContext | null = null
@@ -12,22 +10,6 @@ function context(): AudioContext | null {
   if (!Ctor) return null
   ctx = new Ctor()
   return ctx
-}
-
-export function isChimeOn(): boolean {
-  try {
-    return localStorage.getItem(KEY) !== 'off'
-  } catch {
-    return true
-  }
-}
-
-export function setChimeOn(on: boolean) {
-  try {
-    localStorage.setItem(KEY, on ? 'on' : 'off')
-  } catch {
-    /* ignore */
-  }
 }
 
 /** Browsers keep sound locked until the person touches the page once: unlock it on the first touch/click/key. */
@@ -70,9 +52,8 @@ function bell(c: AudioContext, freq: number, start: number, ring: number, peak: 
   }
 }
 
-/** Plays the notification sound (does nothing when it is muted or the browser still blocks sound). */
-export function playChime(force = false) {
-  if (!force && !isChimeOn()) return
+/** Plays the notification sound (does nothing while the browser still blocks sound). */
+export function playChime() {
   const c = context()
   if (!c) return
   const run = () => {

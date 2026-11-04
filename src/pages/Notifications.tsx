@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, BellOff, BellRing, CheckCheck, FlaskConical, Send, Trash2, Volume2, VolumeX } from 'lucide-react'
+import { Bell, BellOff, BellRing, CheckCheck, FlaskConical, Send, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import MessageDialog from '../components/MessageDialog'
 import PageHead from '../components/PageHead'
 import { clearAll, fetchNotices, markAllRead, markRead } from '../lib/notifications'
 import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
 import { notifyDataChanged } from '../lib/events'
-import { isChimeOn, playChime, setChimeOn } from '../lib/chime'
 import { useAsync } from '../lib/useAsync'
 
 type InstallEvent = Event & { prompt: () => Promise<void> }
@@ -51,7 +50,6 @@ export default function Notifications() {
   const [push, setPush] = useState<PushState>('off')
   const [busy, setBusy] = useState(false)
   const [composing, setComposing] = useState<'message' | 'test' | null>(null)
-  const [chime, setChime] = useState(isChimeOn)
   const rows = list.data ?? []
   const unread = rows.filter((n) => !n.read_at).length
 
@@ -71,14 +69,6 @@ export default function Notifications() {
     setBusy(true)
     setPush(push === 'on' ? await disablePush() : await enablePush(profile.id))
     setBusy(false)
-  }
-
-  function toggleChime() {
-    const next = !chime
-    setChimeOn(next)
-    setChime(next)
-    // turning it on plays the sound once, so it is heard right away
-    if (next) playChime(true)
   }
 
   return (
@@ -120,13 +110,6 @@ export default function Notifications() {
       />
 
       <section className="panel notice-push">
-        <p className="muted small">
-          {chime ? 'نغمة الإشعارات شغّالة وبتتسمع لما يجيلك إشعار جديد والتطبيق مفتوح.' : 'نغمة الإشعارات مكتومة.'}
-        </p>
-        <button className="btn btn-icon" onClick={toggleChime}>
-          {chime ? <VolumeX size={18} aria-hidden="true" /> : <Volume2 size={18} aria-hidden="true" />}
-          {chime ? 'كتم النغمة' : 'تشغيل النغمة'}
-        </button>
         <InstallHint />
         {push === 'unsupported' && (
           <p className="muted small">

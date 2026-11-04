@@ -204,7 +204,7 @@ export default function EntryDialog({
           </label>
         )}
         {!fromAdvance && (
-          <div className="field span-2">
+          <div className="field span-2 kind-field">
             النوع
             <Segmented label="نوع القيد" value={kind} options={KINDS} onChange={setKind} />
           </div>

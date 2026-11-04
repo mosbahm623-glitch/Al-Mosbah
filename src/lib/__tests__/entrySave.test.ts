@@ -36,7 +36,8 @@ const base = (over: Partial<SaveInput> = {}): SaveInput =>
     itemName: 'أسلاك',
     incomeLabel: '',
     contractorName: '',
-    bankName: '',
+    bankName: 'الأهلي',
+    banks: [{ id: 'b1', name: 'الأهلي' }],
     amount: '500',
     date: '2026-11-03',
     notes: '',
@@ -83,7 +84,10 @@ describe('saveEntry: owner banks', () => {
     expect(m.createBank).not.toHaveBeenCalled()
   })
   it('refuses an owner entry without a bank, but not a payment from a custody', async () => {
-    expect(await saveEntry(base({ banks, banksOnly: true }))).toEqual({ status: 'error', error: 'bank-required' })
+    expect(await saveEntry(base({ bankName: '', banks, banksOnly: true }))).toEqual({
+      status: 'error',
+      error: 'bank-required',
+    })
     expect(m.insertEntry).not.toHaveBeenCalled()
     await saveEntry(base({ banks, banksOnly: true, fromAdvance: true, advanceId: 'a1' }))
     expect(m.insertEntry).toHaveBeenCalled()
@@ -115,20 +119,22 @@ describe('saveEntry: owner banks', () => {
   })
 })
 
-describe('saveEntry: income needs a bank', () => {
+describe('saveEntry: every entry needs a bank', () => {
   const income = (over: Partial<SaveInput> = {}) =>
     base({ kind: 'income', category: undefined, itemName: '', incomeLabel: 'دفعة عميل', ...over })
-  it('refuses an income without a bank, for anyone', async () => {
-    expect(await saveEntry(income())).toEqual({ status: 'error', error: 'bank-required' })
+  it('refuses an income without a bank', async () => {
+    expect(await saveEntry(income({ bankName: '' }))).toEqual({ status: 'error', error: 'bank-required' })
     expect(m.insertEntry).not.toHaveBeenCalled()
   })
   it('saves an income that has a bank', async () => {
     m.createBank.mockResolvedValue('b9')
-    await saveEntry(income({ bankName: 'بنك جديد' }))
+    await saveEntry(income({ bankName: 'بنك جديد', banks: [] }))
     expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ kind: 'income', bank_id: 'b9' })
   })
-  it('still lets an expense go without a bank', async () => {
-    await saveEntry(base())
+  it('refuses an expense without a bank too, but not a payment from a custody', async () => {
+    expect(await saveEntry(base({ bankName: '' }))).toEqual({ status: 'error', error: 'bank-required' })
+    expect(m.insertEntry).not.toHaveBeenCalled()
+    await saveEntry(base({ fromAdvance: true, advanceId: 'a1' }))
     expect(m.insertEntry).toHaveBeenCalled()
   })
 })
@@ -152,10 +158,10 @@ describe('saveEntry: saving', () => {
 
   it('creates the typed bank when it is new, but never for a payment from a custody', async () => {
     m.createBank.mockResolvedValue('b9')
-    await saveEntry(base({ bankName: 'بنك جديد' }))
+    await saveEntry(base({ bankName: 'بنك جديد', banks: [] }))
     expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ bank_id: 'b9' })
     m.createBank.mockClear()
-    await saveEntry(base({ bankName: 'بنك جديد', fromAdvance: true }))
+    await saveEntry(base({ bankName: 'بنك جديد', banks: [], fromAdvance: true }))
     expect(m.createBank).not.toHaveBeenCalled()
   })
 

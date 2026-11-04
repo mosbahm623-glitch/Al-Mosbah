@@ -274,9 +274,7 @@ export default function EntryDialog({
               onChange={setBankName}
               banks={isOwner ? ownerBanks : (banks.data ?? [])}
               allowNew={!isOwner}
-              placeholder={
-                isOwner ? 'اختار البنك' : kind === 'income' ? 'اتودّع في أنهي بنك' : 'مدفوع من أنهي بنك (اختياري)'
-              }
+              placeholder={isOwner ? 'اختار البنك' : kind === 'income' ? 'اتودّع في أنهي بنك' : 'مدفوع من أنهي بنك'}
             />
           </div>
         )}

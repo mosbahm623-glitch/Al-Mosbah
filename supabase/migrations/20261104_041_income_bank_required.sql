@@ -1,5 +1,5 @@
--- أي وارد (من أي مستخدم) لازم يكون له بنك. المصروف لسه البنك فيه اختياري للأدمن والمستخدم العادي، والمالك زي ما هو (038 و039).
--- الاستثناء: الوارد القديم من غير بنك لو اتعدّل من غير ما يتحط له بنك (زي الموافقة عليه)، وأي نداء من غير مستخدم (قاعدة البيانات نفسها).
+-- أي قيد (وارد أو مصروف، من أي مستخدم) لازم يكون له بنك. الاستثناء: قيود العهد (مفيهاش بنك أصلًا)، والقيد القديم من غير بنك
+-- لو اتعدّل من غير ما يتحط له بنك (زي الموافقة عليه)، وأي نداء من غير مستخدم (قاعدة البيانات نفسها).
 create or replace function private.entry_bank_access()
 returns trigger
 language plpgsql
@@ -13,7 +13,7 @@ begin
     return new;
   end if;
   if not exists (select 1 from public.profiles where id = uid and role = 'owner') then
-    if new.kind = 'income' and new.bank_id is null and not (tg_op = 'UPDATE' and old.bank_id is null) then
+    if new.bank_id is null and new.advance_id is null and not (tg_op = 'UPDATE' and old.bank_id is null) then
       raise exception 'bank required' using errcode = 'P0001';
     end if;
     return new;

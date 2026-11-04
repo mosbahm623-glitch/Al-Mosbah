@@ -184,7 +184,7 @@ select:disabled {
 }
 
 /* when the screen is tall enough nothing scrolls, so the bank list may open past the dialog's edge instead of scrolling inside it */
-@media (min-width: 720px) and (min-height: 700px) {
+@media (min-width: 720px) and (min-height: 560px) {
   .dialog-wide {
     overflow: visible;
   }

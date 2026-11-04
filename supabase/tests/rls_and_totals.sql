@@ -28,8 +28,9 @@ select set_config('role','authenticated',true);
 select set_config('request.jwt.claims', json_build_object('sub',(select admin from ids),'role','authenticated')::text, true);
 insert into public.projects(name, budget) values ('__T', 5000);
 update ids set pid = (select id from public.projects where name = '__T');
-insert into public.entries(project_id, kind, category, item, amount) select pid,'income','دفعة','x',1000 from ids;
-insert into public.entries(project_id, kind, category, item, amount) select pid,'expense','كهربا','أسلاك',300 from ids;
+insert into public.bank_accounts(name) values ('__RB');
+insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'income','دفعة','x',1000,(select id from public.bank_accounts where name = '__RB') from ids;
+insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'expense','كهربا','أسلاك',300,(select id from public.bank_accounts where name = '__RB') from ids;
 insert into public.advances(holder_name) values ('__H1'), ('__H2');
 update ids set adv1 = (select id from public.advances where holder_name='__H1'), adv2 = (select id from public.advances where holder_name='__H2');
 insert into public.advance_installments(advance_id, amount) select adv1, 500 from ids;
@@ -42,7 +43,7 @@ select pg_temp.chk('advance1_spent', (select (x->>'spent')::numeric from jsonb_a
 
 -- ===== P: projects editor =====
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated"}', true);
-insert into public.entries(project_id, kind, category, item, amount) select pid,'expense','سباكة','مواسير',80 from ids;
+insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'expense','سباكة','مواسير',80,(select id from public.bank_accounts where name = '__RB') from ids;
 select pg_temp.chk('P_entry_pending', (select status from public.entries where item='مواسير'), 'pending');
 select pg_temp.chk('P_pending_not_counted', (select (x->>'expenses')::numeric from jsonb_array_elements(public.project_summaries()) x where x->>'id' = (select pid::text from ids)), 420::numeric);
 update public.entries set amount = 90 where item='مواسير';

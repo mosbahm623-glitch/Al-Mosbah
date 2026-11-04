@@ -1,4 +1,4 @@
--- Integration test for the banks an owner may choose (migrations 038, 039).
+-- Integration test for the banks an owner may choose and for the bank every entry needs (migrations 038, 039, 041).
 -- Run in the Supabase SQL editor or via MCP execute_sql. It creates temporary users and rows,
 -- prints one line per check (ok = got matches expected) and ALWAYS rolls back: nothing is kept.
 begin;
@@ -74,8 +74,20 @@ select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000
 select pg_temp.chk('U_not_limited',
   pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount,bank_id) values (%L,'expense','مواد','u',70,%L)$q$, (select pid from ids), (select bank_a from ids))), 'ok');
 
--- ===== admin: wiping the banks takes the lists with it =====
+-- ===== every entry needs a bank, for everyone (migration 041) =====
+select pg_temp.chk('U_income_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount) values (%L,'income','دفعة',71)$q$, (select pid from ids))), 'P0001');
+select pg_temp.chk('U_income_with_bank_ok',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount,bank_id) values (%L,'income','دفعة',72,%L)$q$, (select pid from ids), (select bank_a from ids))), 'ok');
+select pg_temp.chk('U_expense_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount) values (%L,'expense','مواد','nb',73)$q$, (select pid from ids))), 'P0001');
 select set_config('request.jwt.claims', json_build_object('sub',(select admin from ids),'role','authenticated')::text, true);
+select pg_temp.chk('admin_expense_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,item,amount) values (%L,'expense','مواد','nb2',75)$q$, (select pid from ids))), 'P0001');
+select pg_temp.chk('admin_income_without_bank_refused',
+  pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount) values (%L,'income','دفعة',74)$q$, (select pid from ids))), 'P0001');
+
+-- ===== admin: wiping the banks takes the lists with it =====
 select public.reset_data(array['entries', 'contractor_dues', 'banks']);
 select pg_temp.chk('reset_banks_clears_lists', (select count(*) from public.user_bank_access), 0::bigint);
 

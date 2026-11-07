@@ -53,7 +53,7 @@ export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpen
               </label>
             ))}
           </fieldset>
-          <p className="muted small">
+          <p className="muted small panel-note">
             {rows.length} قيد{isEntryFiltering(filter) ? ` من ${all.length}` : ''} · إجمالي المعتمد:{' '}
             <b>{money(total)}</b>
           </p>

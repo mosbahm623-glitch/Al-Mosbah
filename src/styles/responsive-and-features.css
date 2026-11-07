@@ -319,3 +319,12 @@
 .panel-head select {
   max-width: 260px;
 }
+
+.check-row {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+}

@@ -92,7 +92,7 @@ export default function EntryApprovalCard({
             )}
             <div>
               <dt>سجّله</dt>
-              <dd>{e.creator?.full_name ?? '—'}</dd>
+              <dd>{e.creator?.full_name ?? e.entered_by_name ?? '—'}</dd>
             </div>
           </dl>
           {e.edit_reason && <EntryHistory entryId={e.id} />}

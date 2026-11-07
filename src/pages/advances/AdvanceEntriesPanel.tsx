@@ -66,11 +66,13 @@ export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpen
                       {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
                     </span>
                     {e.notes && <span className="sub">{e.notes}</span>}
-                    {e.creator?.full_name && <span className="sub">سجّله {e.creator.full_name}</span>}
+                    {(e.creator?.full_name ?? e.entered_by_name) && (
+                      <span className="sub">سجّله {e.creator?.full_name ?? e.entered_by_name}</span>
+                    )}
                   </td>
                   <td className="muted sm-hide">{e.contractor?.name}</td>
                   <td className="muted sm-hide">{e.notes}</td>
-                  <td className="muted sm-hide">{e.creator?.full_name}</td>
+                  <td className="muted sm-hide">{e.creator?.full_name ?? e.entered_by_name}</td>
                   <td className="num strong tone-text-err">−{money(e.amount)}</td>
                   <td className="sm-only">{e.status !== 'deleted' && <StatusChip status={e.status} />}</td>
                   {canEdit && (

@@ -161,11 +161,13 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                         {[e.category, e.contractor?.name, e.bank?.name].filter(Boolean).join(' · ')}
                       </span>
                       {e.notes && <span className="sub">{e.notes}</span>}
-                      {e.creator?.full_name && <span className="sub">سجّله {e.creator.full_name}</span>}
+                      {(e.creator?.full_name ?? e.entered_by_name) && (
+                        <span className="sub">سجّله {e.creator?.full_name ?? e.entered_by_name}</span>
+                      )}
                     </td>
                     <td className="muted sm-hide">{e.contractor?.name}</td>
                     <td className="muted sm-hide">{e.bank?.name}</td>
-                    <td className="muted sm-hide">{e.creator?.full_name}</td>
+                    <td className="muted sm-hide">{e.creator?.full_name ?? e.entered_by_name}</td>
                     <td className="muted sm-hide">{e.notes}</td>
                     <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {e.kind === 'income' ? '+' : '−'}

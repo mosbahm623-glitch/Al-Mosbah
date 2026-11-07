@@ -37,6 +37,8 @@ type Props = {
   onEditReturn: (row: AdvanceReturn) => void
 }
 
+const PAGE = 40
+
 const KINDS: { value: MoveFilter; label: string }[] = [
   { value: 'all', label: 'الكل' },
   { value: 'in', label: 'وارد (دفعات)' },
@@ -55,6 +57,7 @@ const COLS = [
 /** Everything that moved on one custody (payments in, expenses, returns) in one table, with filters. */
 export default function AdvanceMovementsPanel(p: Props) {
   const [kind, setKind] = useState<MoveFilter>('all')
+  const [limit, setLimit] = useState(PAGE)
   const [filter, setFilter] = useState(NO_ENTRY_FILTER)
   const [cols, setCols] = useState({ project: true, category: true, contractor: true, enteredBy: true, notes: true })
   const entries = useMemo(() => p.entries ?? [], [p.entries])
@@ -72,6 +75,7 @@ export default function AdvanceMovementsPanel(p: Props) {
 
   const pickKind = (k: MoveFilter) => {
     setKind(k)
+    setLimit(PAGE)
     // fields that do not fit the new kind must not keep filtering invisibly
     if (k === 'in' || k === 'back') setFilter((f) => ({ ...f, project: '', category: '', contractor: '', who: '' }))
   }
@@ -107,7 +111,15 @@ export default function AdvanceMovementsPanel(p: Props) {
           <div className="panel-note">
             <Segmented label="نوع الحركة" value={kind} options={KINDS} onChange={pickKind} />
           </div>
-          <AdvanceEntryFilters rows={entries} filter={filter} onChange={setFilter} entryFields={entryFields} />
+          <AdvanceEntryFilters
+            rows={entries}
+            filter={filter}
+            onChange={(f) => {
+              setFilter(f)
+              setLimit(PAGE)
+            }}
+            entryFields={entryFields}
+          />
           {entryFields && (
             <fieldset className="check-row sm-hide">
               <legend className="sr-only">أعمدة الجدول</legend>
@@ -167,11 +179,18 @@ export default function AdvanceMovementsPanel(p: Props) {
               </tr>
             </thead>
             <tbody>
-              {shown.map((m) => (
+              {shown.slice(0, limit).map((m) => (
                 <MoveRow key={m.key} m={m} cols={showCols} p={p} />
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {shown.length > limit && (
+        <div className="more-row">
+          <button type="button" className="btn btn-ghost" onClick={() => setLimit((n) => n + PAGE)}>
+            عرض المزيد ({shown.length - limit})
+          </button>
         </div>
       )}
     </section>

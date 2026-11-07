@@ -3,6 +3,7 @@ import EntryHistory from '../../components/EntryHistory'
 import InvoiceLink from '../../components/InvoiceLink'
 import type { PendingEntry } from '../../lib/approvals'
 import { dateText, money } from '../../lib/format'
+import { enteredByOf } from '../../lib/enteredBy'
 
 type Props = {
   entry: PendingEntry
@@ -92,7 +93,7 @@ export default function EntryApprovalCard({
             )}
             <div>
               <dt>سجّله</dt>
-              <dd>{e.creator?.full_name ?? e.entered_by_name ?? '—'}</dd>
+              <dd>{enteredByOf(e) ?? '—'}</dd>
             </div>
           </dl>
           {e.edit_reason && <EntryHistory entryId={e.id} />}

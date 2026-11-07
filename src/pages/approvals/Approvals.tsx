@@ -23,6 +23,7 @@ import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
 import EntryDialog from '../../components/EntryDialog'
+import { enteredByOf } from '../../lib/enteredBy'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -70,7 +71,7 @@ export default function Approvals() {
   const filtering = isFiltering(filter)
   // only what is on screen can be chosen: an entry hidden by a filter is never approved by mistake
   const chosen = rows.filter((r) => picked.has(r.id))
-  const names = [...new Set(all.map((r) => r.creator?.full_name).filter((n): n is string => Boolean(n)))]
+  const names = [...new Set(all.map(enteredByOf).filter((n): n is string => Boolean(n)))]
   const banks = [...new Set(all.map((r) => r.bank?.name).filter((n): n is string => Boolean(n)))]
   const toggle = (id: string) =>
     setPicked((s) => {

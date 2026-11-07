@@ -10,6 +10,7 @@ import PrintTables from '../../components/PrintTables'
 import type { Section } from '../../lib/tableTypes'
 import type { ReportColumns } from '../../lib/reportColumns'
 import { usePreparedBy } from '../../auth/usePreparedBy'
+import { enteredByOf } from '../../lib/enteredBy'
 
 type Group = { name: string; rows: Entry[]; total: number }
 
@@ -80,7 +81,6 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
     ...(withNotes ? [e.notes] : []),
     e.amount,
   ]
-  const enteredByOf = (e: Entry) => e.creator?.full_name ?? e.entered_by_name ?? null
   const footerOf = (label: string, total: number, n: number) => [label, ...Array(n - 2).fill(null), total]
   if (incomes.length > 0) {
     const c = [

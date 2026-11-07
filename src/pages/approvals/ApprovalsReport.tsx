@@ -1,3 +1,4 @@
+import { enteredByOf } from '../../lib/enteredBy'
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell } from '../../lib/tableTypes'
@@ -70,7 +71,7 @@ export default function ApprovalsReport({ day }: { day: string }) {
             e.kind === 'income' ? 'وارد' : 'مصروف',
             e.category,
             e.item,
-            e.creator?.full_name ?? null,
+            enteredByOf(e),
             e.status === 'approved' ? 'موافقة' : 'رفض',
             e.decider?.full_name ?? null,
             e.amount,

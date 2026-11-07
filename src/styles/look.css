@@ -66,8 +66,7 @@
   .num,
   .tile-value,
   .appr-amount,
-  td.num,
-  .stat-value {
+  td.num {
     font-variant-numeric: tabular-nums lining-nums;
   }
 

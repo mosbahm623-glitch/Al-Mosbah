@@ -1,6 +1,7 @@
 import type { Entry, ProjectSummary } from '../projects'
 import { TYPE_LABEL, todayISO, todayText } from '../format'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
+import { enteredByOf } from '../enteredBy'
 
 type Options = {
   project: ProjectSummary
@@ -87,7 +88,7 @@ export async function exportProjectExcel({
       e.item ?? '',
       ...(withContractor ? [e.contractor?.name ?? ''] : []),
       ...(withBank ? [e.bank?.name ?? ''] : []),
-      ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? ''] : []),
+      ...(withEnteredBy ? [enteredByOf(e) ?? ''] : []),
       ...(withNotes ? [e.notes ?? ''] : []),
       e.amount,
     ])
@@ -149,7 +150,7 @@ export async function exportProjectExcel({
         e.item ?? '',
         ...(withContractor ? [e.contractor?.name ?? ''] : []),
         ...(withBank ? [e.bank?.name ?? ''] : []),
-        ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? ''] : []),
+        ...(withEnteredBy ? [enteredByOf(e) ?? ''] : []),
         ...(withNotes ? [e.notes ?? ''] : []),
         e.amount,
       ])

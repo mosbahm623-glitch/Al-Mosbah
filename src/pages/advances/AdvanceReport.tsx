@@ -8,6 +8,7 @@ import DataGrid from '../../components/DataGrid'
 import PrintTables from '../../components/PrintTables'
 import type { Section } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
+import { enteredByOf } from '../../lib/enteredBy'
 
 type Parts = { given: boolean; spent: boolean; returned: boolean }
 
@@ -74,7 +75,7 @@ export default function AdvanceReport({
         e.category,
         e.item,
         ...(withContractor ? [e.contractor?.name ?? null] : []),
-        ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? null] : []),
+        ...(withEnteredBy ? [enteredByOf(e)] : []),
         ...(withNotes ? [e.notes] : []),
         e.amount,
       ]),

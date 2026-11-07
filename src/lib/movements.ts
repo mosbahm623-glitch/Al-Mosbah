@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { fetchPaged } from './paged'
 import { toCents } from './money'
+import { enteredByOf } from './enteredBy'
 
 export type MovementKind = 'income' | 'expense' | 'installment' | 'return' | 'due' | 'payment'
 
@@ -93,7 +94,7 @@ const fromEntry = (e: EntryRow): Movement => ({
   party: e.contractor?.name ?? null,
   detail: e.bank?.name ?? null,
   notes: e.notes,
-  enteredBy: e.creator?.full_name ?? e.entered_by_name ?? null,
+  enteredBy: enteredByOf(e),
   seq: e.seq,
   fromAdvance: e.advance_id !== null,
   status: e.status,

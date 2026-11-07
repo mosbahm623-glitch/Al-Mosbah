@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { enteredByOf } from './enteredBy'
 
 export type PendingEntry = {
   id: string
@@ -101,7 +102,7 @@ export function filterEntries(rows: PendingEntry[], f: ApprovalFilter): PendingE
       const hay = plain([e.item, e.category, e.notes].filter(Boolean).join(' '))
       if (!words.every((w) => hay.includes(w))) return false
     }
-    if (f.who && (e.creator?.full_name ?? '') !== f.who) return false
+    if (f.who && (enteredByOf(e) ?? '') !== f.who) return false
     if (f.bank && (e.bank?.name ?? '') !== f.bank) return false
     if (f.day && e.entry_date !== f.day) return false
     if (min !== null && e.amount < min) return false

@@ -25,7 +25,7 @@ export default function AdvanceEntryFilters({ rows, filter, onChange, entryField
     { key: 'who', label: 'المدخل', options: choicesOf(rows, enteredByOf) },
   ]
   return (
-    <section className="card appr-filters" aria-label="فلتر مصروفات العهدة">
+    <>
       <label className="field">
         كلمة في البيان أو الملاحظات
         <input value={filter.text} onChange={(e) => setF({ text: e.target.value })} />
@@ -57,6 +57,6 @@ export default function AdvanceEntryFilters({ rows, filter, onChange, entryField
           مسح الفلتر
         </button>
       )}
-    </section>
+    </>
   )
 }

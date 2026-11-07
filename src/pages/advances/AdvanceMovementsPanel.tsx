@@ -159,56 +159,53 @@ export default function AdvanceMovementsPanel(p: Props) {
       </div>
 
       {moves.length > 0 && (
-        <>
-          <div className="panel-note">
+        <div className="reports-layout adv-layout">
+          <aside className="ctl" aria-label="فلتر حركة العهدة">
             <Segmented label="نوع الحركة" value={kind} options={KINDS} onChange={pickKind} />
+            <AdvanceEntryFilters rows={entries} filter={filter} onChange={setFilter} entryFields={entryFields} />
+            {entryFields && (
+              <fieldset className="cols">
+                <legend>أعمدة الجدول</legend>
+                {COLS.map(([k, label]) => (
+                  <label className="check" key={k}>
+                    <input type="checkbox" checked={cols[k]} onChange={() => setCols((c) => ({ ...c, [k]: !c[k] }))} />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            )}
+          </aside>
+          <div className="reports-preview">
+            <p className="muted small panel-note">
+              {shown.length} حركة{filtering ? ` من ${moves.length}` : ''}
+              {t.in > 0 && (
+                <>
+                  {' '}
+                  · وارد: <b>{money(t.in)}</b>
+                </>
+              )}
+              {t.out > 0 && (
+                <>
+                  {' '}
+                  · مصروف: <b>{money(t.out)}</b>
+                </>
+              )}
+              {t.back > 0 && (
+                <>
+                  {' '}
+                  · مرتجع: <b>{money(t.back)}</b>
+                </>
+              )}
+            </p>
+            {shown.length === 0 ? (
+              <p className="empty muted">مفيش حركات بالفلتر ده.</p>
+            ) : (
+              <DataGrid section={section} actions={actions} />
+            )}
           </div>
-          <AdvanceEntryFilters
-            rows={entries}
-            filter={filter}
-            onChange={(f) => {
-              setFilter(f)
-            }}
-            entryFields={entryFields}
-          />
-          {entryFields && (
-            <fieldset className="check-row sm-hide">
-              <legend className="sr-only">أعمدة الجدول</legend>
-              {COLS.map(([k, label]) => (
-                <label className="check" key={k}>
-                  <input type="checkbox" checked={cols[k]} onChange={() => setCols((c) => ({ ...c, [k]: !c[k] }))} />
-                  {label}
-                </label>
-              ))}
-            </fieldset>
-          )}
-          <p className="muted small panel-note">
-            {shown.length} حركة{filtering ? ` من ${moves.length}` : ''}
-            {t.in > 0 && (
-              <>
-                {' '}
-                · وارد: <b>{money(t.in)}</b>
-              </>
-            )}
-            {t.out > 0 && (
-              <>
-                {' '}
-                · مصروف: <b>{money(t.out)}</b>
-              </>
-            )}
-            {t.back > 0 && (
-              <>
-                {' '}
-                · مرتجع: <b>{money(t.back)}</b>
-              </>
-            )}
-          </p>
-        </>
+        </div>
       )}
-
       {moves.length === 0 && <p className="empty muted">مفيش حركات على العهدة لسه.</p>}
-      {moves.length > 0 && shown.length === 0 && <p className="empty muted">مفيش حركات بالفلتر ده.</p>}
-      {shown.length > 0 && <DataGrid section={section} actions={actions} />}
     </section>
   )
 }

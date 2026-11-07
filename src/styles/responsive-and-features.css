@@ -333,3 +333,14 @@
   margin: 0 0 0.5rem;
   padding-inline: 1rem;
 }
+
+/* custody movements: the filters sit beside the table, like the reports page */
+.adv-layout {
+  padding: 1rem;
+}
+.adv-layout .panel-note {
+  padding-inline: 0;
+}
+.adv-layout .check {
+  display: flex;
+}

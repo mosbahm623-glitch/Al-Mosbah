@@ -7,10 +7,16 @@ import {
 } from '../../lib/advanceEntryFilter'
 import type { Entry } from '../../lib/projects'
 
-type Props = { rows: Entry[]; filter: AdvanceEntryFilter; onChange: (next: AdvanceEntryFilter) => void }
+type Props = {
+  rows: Entry[]
+  filter: AdvanceEntryFilter
+  onChange: (next: AdvanceEntryFilter) => void
+  /** project, category, contractor and entrant only fit expenses: hidden while viewing payments or returns */
+  entryFields: boolean
+}
 
 /** Search fields for one custody's expenses; the choices come from what that custody actually has. */
-export default function AdvanceEntryFilters({ rows, filter, onChange }: Props) {
+export default function AdvanceEntryFilters({ rows, filter, onChange, entryFields }: Props) {
   const setF = (patch: Partial<AdvanceEntryFilter>) => onChange({ ...filter, ...patch })
   const lists: { key: 'project' | 'category' | 'contractor' | 'who'; label: string; options: string[] }[] = [
     { key: 'project', label: 'المشروع', options: choicesOf(rows, (e) => e.project?.name) },
@@ -24,19 +30,20 @@ export default function AdvanceEntryFilters({ rows, filter, onChange }: Props) {
         كلمة في البيان أو الملاحظات
         <input value={filter.text} onChange={(e) => setF({ text: e.target.value })} />
       </label>
-      {lists.map(({ key, label, options }) => (
-        <label className="field" key={key}>
-          {label}
-          <select value={filter[key]} onChange={(e) => setF({ [key]: e.target.value })}>
-            <option value="">الكل</option>
-            {options.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-      ))}
+      {entryFields &&
+        lists.map(({ key, label, options }) => (
+          <label className="field" key={key}>
+            {label}
+            <select value={filter[key]} onChange={(e) => setF({ [key]: e.target.value })}>
+              <option value="">الكل</option>
+              {options.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+        ))}
       <label className="field">
         من تاريخ
         <input type="date" value={filter.from} onChange={(e) => setF({ from: e.target.value })} />

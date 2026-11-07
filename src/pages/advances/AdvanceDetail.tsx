@@ -9,9 +9,7 @@ import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
 import EntryDialog from '../../components/EntryDialog'
-import AdvanceEntriesPanel from './AdvanceEntriesPanel'
-import InstallmentsPanel from './InstallmentsPanel'
-import ReturnsPanel from './ReturnsPanel'
+import AdvanceMovementsPanel from './AdvanceMovementsPanel'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
 import MoneyDialog from './MoneyDialog'
@@ -86,27 +84,20 @@ export default function AdvanceDetail({ id }: { id: string }) {
         ]}
       />
 
-      <InstallmentsPanel
+      <AdvanceMovementsPanel
         installments={installments}
-        isStaff={isStaff}
-        isAdmin={isAdmin}
-        onAdd={() => setMoney({ kind: 'installment' })}
-        onEdit={(row) => setMoney({ kind: 'installment', row })}
-      />
-
-      <AdvanceEntriesPanel
         entries={entries}
-        canEdit={canEdit}
-        canTouch={canTouch}
-        onSpend={() => setSpending(true)}
-        onEdit={setEditingEntry}
-      />
-
-      <ReturnsPanel
         returns={returns}
         isStaff={isStaff}
-        onAdd={() => setMoney({ kind: 'return' })}
-        onEdit={(row) => setMoney({ kind: 'return', row })}
+        isAdmin={isAdmin}
+        canEdit={canEdit}
+        canTouch={canTouch}
+        onAddInstallment={() => setMoney({ kind: 'installment' })}
+        onEditInstallment={(row) => setMoney({ kind: 'installment', row })}
+        onSpend={() => setSpending(true)}
+        onEditEntry={setEditingEntry}
+        onAddReturn={() => setMoney({ kind: 'return' })}
+        onEditReturn={(row) => setMoney({ kind: 'return', row })}
       />
 
       {money_ && (

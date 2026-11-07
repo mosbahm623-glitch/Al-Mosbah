@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { NO_ENTRY_FILTER, choicesOf, enteredByOf, filterAdvanceEntries, isEntryFiltering } from '../advanceEntryFilter'
+import {
+  NO_ENTRY_FILTER,
+  buildMoves,
+  choicesOf,
+  enteredByOf,
+  filterAdvanceEntries,
+  filterMoves,
+  isEntryFiltering,
+  totalsOfMoves,
+} from '../advanceEntryFilter'
+import type { AdvanceReturn, Installment } from '../advances'
 import type { Entry } from '../projects'
 
 const e = (over: Partial<Entry>): Entry =>
@@ -59,5 +69,34 @@ describe('filterAdvanceEntries', () => {
   })
   it('lists each choice once', () => {
     expect(choicesOf(rows, (x) => x.category)).toEqual(['بلاط', 'نقاشة'])
+  })
+})
+
+describe('movements of a custody', () => {
+  const ins: Installment[] = [
+    { id: 'p1', amount: 1000, paid_on: '2026-10-15', status: 'approved', reject_reason: null },
+    { id: 'p2', amount: 500, paid_on: '2026-10-25', status: 'pending', reject_reason: null },
+  ]
+  const back: AdvanceReturn[] = [{ id: 'r1', amount: 50, returned_on: '2026-11-05', notes: 'باقي' }]
+  const moves = buildMoves(ins, rows, back)
+
+  it('puts everything in one list, newest first', () => {
+    expect(moves).toHaveLength(6)
+    expect(moves[0].key).toBe('r-r1')
+    expect(moves.at(-1)?.key).toBe('e-a')
+  })
+  it('narrows by kind and by dates for every kind', () => {
+    expect(filterMoves(moves, 'in', NO_ENTRY_FILTER)).toHaveLength(2)
+    expect(filterMoves(moves, 'back', NO_ENTRY_FILTER)).toHaveLength(1)
+    const range = { ...NO_ENTRY_FILTER, from: '2026-10-20', to: '2026-10-31' }
+    expect(filterMoves(moves, 'all', range).map((m) => m.key)).toEqual(['i-p2', 'e-b'])
+  })
+  it('hides payments and returns while a project, category, contractor or entrant is chosen', () => {
+    const got = filterMoves(moves, 'all', { ...NO_ENTRY_FILTER, project: 'فيلا 5' })
+    expect(got.every((m) => m.type === 'out')).toBe(true)
+    expect(got).toHaveLength(2)
+  })
+  it('counts only approved payments and expenses, but every return', () => {
+    expect(totalsOfMoves(moves)).toEqual({ in: 1000, out: 300, back: 50 })
   })
 })

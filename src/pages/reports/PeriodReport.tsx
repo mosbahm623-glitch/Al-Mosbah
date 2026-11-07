@@ -17,6 +17,7 @@ export default function PeriodReport({
   withContractor,
   withBank: bankWanted,
   withNotes,
+  withEnteredBy,
 }: Props) {
   const fetchRows = useCallback(async () => {
     const rows = await fetchMovements({
@@ -50,6 +51,7 @@ export default function PeriodReport({
     { h: 'المشروع' },
     ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
     ...(withBank ? [{ h: 'البنك' }] : []),
+    ...(withEnteredBy ? [{ h: 'المدخل' }] : []),
     ...(withNotes ? [{ h: 'ملاحظات' }] : []),
     { h: 'المبلغ', kind: 'money' as const },
   ]
@@ -62,6 +64,7 @@ export default function PeriodReport({
     m.project,
     ...(withContractor ? [m.party] : []),
     ...(withBank ? [m.detail] : []),
+    ...(withEnteredBy ? [m.enteredBy] : []),
     ...(withNotes ? [m.notes] : []),
     m.amount,
   ])

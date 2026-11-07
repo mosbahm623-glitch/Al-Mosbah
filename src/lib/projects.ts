@@ -45,6 +45,8 @@ export type Entry = {
   /** set when the entry was paid from a custody */
   advance_id: string | null
   creator?: { full_name: string | null } | null
+  /** المدخل as typed in for entries copied from the old system (no profile) */
+  entered_by_name?: string | null
   /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
   status: 'pending' | 'approved' | 'rejected' | 'deleted'
   /** how many invoice photos are attached (embedded count) */
@@ -76,7 +78,7 @@ export const saveProject = (row: ProjectInput, id?: string) =>
   id ? supabase.from('projects').update(row).eq('id', id) : supabase.from('projects').insert(row)
 
 export const ENTRY_COLUMNS =
-  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,edit_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name)'
+  'id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,reject_reason,edit_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),entered_by_name,creator:profiles!entries_created_by_profile_fkey(full_name)'
 
 /** All of a project's entries, newest first. Read page by page, because the API stops at 1000 rows per request. */
 export async function fetchEntries(projectId: string): Promise<{ data: Entry[] | null; error: boolean }> {

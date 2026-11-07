@@ -22,9 +22,11 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   const [ownContractor, setWithContractor] = useState(true)
   const [ownBank, setBankWanted] = useState(true)
   const [ownNotes, setWithNotes] = useState(true)
+  const [ownEnteredBy, setWithEnteredBy] = useState(true)
   const withContractor = embedded ? embedded.withContractor : ownContractor
   const bankWanted = embedded ? embedded.withBank : ownBank
   const withNotes = embedded ? embedded.withNotes : ownNotes
+  const withEnteredBy = embedded ? embedded.withEnteredBy : ownEnteredBy
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
   const [today] = useState(() => todayText())
@@ -64,6 +66,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
     { h: first },
     ...(withContractor ? [{ h: 'المقاول' }] : []),
     ...(withBank ? [{ h: 'البنك' }] : []),
+    ...(withEnteredBy ? [{ h: 'المدخل' }] : []),
     ...(withNotes ? [{ h: 'ملاحظات' }] : []),
     { h: 'المبلغ', kind: 'money' as const },
   ]
@@ -73,16 +76,34 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
     first,
     ...(withContractor ? [e.contractor?.name ?? null] : []),
     ...(withBank ? [e.bank?.name ?? null] : []),
+    ...(withEnteredBy ? [enteredByOf(e)] : []),
     ...(withNotes ? [e.notes] : []),
     e.amount,
   ]
+  const enteredByOf = (e: Entry) => e.creator?.full_name ?? e.entered_by_name ?? null
   const footerOf = (label: string, total: number, n: number) => [label, ...Array(n - 2).fill(null), total]
   if (incomes.length > 0) {
-    const c = entryCols('البيان').filter((x) => x.h !== 'المقاول' && x.h !== 'البنك')
+    const c = [
+      { h: 'رقم', kind: 'int' as const },
+      { h: 'التاريخ', kind: 'date' as const },
+      { h: 'البند' },
+      { h: 'البيان' },
+      ...(withEnteredBy ? [{ h: 'المدخل' }] : []),
+      ...(withNotes ? [{ h: 'ملاحظات' }] : []),
+      { h: 'المبلغ', kind: 'money' as const },
+    ]
     incomeSections.push({
       heading: 'الوارد',
       cols: c,
-      rows: incomes.map((e) => [e.seq, e.entry_date, e.category, ...(withNotes ? [e.notes] : []), e.amount]),
+      rows: incomes.map((e) => [
+        e.seq,
+        e.entry_date,
+        e.category,
+        e.item,
+        ...(withEnteredBy ? [enteredByOf(e)] : []),
+        ...(withNotes ? [e.notes] : []),
+        e.amount,
+      ]),
       footer: footerOf('إجمالي الوارد', incomeTotal, c.length),
     })
   }
@@ -101,7 +122,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
     setBusy(true)
     setFailed(false)
     try {
-      await exportProjectExcel({ project, entries: data, withContractor, withBank, withNotes })
+      await exportProjectExcel({ project, entries: data, withContractor, withBank, withNotes, withEnteredBy })
     } catch {
       setFailed(true)
     }
@@ -127,6 +148,10 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
                 البنك
               </label>
             )}
+            <label className="check">
+              <input type="checkbox" checked={withEnteredBy} onChange={(e) => setWithEnteredBy(e.target.checked)} />
+              المدخل
+            </label>
             <label className="check">
               <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
               الملاحظات

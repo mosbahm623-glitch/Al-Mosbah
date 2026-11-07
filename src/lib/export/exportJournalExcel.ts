@@ -2,10 +2,24 @@ import { KIND_LABEL, totalsOfDay, type Movement } from '../movements'
 import { dateText } from '../format'
 import { MONEY, SOFT_FILL, border, downloadWorkbook, header, solid } from './excelCommon'
 
-type Options = { day: string; rows: Movement[]; withContractor: boolean; withBank: boolean; withNotes: boolean }
+type Options = {
+  day: string
+  rows: Movement[]
+  withContractor: boolean
+  withBank: boolean
+  withNotes: boolean
+  withEnteredBy?: boolean
+}
 
 /** One day's journal as a workbook: every movement, then the totals per kind. */
-export async function exportJournalExcel({ day, rows, withContractor, withBank: bankWanted, withNotes }: Options) {
+export async function exportJournalExcel({
+  day,
+  rows,
+  withContractor,
+  withBank: bankWanted,
+  withNotes,
+  withEnteredBy = false,
+}: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'المصباح'
@@ -21,6 +35,7 @@ export async function exportJournalExcel({ day, rows, withContractor, withBank: 
     { h: 'المشروع', w: 24, get: (m) => m.project ?? '' },
     ...(withContractor ? [{ h: 'المقاول / العهدة', w: 24, get: (m: Movement) => m.party ?? '' }] : []),
     ...(withBank ? [{ h: 'البنك', w: 18, get: (m: Movement) => m.detail ?? '' }] : []),
+    ...(withEnteredBy ? [{ h: 'المدخل', w: 18, get: (m: Movement) => m.enteredBy ?? '' }] : []),
     ...(withNotes ? [{ h: 'ملاحظات', w: 30, get: (m: Movement) => m.notes ?? '' }] : []),
     { h: 'المبلغ', w: 16, get: (m) => m.amount },
   ]

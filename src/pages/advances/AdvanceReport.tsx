@@ -17,11 +17,12 @@ export default function AdvanceReport({
   embedded,
 }: {
   id: string
-  embedded?: { withContractor: boolean; withNotes: boolean; parts?: Parts }
+  embedded?: { withContractor: boolean; withNotes: boolean; withEnteredBy?: boolean; parts?: Parts }
 }) {
   const preparedBy = usePreparedBy()
   const withContractor = embedded?.withContractor ?? true
   const withNotes = embedded?.withNotes ?? true
+  const withEnteredBy = embedded?.withEnteredBy ?? true
   // which parts of the statement to show (all by default)
   const parts = embedded?.parts ?? { given: true, spent: true, returned: true }
   const { advance, installments, returns, entries, loading, failed } = useAdvanceData(id)
@@ -62,6 +63,7 @@ export default function AdvanceReport({
         { h: 'البند' },
         { h: 'البيان' },
         ...(withContractor ? [{ h: 'المقاول' }] : []),
+        ...(withEnteredBy ? [{ h: 'المدخل' }] : []),
         ...(withNotes ? [{ h: 'ملاحظات' }] : []),
         { h: 'المبلغ', kind: 'money' as const },
       ],
@@ -72,12 +74,13 @@ export default function AdvanceReport({
         e.category,
         e.item,
         ...(withContractor ? [e.contractor?.name ?? null] : []),
+        ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? null] : []),
         ...(withNotes ? [e.notes] : []),
         e.amount,
       ]),
       footer: [
         'إجمالي المصروف',
-        ...Array(4 + (withContractor ? 1 : 0) + (withNotes ? 1 : 0)).fill(null),
+        ...Array(4 + (withContractor ? 1 : 0) + (withNotes ? 1 : 0) + (withEnteredBy ? 1 : 0)).fill(null),
         advance.spent,
       ],
       empty: 'مفيش مصروفات.',

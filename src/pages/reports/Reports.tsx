@@ -42,6 +42,7 @@ export default function Reports() {
   const [withContractor, setWithContractor] = useState(true)
   const [withBank, setWithBank] = useState(true)
   const [withNotes, setWithNotes] = useState(true)
+  const [withEnteredBy, setWithEnteredBy] = useState(true)
   // custody statement: which parts to show (the received payments, the spending, the returns)
   const [parts, setParts] = useState({ given: true, spent: true, returned: true })
   // nothing is drawn until "عرض التقرير" is pressed; changing any choice hides it again
@@ -79,7 +80,7 @@ export default function Reports() {
         type === 'category' ? kindFilter : '',
         type === 'budget' ? budgetMode : '',
         type === 'pending' ? [pendingStatus, creatorId] : '',
-        hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes] : '',
+        hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes, withEnteredBy] : '',
         type === 'advance' ? parts : '',
       ]),
     [
@@ -95,11 +96,12 @@ export default function Reports() {
       withContractor,
       withBank,
       withNotes,
+      withEnteredBy,
       parts,
     ],
   )
   const visible = shown?.key === key && Boolean(target) && rangeOk && partsOk
-  const cols = { withContractor, withBank, withNotes }
+  const cols = { withContractor, withBank, withNotes, withEnteredBy }
   const n = shown?.n ?? 0
 
   const select = (
@@ -323,6 +325,10 @@ export default function Reports() {
                   البنك
                 </label>
               )}
+              <label className="check">
+                <input type="checkbox" checked={withEnteredBy} onChange={(e) => setWithEnteredBy(e.target.checked)} />
+                المدخل
+              </label>
               <label className="check">
                 <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
                 الملاحظات

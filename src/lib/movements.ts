@@ -29,6 +29,8 @@ export type Movement = {
   party: string | null
   detail: string | null
   notes: string | null
+  /** المدخل: who recorded the entry (entries only) */
+  enteredBy: string | null
   seq: number | null
   /** expense paid out of a custody: shown, but not counted again (the installments are) */
   fromAdvance: boolean
@@ -50,6 +52,8 @@ type EntryRow = {
   project: { name: string } | null
   contractor: { name: string } | null
   bank: { name: string } | null
+  entered_by_name: string | null
+  creator: { full_name: string } | null
 }
 type InstallmentRow = {
   id: string
@@ -89,6 +93,7 @@ const fromEntry = (e: EntryRow): Movement => ({
   party: e.contractor?.name ?? null,
   detail: e.bank?.name ?? null,
   notes: e.notes,
+  enteredBy: e.creator?.full_name ?? e.entered_by_name ?? null,
   seq: e.seq,
   fromAdvance: e.advance_id !== null,
   status: e.status,
@@ -106,6 +111,7 @@ const fromInstallment = (r: InstallmentRow): Movement => ({
   party: r.advance?.holder_name ?? null,
   detail: null,
   notes: null,
+  enteredBy: null,
   seq: null,
   fromAdvance: false,
   status: 'approved',
@@ -123,6 +129,7 @@ const fromReturn = (r: ReturnRow): Movement => ({
   party: r.advance?.holder_name ?? null,
   detail: null,
   notes: r.notes,
+  enteredBy: null,
   seq: null,
   fromAdvance: false,
   status: 'approved',
@@ -140,13 +147,14 @@ const fromTxn = (t: TxnRow): Movement => ({
   party: t.contractor?.name ?? null,
   detail: null,
   notes: t.notes,
+  enteredBy: null,
   seq: null,
   fromAdvance: false,
   status: 'approved',
 })
 
 const ENTRY_SELECT =
-  'id,seq,kind,category,item,amount,entry_date,created_at,notes,advance_id,status,project:projects(name),contractor:contractors(name),bank:bank_accounts(name)'
+  'id,seq,kind,category,item,amount,entry_date,created_at,notes,advance_id,status,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),entered_by_name,creator:profiles!entries_created_by_profile_fkey(full_name)'
 const INSTALLMENT_SELECT = 'id,amount,paid_on,created_at,advance:advances(holder_name)'
 const RETURN_SELECT = 'id,amount,returned_on,created_at,notes,advance:advances(holder_name)'
 const TXN_SELECT = 'id,kind,amount,txn_date,created_at,notes,contractor:contractors(name),project:projects(name)'

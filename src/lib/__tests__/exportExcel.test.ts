@@ -126,6 +126,7 @@ const move = (over: Partial<Movement>): Movement => ({
   party: 'أحمد',
   detail: 'البنك الأهلي',
   notes: 'ملحوظة',
+  enteredBy: 'أحمد',
   seq: 1,
   fromAdvance: false,
   status: 'approved',

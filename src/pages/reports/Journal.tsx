@@ -26,6 +26,7 @@ export default function Journal({
   withContractor,
   withBank: bankWanted,
   withNotes,
+  withEnteredBy,
 }: { day: string } & ReportColumns) {
   const fetchDay = useCallback(async () => {
     const rows = await fetchMovements({ from: day, to: day })
@@ -43,8 +44,8 @@ export default function Journal({
   )
   const t = useMemo(() => totalsOfDay(rows), [rows])
   const withBank = bankWanted && rows.some((m) => m.detail)
-  const cols = { withContractor, withBank, withNotes }
-  const span = 5 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0)
+  const cols = { withContractor, withBank, withNotes, withEnteredBy }
+  const span = 5 + (withContractor ? 1 : 0) + (withBank ? 1 : 0) + (withNotes ? 1 : 0) + (withEnteredBy ? 1 : 0)
 
   async function excel() {
     setBusy(true)
@@ -66,6 +67,7 @@ export default function Journal({
       { h: 'المشروع' },
       ...(withContractor ? [{ h: 'المقاول / العهدة' }] : []),
       ...(withBank ? [{ h: 'البنك' }] : []),
+      ...(withEnteredBy ? [{ h: 'المدخل' }] : []),
       ...(withNotes ? [{ h: 'ملاحظات' }] : []),
       { h: 'المبلغ', kind: 'money' as const },
     ],
@@ -77,6 +79,7 @@ export default function Journal({
       m.project,
       ...(withContractor ? [m.party] : []),
       ...(withBank ? [m.detail] : []),
+      ...(withEnteredBy ? [m.enteredBy] : []),
       ...(withNotes ? [m.notes] : []),
       m.amount,
     ]),

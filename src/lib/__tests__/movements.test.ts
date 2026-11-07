@@ -13,6 +13,7 @@ const m = (over: Partial<Movement>): Movement => ({
   party: null,
   detail: null,
   notes: null,
+  enteredBy: null,
   seq: null,
   fromAdvance: false,
   status: 'approved',

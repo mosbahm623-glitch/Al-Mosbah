@@ -8,6 +8,7 @@ type Options = {
   withContractor: boolean
   withBank: boolean
   withNotes: boolean
+  withEnteredBy?: boolean
 }
 
 const sheetName = (name: string, used: Set<string>) => {
@@ -29,6 +30,7 @@ export async function exportProjectExcel({
   withContractor,
   withBank: bankWanted,
   withNotes,
+  withEnteredBy = false,
 }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
@@ -68,6 +70,7 @@ export async function exportProjectExcel({
     { h: 'البيان', w: 30 },
     ...(withContractor ? [{ h: 'المقاول', w: 22 }] : []),
     ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
+    ...(withEnteredBy ? [{ h: 'المدخل', w: 18 }] : []),
     ...(withNotes ? [{ h: 'ملاحظات', w: 30 }] : []),
     { h: 'المبلغ', w: 16 },
   ]
@@ -84,6 +87,7 @@ export async function exportProjectExcel({
       e.item ?? '',
       ...(withContractor ? [e.contractor?.name ?? ''] : []),
       ...(withBank ? [e.bank?.name ?? ''] : []),
+      ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? ''] : []),
       ...(withNotes ? [e.notes ?? ''] : []),
       e.amount,
     ])
@@ -131,6 +135,7 @@ export async function exportProjectExcel({
       { h: 'البيان', w: 32 },
       ...(withContractor ? [{ h: 'المقاول', w: 24 }] : []),
       ...(withBank ? [{ h: 'البنك', w: 18 }] : []),
+      ...(withEnteredBy ? [{ h: 'المدخل', w: 18 }] : []),
       ...(withNotes ? [{ h: 'ملاحظات', w: 32 }] : []),
       { h: 'المبلغ', w: 16 },
     ]
@@ -144,6 +149,7 @@ export async function exportProjectExcel({
         e.item ?? '',
         ...(withContractor ? [e.contractor?.name ?? ''] : []),
         ...(withBank ? [e.bank?.name ?? ''] : []),
+        ...(withEnteredBy ? [e.creator?.full_name ?? e.entered_by_name ?? ''] : []),
         ...(withNotes ? [e.notes ?? ''] : []),
         e.amount,
       ])

@@ -427,7 +427,3 @@
 .bank-picker-empty {
   padding: 0.5rem 0.6rem;
 }
-.grid td.grid-actions {
-  white-space: nowrap;
-  width: 1%;
-}

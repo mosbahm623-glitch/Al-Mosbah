@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search } from 'lucide-react'
 import { toCents } from '../lib/money'
 import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/tableFormat'
@@ -9,19 +9,12 @@ const MIN_ROWS_FOR_TOOLS = 6
 type Sort = { col: number; dir: 'asc' | 'desc' } | null
 
 /** On-screen data table: click a heading to sort, type to filter, totals stay in view. Print and Excel use their own layouts. */
-export default function DataGrid({
-  section,
-  actions,
-}: {
-  section: Section
-  /** an extra cell at the end of each row (edit buttons...); gets the row's index in `section.rows` */
-  actions?: (rowIndex: number) => ReactNode
-}) {
+export default function DataGrid({ section }: { section: Section }) {
   const { heading, cols, rows, footer, empty } = section
   const [sort, setSort] = useState<Sort>(null)
   const [q, setQ] = useState('')
 
-  const found = useMemo(() => {
+  const shown = useMemo(() => {
     const needle = q.trim().toLowerCase()
     let out = rows.map((r, i) => ({ r, i }))
     if (needle)
@@ -41,9 +34,8 @@ export default function DataGrid({
         return (c || a.i - b.i) * k
       })
     }
-    return out
+    return out.map((o) => o.r)
   }, [rows, cols, q, sort])
-  const shown = useMemo(() => found.map((o) => o.r), [found])
 
   function toggle(ci: number) {
     setSort((s) => (s?.col !== ci ? { col: ci, dir: 'asc' } : s.dir === 'asc' ? { col: ci, dir: 'desc' } : null))
@@ -113,23 +105,18 @@ export default function DataGrid({
                     </th>
                   )
                 })}
-                {actions && (
-                  <th>
-                    <span className="sr-only">إجراءات</span>
-                  </th>
-                )}
               </tr>
             </thead>
             <tbody>
               {shown.length === 0 && (
                 <tr>
-                  <td colSpan={cols.length + (actions ? 1 : 0)} className="grid-none">
+                  <td colSpan={cols.length} className="grid-none">
                     مفيش نتايج للبحث ده.
                   </td>
                 </tr>
               )}
-              {found.map(({ r, i }) => (
-                <tr key={i}>
+              {shown.map((r, ri) => (
+                <tr key={ri}>
                   {r.map((v, ci) => (
                     <td
                       key={ci}
@@ -142,7 +129,6 @@ export default function DataGrid({
                       )}
                     </td>
                   ))}
-                  {actions && <td className="grid-actions">{actions(i)}</td>}
                 </tr>
               ))}
             </tbody>

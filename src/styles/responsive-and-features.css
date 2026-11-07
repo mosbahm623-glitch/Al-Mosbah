@@ -319,28 +319,3 @@
 .panel-head select {
   max-width: 260px;
 }
-
-.check-row {
-  border: 0;
-  padding: 0;
-  margin: 0.75rem 0 0.25rem;
-  padding-inline: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 1.25rem;
-}
-.panel-note {
-  margin: 0 0 0.5rem;
-  padding-inline: 1rem;
-}
-
-/* custody movements: the filters sit beside the table, like the reports page */
-.adv-layout {
-  padding: 1rem;
-}
-.adv-layout .panel-note {
-  padding-inline: 0;
-}
-.adv-layout .check {
-  display: flex;
-}

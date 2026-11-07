@@ -21,7 +21,7 @@ export default function StatusChip({ status, kind = 'entry', long = false, class
 }
 
 /** Why the admin sent it back, shown next to the status. */
-function RejectReason({ reason, prefix = 'سبب الرفض' }: { reason: string | null | undefined; prefix?: string }) {
+export function RejectReason({ reason, prefix = 'سبب الرفض' }: { reason: string | null | undefined; prefix?: string }) {
   return reason ? (
     <span className="reject-reason">
       {prefix}: {reason}

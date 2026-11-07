@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Pencil, Plus, Undo2 } from 'lucide-react'
 import Segmented from '../../components/Segmented'
+import DataGrid from '../../components/DataGrid'
 import InvoiceLink from '../../components/InvoiceLink'
-import StatusChip, { EntryFlag, RejectReason } from '../../components/StatusChip'
 import {
   MOVE_LABEL,
   NO_ENTRY_FILTER,
@@ -15,7 +15,8 @@ import {
   type MoveFilter,
 } from '../../lib/advanceEntryFilter'
 import type { AdvanceReturn, Installment } from '../../lib/advances'
-import { dateShort, dateText, money } from '../../lib/format'
+import { money } from '../../lib/format'
+import type { Cell, Col, Section } from '../../lib/tableTypes'
 import type { Entry } from '../../lib/projects'
 import AdvanceEntryFilters from './AdvanceEntryFilters'
 
@@ -37,8 +38,6 @@ type Props = {
   onEditReturn: (row: AdvanceReturn) => void
 }
 
-const PAGE = 40
-
 const KINDS: { value: MoveFilter; label: string }[] = [
   { value: 'all', label: 'الكل' },
   { value: 'in', label: 'وارد (دفعات)' },
@@ -57,7 +56,6 @@ const COLS = [
 /** Everything that moved on one custody (payments in, expenses, returns) in one table, with filters. */
 export default function AdvanceMovementsPanel(p: Props) {
   const [kind, setKind] = useState<MoveFilter>('all')
-  const [limit, setLimit] = useState(PAGE)
   const [filter, setFilter] = useState(NO_ENTRY_FILTER)
   const [cols, setCols] = useState({ project: true, category: true, contractor: true, enteredBy: true, notes: true })
   const entries = useMemo(() => p.entries ?? [], [p.entries])
@@ -75,9 +73,63 @@ export default function AdvanceMovementsPanel(p: Props) {
 
   const pickKind = (k: MoveFilter) => {
     setKind(k)
-    setLimit(PAGE)
     // fields that do not fit the new kind must not keep filtering invisibly
     if (k === 'in' || k === 'back') setFilter((f) => ({ ...f, project: '', category: '', contractor: '', who: '' }))
+  }
+
+  const cells: Col[] = [
+    { h: 'التاريخ', kind: 'date' },
+    { h: 'النوع' },
+    { h: 'رقم', kind: 'int' },
+    { h: 'البيان' },
+    ...(showCols.category ? [{ h: 'البند' }] : []),
+    ...(showCols.project ? [{ h: 'المشروع' }] : []),
+    ...(showCols.contractor ? [{ h: 'المقاول' }] : []),
+    ...(showCols.enteredBy ? [{ h: 'المدخل' }] : []),
+    ...(showCols.notes ? [{ h: 'ملاحظات' }] : []),
+    { h: 'المبلغ', kind: 'money' },
+  ]
+  const rowOf = (m: Move): Cell[] => {
+    const optional = (e: Entry | null, notes: string | null): Cell[] => [
+      ...(showCols.category ? [e?.category ?? null] : []),
+      ...(showCols.project ? [e?.project?.name ?? null] : []),
+      ...(showCols.contractor ? [e?.contractor?.name ?? null] : []),
+      ...(showCols.enteredBy ? [e ? enteredByOf(e) : null] : []),
+      ...(showCols.notes ? [notes] : []),
+    ]
+    if (m.type === 'in') {
+      const state = m.row.status === 'pending' ? ' (مستنية الموافقة)' : m.row.status === 'rejected' ? ' (مرفوضة)' : ''
+      return [m.date, MOVE_LABEL.in + state, null, 'دفعة مستلمة', ...optional(null, m.row.reject_reason), m.amount]
+    }
+    if (m.type === 'back') return [m.date, MOVE_LABEL.back, null, 'رد عهدة', ...optional(null, m.row.notes), -m.amount]
+    const e = m.row
+    const state = e.status === 'pending' ? ' (مستنية الموافقة)' : e.status === 'rejected' ? ' (مرفوض)' : ''
+    return [m.date, MOVE_LABEL.out + state, e.seq, e.item, ...optional(e, e.notes), -e.amount]
+  }
+  const section: Section = { cols: cells, rows: shown.map(rowOf) }
+  const actions = (i: number) => {
+    const m = shown[i]
+    if (m.type === 'out')
+      return (
+        <>
+          <InvoiceLink entry={m.row} />
+          {p.canEdit && p.canTouch(m.row.status) && (
+            <button className="icon-btn" aria-label={`تعديل القيد ${m.row.seq}`} onClick={() => p.onEditEntry(m.row)}>
+              <Pencil size={16} aria-hidden="true" />
+            </button>
+          )}
+        </>
+      )
+    if (!p.isStaff) return null
+    const edit =
+      m.type === 'in'
+        ? (p.isAdmin || m.row.status !== 'approved') && (() => p.onEditInstallment(m.row))
+        : () => p.onEditReturn(m.row)
+    return edit ? (
+      <button className="icon-btn" aria-label={m.type === 'in' ? 'تعديل الدفعة' : 'تعديل المرتجع'} onClick={edit}>
+        <Pencil size={16} aria-hidden="true" />
+      </button>
+    ) : null
   }
 
   return (
@@ -116,7 +168,6 @@ export default function AdvanceMovementsPanel(p: Props) {
             filter={filter}
             onChange={(f) => {
               setFilter(f)
-              setLimit(PAGE)
             }}
             entryFields={entryFields}
           />
@@ -157,144 +208,7 @@ export default function AdvanceMovementsPanel(p: Props) {
 
       {moves.length === 0 && <p className="empty muted">مفيش حركات على العهدة لسه.</p>}
       {moves.length > 0 && shown.length === 0 && <p className="empty muted">مفيش حركات بالفلتر ده.</p>}
-      {shown.length > 0 && (
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>النوع</th>
-                <th>البيان</th>
-                {showCols.category && <th className="sm-hide">البند</th>}
-                {showCols.project && <th className="sm-hide">المشروع</th>}
-                {showCols.contractor && <th className="sm-hide">المقاول</th>}
-                {showCols.enteredBy && <th className="sm-hide">المدخل</th>}
-                {showCols.notes && <th className="sm-hide">ملاحظات</th>}
-                <th>المبلغ</th>
-                {(p.isStaff || p.canEdit) && (
-                  <th>
-                    <span className="sr-only">إجراءات</span>
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {shown.slice(0, limit).map((m) => (
-                <MoveRow key={m.key} m={m} cols={showCols} p={p} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {shown.length > limit && (
-        <div className="more-row">
-          <button type="button" className="btn btn-ghost" onClick={() => setLimit((n) => n + PAGE)}>
-            عرض المزيد ({shown.length - limit})
-          </button>
-        </div>
-      )}
+      {shown.length > 0 && <DataGrid section={section} actions={actions} />}
     </section>
-  )
-}
-
-type ColsShown = { project: boolean; category: boolean; contractor: boolean; enteredBy: boolean; notes: boolean }
-
-function MoveRow({ m, cols, p }: { m: Move; cols: ColsShown; p: Props }) {
-  const date = (
-    <td className="num muted">
-      <span className="sm-hide">{dateText(m.date)}</span>
-      <span className="sm-only">{dateShort(m.date)}</span>
-    </td>
-  )
-  if (m.type === 'in') {
-    const i = m.row
-    return (
-      <tr>
-        {date}
-        <td>
-          {MOVE_LABEL.in} {i.status !== 'approved' && <StatusChip status={i.status} kind="payment" />}
-          {i.status === 'rejected' && <RejectReason reason={i.reject_reason} prefix="السبب" />}
-        </td>
-        <td className="strong">دفعة مستلمة</td>
-        <Blank cols={cols} />
-        <td className="num strong tone-text-ok">+{money(i.amount)}</td>
-        {(p.isStaff || p.canEdit) && (
-          <td>
-            {p.isStaff && (p.isAdmin || i.status !== 'approved') && (
-              <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => p.onEditInstallment(i)}>
-                <Pencil size={16} aria-hidden="true" />
-              </button>
-            )}
-          </td>
-        )}
-      </tr>
-    )
-  }
-  if (m.type === 'back') {
-    const r = m.row
-    return (
-      <tr>
-        {date}
-        <td>{MOVE_LABEL.back}</td>
-        <td className="strong">رد عهدة</td>
-        <Blank cols={cols} notes={r.notes} />
-        <td className="num strong">−{money(r.amount)}</td>
-        {(p.isStaff || p.canEdit) && (
-          <td>
-            {p.isStaff && (
-              <button className="icon-btn" aria-label="تعديل المرتجع" onClick={() => p.onEditReturn(r)}>
-                <Pencil size={16} aria-hidden="true" />
-              </button>
-            )}
-          </td>
-        )}
-      </tr>
-    )
-  }
-  const e = m.row
-  return (
-    <tr>
-      {date}
-      <td>
-        {MOVE_LABEL.out} <span className="muted num">#{e.seq}</span>
-        {e.status !== 'approved' && e.status !== 'deleted' && <StatusChip status={e.status} />}
-      </td>
-      <td className="strong">
-        {e.item}
-        <InvoiceLink entry={e} />
-        <EntryFlag status={e.status} reason={e.reject_reason} />
-        <span className="sub">{[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}</span>
-        {e.notes && <span className="sub">{e.notes}</span>}
-        {enteredByOf(e) && <span className="sub">سجّله {enteredByOf(e)}</span>}
-      </td>
-      {cols.category && <td className="sm-hide">{e.category}</td>}
-      {cols.project && <td className="sm-hide">{e.project?.name}</td>}
-      {cols.contractor && <td className="muted sm-hide">{e.contractor?.name}</td>}
-      {cols.enteredBy && <td className="muted sm-hide">{enteredByOf(e)}</td>}
-      {cols.notes && <td className="muted sm-hide">{e.notes}</td>}
-      <td className="num strong tone-text-err">−{money(e.amount)}</td>
-      {(p.isStaff || p.canEdit) && (
-        <td>
-          {p.canEdit && p.canTouch(e.status) && (
-            <button className="icon-btn" aria-label={`تعديل القيد ${e.seq}`} onClick={() => p.onEditEntry(e)}>
-              <Pencil size={16} aria-hidden="true" />
-            </button>
-          )}
-        </td>
-      )}
-    </tr>
-  )
-}
-
-/** the cells of the optional columns for a line that has no project, category, contractor or entrant */
-function Blank({ cols, notes = null }: { cols: ColsShown; notes?: string | null }) {
-  return (
-    <>
-      {cols.category && <td className="sm-hide" />}
-      {cols.project && <td className="sm-hide" />}
-      {cols.contractor && <td className="sm-hide" />}
-      {cols.enteredBy && <td className="sm-hide" />}
-      {cols.notes && <td className="muted sm-hide">{notes}</td>}
-    </>
   )
 }

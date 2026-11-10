@@ -126,6 +126,7 @@ export type Database = {
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
       reset_data: { Args: { p_groups?: string[] }; Returns: undefined }
+      send_low_balance_reminder: { Args: never; Returns: Json }
       send_message: { Args: { p_users: string[]; p_title: string; p_body?: string | null }; Returns: number }
       password_changed: { Args: Record<string, never>; Returns: undefined }
       project_deleted_entries: { Args: { p_project: string }; Returns: Json[] }

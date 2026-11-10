@@ -12,3 +12,11 @@ export async function sendMessage(userIds: string[], title: string, body: string
   })
   return error || typeof data !== 'number' ? null : data
 }
+
+/** Reminds every owner of the active projects whose balance is under the limit (admin only). Null when it failed. */
+export async function sendLowBalanceReminder(): Promise<{ projects: number; owners: number } | null> {
+  const { data, error } = await supabase.rpc('send_low_balance_reminder')
+  if (error || !data || typeof data !== 'object' || Array.isArray(data)) return null
+  const { projects, owners } = data
+  return typeof projects === 'number' && typeof owners === 'number' ? { projects, owners } : null
+}

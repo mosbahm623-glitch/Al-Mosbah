@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Bell, BellOff, BellRing, CheckCheck, FlaskConical, Send, Trash2 } from 'lucide-react'
+import { Bell, BellOff, BellRing, CheckCheck, FlaskConical, Send, TriangleAlert, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import MessageDialog from '../components/MessageDialog'
 import PageHead from '../components/PageHead'
+import { sendLowBalanceReminder } from '../lib/messages'
 import { clearAll, fetchNotices, markAllRead, markRead } from '../lib/notifications'
 import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
 import { notifyDataChanged } from '../lib/events'
@@ -50,6 +51,7 @@ export default function Notifications() {
   const [push, setPush] = useState<PushState>('off')
   const [busy, setBusy] = useState(false)
   const [composing, setComposing] = useState<'message' | 'test' | null>(null)
+  const [reminder, setReminder] = useState<string | null>(null)
   const rows = list.data ?? []
   const unread = rows.filter((n) => !n.read_at).length
 
@@ -62,6 +64,22 @@ export default function Notifications() {
     await job()
     setBusy(false)
     notifyDataChanged()
+  }
+
+  async function remindOwners() {
+    setBusy(true)
+    setReminder(null)
+    const r = await sendLowBalanceReminder()
+    setBusy(false)
+    setReminder(
+      !r
+        ? 'التذكير ما اتبعتش، جرّب تاني'
+        : r.projects === 0
+          ? 'مفيش مشروع نشط رصيده أقل من 50,000.'
+          : r.owners === 0
+            ? `فيه ${r.projects} مشروع رصيدهم أقل من 50,000 بس مفيش مالك مفعّل يستلم.`
+            : `اتبعت تذكير بـ ${r.projects} مشروع لـ ${r.owners} مالك.`,
+    )
   }
 
   async function togglePush() {
@@ -82,6 +100,10 @@ export default function Notifications() {
                 <button className="btn btn-icon" onClick={() => setComposing('message')}>
                   <Send size={18} aria-hidden="true" />
                   إرسال رسالة
+                </button>
+                <button className="btn btn-icon" disabled={busy} onClick={() => void remindOwners()}>
+                  <TriangleAlert size={18} aria-hidden="true" />
+                  تذكير المالك بالمشاريع الأقل من 50 ألف
                 </button>
                 <button className="btn btn-ghost btn-icon" onClick={() => setComposing('test')}>
                   <FlaskConical size={18} aria-hidden="true" />
@@ -108,6 +130,8 @@ export default function Notifications() {
           </>
         }
       />
+
+      {reminder && <p className="msg">{reminder}</p>}
 
       <section className="panel notice-push">
         <InstallHint />

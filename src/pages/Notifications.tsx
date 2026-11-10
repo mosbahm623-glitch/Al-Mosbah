@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BellOff, BellRing, CheckCheck, FlaskConical, TriangleAlert, Trash2, type LucideIcon } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
+import LowBalanceReminderDialog from '../components/LowBalanceReminderDialog'
 import TestNoticeDialog from '../components/TestNoticeDialog'
 import PageHead from '../components/PageHead'
 import { clearAll, fetchNotices, markAllRead, markRead, type Notice } from '../lib/notifications'
@@ -59,6 +60,7 @@ export default function Notifications() {
   const [push, setPush] = useState<PushState>('off')
   const [busy, setBusy] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [reminding, setReminding] = useState(false)
   const rows = list.data ?? []
   const unread = rows.filter((n) => !n.read_at).length
 
@@ -87,10 +89,16 @@ export default function Notifications() {
         actions={
           <>
             {isAdmin && (
-              <button className="btn btn-icon" onClick={() => setTesting(true)}>
-                <FlaskConical size={18} aria-hidden="true" />
-                إشعار تجريبي
-              </button>
+              <>
+                <button className="btn btn-icon" onClick={() => setReminding(true)}>
+                  <TriangleAlert size={18} aria-hidden="true" />
+                  تذكير المالك بالمشاريع الأقل من 50 ألف
+                </button>
+                <button className="btn btn-ghost btn-icon" onClick={() => setTesting(true)}>
+                  <FlaskConical size={18} aria-hidden="true" />
+                  إشعار تجريبي
+                </button>
+              </>
             )}
             {rows.length > 0 && (
               <>
@@ -166,6 +174,7 @@ export default function Notifications() {
         </ul>
       )}
       {testing && <TestNoticeDialog onClose={() => setTesting(false)} />}
+      {reminding && <LowBalanceReminderDialog onClose={() => setReminding(false)} />}
     </div>
   )
 }

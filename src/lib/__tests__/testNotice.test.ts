@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../supabase', () => ({ supabase: { rpc: vi.fn() } }))
 
 import { supabase } from '../supabase'
-import { fetchPushDevices, sendTestNotification } from '../testNotice'
+import { fetchLowBalanceOverview, fetchPushDevices, sendLowBalanceReminder, sendTestNotification } from '../testNotice'
 
 const rpc = vi.mocked(supabase.rpc)
 
@@ -40,5 +40,33 @@ describe('fetchPushDevices', () => {
     expect(await fetchPushDevices()).toBeNull()
     rpc.mockResolvedValueOnce({ data: null, error: { message: 'x' } } as never)
     expect(await fetchPushDevices()).toBeNull()
+  })
+})
+
+describe('low-balance reminder', () => {
+  it('reads the overview and drops rows that are not a name with a balance', async () => {
+    rpc.mockResolvedValue({
+      data: { limit: 50000, owners: 1, projects: [{ name: 'أ', balance: -5 }, { name: 'ب' }, null] },
+      error: null,
+    } as never)
+    expect(await fetchLowBalanceOverview()).toEqual({ limit: 50000, owners: 1, projects: [{ name: 'أ', balance: -5 }] })
+    expect(rpc).toHaveBeenCalledWith('low_balance_overview')
+  })
+
+  it('returns null for a refused or malformed overview', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'admin only' } } as never)
+    expect(await fetchLowBalanceOverview()).toBeNull()
+    rpc.mockResolvedValueOnce({ data: { limit: 'x', owners: 1, projects: [] }, error: null } as never)
+    expect(await fetchLowBalanceOverview()).toBeNull()
+  })
+
+  it('sends the reminder and returns how many projects and owners', async () => {
+    rpc.mockResolvedValueOnce({ data: { projects: 26, owners: 1 }, error: null } as never)
+    expect(await sendLowBalanceReminder()).toEqual({ projects: 26, owners: 1 })
+    expect(rpc).toHaveBeenCalledWith('send_low_balance_reminder')
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'x' } } as never)
+    expect(await sendLowBalanceReminder()).toBeNull()
+    rpc.mockResolvedValueOnce({ data: { projects: 'x' }, error: null } as never)
+    expect(await sendLowBalanceReminder()).toBeNull()
   })
 })

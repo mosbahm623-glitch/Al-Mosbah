@@ -24,9 +24,9 @@ Deno.serve(async (req: Request) => {
     } catch (e) {
       failed++
       const code = (e as { statusCode?: number }).statusCode
-      console.error('push failed', code, s.id)
-      // the phone removed the permission: forget it
-      if (code === 404 || code === 410) await sb.from('push_subscriptions').delete().eq('id', s.id)
+      console.error('push failed', code, s.id, (e as { body?: string }).body)
+      // the phone removed the permission, or the subscription was made with an older key: forget it (the app re-registers)
+      if (code === 400 || code === 403 || code === 404 || code === 410) await sb.from('push_subscriptions').delete().eq('id', s.id)
     }
   }
   return new Response(JSON.stringify({ sent, failed }), { headers: { 'Content-Type': 'application/json' } })

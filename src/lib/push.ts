@@ -10,6 +10,28 @@ const toBytes = (b64: string) => {
   return Uint8Array.from(raw, (c) => c.charCodeAt(0))
 }
 
+/**
+ * This browser's push subscription for the current key. A subscription made with an older key is rejected by the
+ * phone's push service (403 / 400), so it is dropped and made again instead of being reused.
+ */
+async function currentSubscription(reg: ServiceWorkerRegistration) {
+  const key = toBytes(VAPID_PUBLIC)
+  const existing = await reg.pushManager.getSubscription()
+  const used = existing?.options.applicationServerKey
+  if (
+    existing &&
+    used &&
+    new Uint8Array(used).length === key.length &&
+    new Uint8Array(used).every((b, i) => b === key[i])
+  )
+    return existing
+  if (existing) {
+    await supabase.from('push_subscriptions').delete().eq('endpoint', existing.endpoint)
+    await existing.unsubscribe()
+  }
+  return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
+}
+
 const supported = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
 
 export async function pushState(): Promise<PushState> {
@@ -30,9 +52,7 @@ export async function enablePush(userId: string): Promise<PushState> {
   const permission = await Notification.requestPermission()
   if (permission !== 'granted') return permission === 'denied' ? 'blocked' : 'off'
   const reg = await navigator.serviceWorker.ready
-  const sub =
-    (await reg.pushManager.getSubscription()) ??
-    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(VAPID_PUBLIC) }))
+  const sub = await currentSubscription(reg)
   const j = sub.toJSON()
   if (!j.endpoint || !j.keys?.p256dh || !j.keys.auth) return 'off'
   await supabase.from('push_subscriptions').delete().eq('endpoint', j.endpoint)
@@ -50,9 +70,7 @@ export async function syncPush(userId: string): Promise<void> {
   if (!supported() || Notification.permission !== 'granted') return
   try {
     const reg = await navigator.serviceWorker.ready
-    const sub =
-      (await reg.pushManager.getSubscription()) ??
-      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(VAPID_PUBLIC) }))
+    const sub = await currentSubscription(reg)
     const j = sub.toJSON()
     if (!j.endpoint || !j.keys?.p256dh || !j.keys.auth) return
     const { data } = await supabase.from('push_subscriptions').select('id').eq('endpoint', j.endpoint).maybeSingle()

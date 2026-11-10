@@ -5,12 +5,12 @@ import { notifyApprovalsChanged } from '../../lib/events'
 import { useAuth } from '../../auth/AuthProvider'
 import InvoiceLink from '../../components/InvoiceLink'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
+import Pager from '../../components/Pager'
 import Segmented from '../../components/Segmented'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
-
-const PAGE = 60
+import { usePages } from '../../lib/usePages'
 
 const KINDS = [
   { value: 'all', label: 'الكل' },
@@ -24,7 +24,6 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   const { isAdmin, canTouch } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
-  const [limit, setLimit] = useState(PAGE)
 
   async function restore(id: string) {
     if (await restoreEntry(id)) notifyApprovalsChanged()
@@ -53,6 +52,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
       ),
     [entries, kind, category],
   )
+  const pager = usePages(shown)
 
   return (
     <>
@@ -64,7 +64,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
             aria-pressed={category === null}
             onClick={() => {
               setCategory(null)
-              setLimit(PAGE)
+              pager.setPage(1)
             }}
           >
             الكل · {money(expenseTotal)}
@@ -77,7 +77,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               aria-pressed={category === name}
               onClick={() => {
                 setCategory(category === name ? null : name)
-                setLimit(PAGE)
+                pager.setPage(1)
               }}
             >
               {name} · {money(total)}
@@ -94,7 +94,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
           options={KINDS}
           onChange={(k) => {
             setKind(k)
-            setLimit(PAGE)
+            pager.setPage(1)
           }}
         />
         <span className="toolbar-note muted small">{shown.length} قيد</span>
@@ -127,7 +127,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                 </tr>
               </thead>
               <tbody>
-                {shown.slice(0, limit).map((e) => (
+                {pager.items.map((e) => (
                   <tr key={e.id} className={e.status === 'deleted' ? 'row-deleted' : undefined}>
                     <td className="strong num">#{e.seq}</td>
                     <td className="num muted">
@@ -219,13 +219,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               </tbody>
             </table>
           </div>
-          {shown.length > limit && (
-            <div className="more-row">
-              <button type="button" className="btn btn-ghost" onClick={() => setLimit((n) => n + PAGE)}>
-                عرض المزيد ({shown.length - limit})
-              </button>
-            </div>
-          )}
+          <Pager {...pager} onChange={pager.setPage} />
         </section>
       )}
     </>

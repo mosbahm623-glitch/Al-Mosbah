@@ -1,5 +1,7 @@
 import { Pencil, Plus } from 'lucide-react'
 import InvoiceLink from '../../components/InvoiceLink'
+import Pager from '../../components/Pager'
+import { usePages } from '../../lib/usePages'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
@@ -15,6 +17,7 @@ type Props = {
 
 /** What the holder spent out of the custody. */
 export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpend, onEdit }: Props) {
+  const pager = usePages(entries ?? [])
   return (
     <section className="panel">
       <div className="panel-head">
@@ -49,7 +52,7 @@ export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpen
               </tr>
             </thead>
             <tbody>
-              {entries.map((e) => (
+              {pager.items.map((e) => (
                 <tr key={e.id}>
                   <td className="strong num">#{e.seq}</td>
                   <td className="num muted">
@@ -91,6 +94,7 @@ export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpen
       ) : (
         <p className="empty muted">مفيش مصروفات من العهدة لسه.</p>
       )}
+      <Pager {...pager} onChange={pager.setPage} />
     </section>
   )
 }

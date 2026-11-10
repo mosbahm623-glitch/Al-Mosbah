@@ -305,3 +305,51 @@
   justify-content: center;
   padding: 12px;
 }
+
+/* page buttons under a long list */
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid var(--line-2);
+}
+.pager-pages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+.pager-pages button {
+  font: inherit;
+  font-size: 0.85rem;
+  min-width: 38px;
+  min-height: 38px;
+  display: inline-grid;
+  place-items: center;
+  padding-inline: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+.pager-pages button[aria-current='page'] {
+  background: var(--hover);
+  font-weight: 700;
+}
+.pager-pages button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.pager-pages button:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+.pager-gap {
+  min-width: 1.2rem;
+  text-align: center;
+  color: var(--muted, #667);
+}

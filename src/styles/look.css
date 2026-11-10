@@ -306,6 +306,11 @@
   padding: 12px;
 }
 
+/* a page change scrolls to the top of the list: keep its title clear of the fixed top bar */
+.panel {
+  scroll-margin-top: 4.5rem;
+}
+
 /* page buttons under a long list */
 .pager {
   display: flex;

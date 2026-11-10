@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
+import Segmented from '../../components/Segmented'
 import { FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
@@ -18,6 +19,9 @@ import MoneyDialog from './MoneyDialog'
 
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
+/** One list at a time: what was spent, what was handed over, what came back. */
+const TABS = ['entries', 'installments', 'returns'] as const
+
 export default function AdvanceDetail({ id }: { id: string }) {
   const { can, isStaff, isAdmin, canTouch } = useAuth()
   const canEdit = can('advances', 'edit')
@@ -27,6 +31,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
   const [spending, setSpending] = useState(false)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
   const [editing, setEditing] = useState(false)
+  const [tab, setTab] = useState<(typeof TABS)[number]>('entries')
 
   if (loading) return <p className="muted">جارٍ التحميل...</p>
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل العهدة، جرّب تاني</p>
@@ -86,28 +91,47 @@ export default function AdvanceDetail({ id }: { id: string }) {
         ]}
       />
 
-      <InstallmentsPanel
-        installments={installments}
-        isStaff={isStaff}
-        isAdmin={isAdmin}
-        onAdd={() => setMoney({ kind: 'installment' })}
-        onEdit={(row) => setMoney({ kind: 'installment', row })}
-      />
+      <div className="toolbar">
+        <Segmented
+          label="أقسام العهدة"
+          value={tab}
+          options={[
+            { value: 'entries', label: `المصروفات · ${entries?.length ?? 0}` },
+            { value: 'installments', label: `الدفعات · ${installments?.length ?? 0}` },
+            { value: 'returns', label: `المرتجعات · ${returns?.length ?? 0}` },
+          ]}
+          onChange={setTab}
+        />
+      </div>
 
-      <AdvanceEntriesPanel
-        entries={entries}
-        canEdit={canEdit}
-        canTouch={canTouch}
-        onSpend={() => setSpending(true)}
-        onEdit={setEditingEntry}
-      />
+      {tab === 'entries' && (
+        <AdvanceEntriesPanel
+          entries={entries}
+          canEdit={canEdit}
+          canTouch={canTouch}
+          onSpend={() => setSpending(true)}
+          onEdit={setEditingEntry}
+        />
+      )}
 
-      <ReturnsPanel
-        returns={returns}
-        isStaff={isStaff}
-        onAdd={() => setMoney({ kind: 'return' })}
-        onEdit={(row) => setMoney({ kind: 'return', row })}
-      />
+      {tab === 'installments' && (
+        <InstallmentsPanel
+          installments={installments}
+          isStaff={isStaff}
+          isAdmin={isAdmin}
+          onAdd={() => setMoney({ kind: 'installment' })}
+          onEdit={(row) => setMoney({ kind: 'installment', row })}
+        />
+      )}
+
+      {tab === 'returns' && (
+        <ReturnsPanel
+          returns={returns}
+          isStaff={isStaff}
+          onAdd={() => setMoney({ kind: 'return' })}
+          onEdit={(row) => setMoney({ kind: 'return', row })}
+        />
+      )}
 
       {money_ && (
         <MoneyDialog

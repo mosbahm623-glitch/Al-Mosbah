@@ -38,7 +38,7 @@ function SearchView({ q }: { q: string }) {
   const rows = data ?? []
   return (
     <div className="page-stack">
-      <PageHead title="بحث في القيود" note="ابحث برقم القيد أو البند أو البيان أو اسم المشروع أو المقاول." />
+      <PageHead title="بحث في القيود" note="ابحث برقم القيد أو المبلغ أو البند أو البيان أو اسم المشروع أو المقاول." />
       <form className="toolbar" onSubmit={submit} role="search">
         <label className="search-box">
           <SearchIcon size={18} aria-hidden="true" />
@@ -46,7 +46,7 @@ function SearchView({ q }: { q: string }) {
             type="search"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="مثلاً: 413 أو كهرباء أو اسم مقاول"
+            placeholder="مثلاً: 1500 أو كهرباء أو اسم مقاول"
             aria-label="بحث في القيود"
             autoComplete="off"
           />
@@ -57,7 +57,7 @@ function SearchView({ q }: { q: string }) {
       </form>
 
       {failed && <p className="msg msg-error">البحث ما نفعش، جرّب تاني</p>}
-      {!q && <div className="card empty">اكتب رقم القيد أو أي كلمة من البند أو البيان.</div>}
+      {!q && <div className="card empty">اكتب المبلغ أو رقم القيد أو أي كلمة من البند أو البيان.</div>}
       {q && loading && !data && <p className="muted">جارٍ البحث...</p>}
       {q && data && rows.length === 0 && <div className="card empty">مفيش نتايج لـ «{q}».</div>}
 

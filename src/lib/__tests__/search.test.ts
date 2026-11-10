@@ -69,8 +69,19 @@ describe('searchEntries', () => {
 
   it('ignores numbers too big for the database', async () => {
     const log = plan({})
-    await searchEntries('99999999999')
+    await searchEntries('9999999999999999')
     expect(log.filter((l) => l.table === 'entries')).toHaveLength(1)
+  })
+
+  it('also looks the number up as an amount, with commas or Arabic digits', async () => {
+    const log = plan({})
+    await searchEntries('1,500.5')
+    await searchEntries('١٥٠٠')
+    const amounts = log.filter((l) => l.table === 'entries').flatMap((l) => l.calls.filter(([m]) => m === 'eq'))
+    expect(amounts.map(([, a]) => a)).toEqual([
+      ['amount', 1500.5],
+      ['amount', 1500],
+    ])
   })
 
   it('fails as a whole when any read fails', async () => {

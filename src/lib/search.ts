@@ -8,25 +8,39 @@ export const SEARCH_LIMIT = 100
 // % _ and , have a meaning inside a PostgREST filter
 const clean = (q: string) => q.replace(/[%_,()*\\]/g, ' ').trim()
 
-/** Entries by number, البند, البيان, project or contractor name. */
+/** A typed amount such as 1500, 1,500 or 1500.5 (Arabic digits too), or null when the text is not a number. */
+function parseAmount(q: string) {
+  const t = q
+    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[,٬\s]/g, '')
+    .replace('٫', '.')
+  return /^\d{1,12}(\.\d{1,2})?$/.test(t) ? Number(t) : null
+}
+
+/** Entries by number, amount, البند, البيان, project or contractor name. */
 export async function searchEntries(q: string) {
   const like = `%${clean(q)}%`
   const num = /^#?\d+$/.test(q) ? Number(q.replace('#', '')) : null
+  const amount = parseAmount(q.replace('#', ''))
   const byText = supabase
     .from('entries')
     .select(SELECT)
     .or(`category.ilike.${like},item.ilike.${like},notes.ilike.${like}`)
     .limit(SEARCH_LIMIT)
     .returns<Hit[]>()
-  const [text, projects, contractors, seq] = await Promise.all([
+  const [text, projects, contractors, seq, byAmount] = await Promise.all([
     byText,
     supabase.from('projects').select('id').ilike('name', like).limit(50),
     supabase.from('contractors').select('id').ilike('name', like).limit(50),
     num !== null && num <= 2147483647
       ? supabase.from('entries').select(SELECT).eq('seq', num).returns<Hit[]>()
       : Promise.resolve({ data: [] as Hit[], error: null }),
+    amount !== null
+      ? supabase.from('entries').select(SELECT).eq('amount', amount).limit(SEARCH_LIMIT).returns<Hit[]>()
+      : Promise.resolve({ data: [] as Hit[], error: null }),
   ])
-  if (text.error || projects.error || contractors.error || seq.error) return { data: null, error: true }
+  if (text.error || projects.error || contractors.error || seq.error || byAmount.error)
+    return { data: null, error: true }
   const projectIds = (projects.data ?? []).map((p) => p.id)
   const contractorIds = (contractors.data ?? []).map((c) => c.id)
   const [byProject, byContractor] = await Promise.all([
@@ -40,7 +54,13 @@ export async function searchEntries(q: string) {
   if (byProject.error || byContractor.error) return { data: null, error: true }
   const merged = new Map<string, Hit>()
   // a number match comes first, then the rest, newest number first
-  for (const h of [...(seq.data ?? []), ...(text.data ?? []), ...(byProject.data ?? []), ...(byContractor.data ?? [])])
+  for (const h of [
+    ...(seq.data ?? []),
+    ...(byAmount.data ?? []),
+    ...(text.data ?? []),
+    ...(byProject.data ?? []),
+    ...(byContractor.data ?? []),
+  ])
     merged.set(h.id, h)
   const seqFirst = (h: Hit) => (h.seq === num ? 1 : 0)
   return { data: [...merged.values()].sort((a, b) => seqFirst(b) - seqFirst(a) || b.seq - a.seq), error: false }

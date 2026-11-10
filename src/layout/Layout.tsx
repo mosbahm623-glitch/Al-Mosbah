@@ -116,7 +116,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             name="q"
             type="search"
             autoComplete="off"
-            placeholder="بحث برقم القيد أو البند أو البيان أو المشروع"
+            placeholder="بحث بالمبلغ أو رقم القيد أو البند أو البيان أو المشروع"
             aria-label="بحث"
             onChange={(e) => {
               // results appear while typing, once the typing pauses

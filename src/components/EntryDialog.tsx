@@ -108,6 +108,13 @@ export default function EntryDialog({
     return names.map((n) => ({ value: n, label: n }))
   }, [categories.data, categoryName])
 
+  // the names already used under the chosen بند, plus the current one (an old entry, or one just added)
+  const itemOptions = useMemo(() => {
+    const names = (category?.expense_items ?? []).map((i) => i.name)
+    if (itemName && !names.includes(itemName)) names.push(itemName)
+    return names.sort((a, b) => a.localeCompare(b, 'ar')).map((n) => ({ value: n, label: n }))
+  }, [category, itemName])
+
   async function createCategory(name: string) {
     if (!(await saveCategory(name))) return null
     categories.reload()
@@ -224,22 +231,17 @@ export default function EntryDialog({
               }}
               onCreate={createCategory}
             />
-            <label className="field">
-              البيان
-              <input
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                list="item-names"
-                placeholder={categoryName ? 'اكتب البيان' : 'اختار البند الأول'}
-                disabled={!categoryName}
-                required
-              />
-              <datalist id="item-names">
-                {category?.expense_items.map((i) => (
-                  <option key={i.id} value={i.name} />
-                ))}
-              </datalist>
-            </label>
+            {/* pick from the names used before, or add a new one: it is saved with the entry (and listed for next time) */}
+            <CreatableSelect
+              label="البيان"
+              value={itemName}
+              options={itemOptions}
+              placeholder={categoryName ? 'اختار البيان' : 'اختار البند الأول'}
+              disabled={!categoryName}
+              required
+              onChange={setItemName}
+              onCreate={(name) => Promise.resolve(name)}
+            />
             <label className="field">
               اسم المقاول
               <input

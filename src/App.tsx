@@ -22,6 +22,7 @@ const Contractors = lazy(() => import('./pages/contractors/Contractors'))
 const ContractorDetail = lazy(() => import('./pages/contractors/ContractorDetail'))
 const Backup = lazy(() => import('./pages/Backup'))
 const Search = lazy(() => import('./pages/Search'))
+const Notifications = lazy(() => import('./pages/Notifications'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
@@ -34,6 +35,7 @@ function Content() {
   const section = route.split('/')[0]
   const sectionItem = ALL_ITEMS.find((i) => i.path === section)
 
+  if (route === 'notifications') return <Notifications />
   if (route === 'quick-entry') return isOwner ? <QuickEntry /> : <ComingSoon title="الصفحة مش موجودة" />
   if ((sectionItem?.adminOnly && !isAdmin) || (sectionItem?.staffOnly && !isStaff))
     return <ComingSoon title="الصفحة مش موجودة" />

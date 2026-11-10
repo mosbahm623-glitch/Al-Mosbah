@@ -199,7 +199,7 @@ select:disabled {
 }
 .msg-to-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: 0 0.75rem;
   max-height: 11rem;
   overflow-y: auto;
@@ -207,4 +207,15 @@ select:disabled {
 }
 .msg-to-list .check {
   min-height: 38px;
+}
+.device {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+  font-size: 0.75rem;
+  color: var(--muted, #6b7280);
+}
+.device-on {
+  color: var(--ok, #15803d);
 }

@@ -14,6 +14,16 @@ export type Database = {
         { id?: string; entry_id: string; path: string; file_name?: string | null; created_by?: string | null; created_at?: string },
         { file_name?: string | null }
       >
+      notifications: T<
+        { id: number; user_id: string; kind: string; title: string; body: string | null; url: string | null; created_at: string; read_at: string | null },
+        { id?: never; user_id: string; kind: string; title: string; body?: string | null; url?: string | null; created_at?: string; read_at?: string | null },
+        { read_at?: string | null }
+      >
+      push_subscriptions: T<
+        { id: number; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string },
+        { id?: never; user_id: string; endpoint: string; p256dh: string; auth: string; created_at?: string },
+        { endpoint?: string; p256dh?: string; auth?: string }
+      >
       backup_log: T<
         { at: string; by: string | null; id: number; note: string | null },
         { at?: string; by?: string | null; id?: never; note?: string | null },
@@ -116,6 +126,8 @@ export type Database = {
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
       reset_data: { Args: { p_groups?: string[] }; Returns: undefined }
+      send_test_notification: { Args: { p_users?: string[] | null }; Returns: number }
+      push_devices: { Args: never; Returns: Json }
       password_changed: { Args: Record<string, never>; Returns: undefined }
       project_deleted_entries: { Args: { p_project: string }; Returns: Json[] }
       deleted_entries: { Args: never; Returns: Json[] }

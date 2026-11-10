@@ -5,6 +5,7 @@ import { notifyDataChanged } from '../lib/events'
 import { isOnline } from '../lib/offline/connection'
 import { readStoredSession } from '../lib/offline/auth'
 import { clearReadCache } from '../lib/offline/fetch'
+import { syncPush } from '../lib/push'
 import { allows, type Level, type Module, type Permissions } from './permissions'
 
 export type Profile = {
@@ -149,6 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Permission, role or active-state changes made by the admin reach this user at once (no re-login or refresh needed)
   const uid = session?.user.id ?? null
+  // a phone that already allowed notifications is kept registered for push at every start
+  useEffect(() => {
+    if (uid && isOnline()) void syncPush(uid)
+  }, [uid])
   useEffect(() => {
     if (!uid) return
     let timer: number | undefined

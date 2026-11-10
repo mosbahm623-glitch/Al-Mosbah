@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
+import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
@@ -25,6 +26,7 @@ function initialOpen(): boolean {
 export default function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut, can, isAdmin, isStaff, isOwner } = useAuth()
   const pending = usePendingCount(isAdmin)
+  const unread = useUnread()
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
@@ -137,6 +139,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
+          <a
+            className="top-btn bell"
+            href="#/notifications"
+            aria-label={unread > 0 ? `الإشعارات، ${unread} جديد` : 'الإشعارات'}
+          >
+            <Bell size={20} />
+            {unread > 0 && <span className="bell-badge">{unread > 99 ? '99+' : unread}</span>}
+          </a>
           <div className="user">
             <span className="avatar" aria-hidden="true">
               {(profile?.full_name ?? 'م').trim().charAt(0)}

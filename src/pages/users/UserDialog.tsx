@@ -9,7 +9,6 @@ import {
   replaceBankAccess,
   replacePermissions,
   setEntryRights,
-  setLowBalanceAlert,
   updateRole,
   type AdvanceOption,
   type UserRow,
@@ -43,7 +42,6 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
         MODULES.map((m) => [m.id, user.permissions.find((p) => p.module === m.id)?.level ?? 'none']),
       ) as Record<Module, Choice>,
   )
-  const [alertOn, setAlertOn] = useState(user.notify_low_balance)
   const [canEditOwn, setCanEditOwn] = useState(user.can_edit_entries)
   const [canDeleteOwn, setCanDeleteOwn] = useState(user.can_delete_entries)
   const [canEditApproved, setCanEditApproved] = useState(user.can_edit_approved)
@@ -61,13 +59,6 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
       if (err) {
         setSaving(false)
         return setError('ما اتحفظش، جرّب تاني')
-      }
-    }
-    if (alertOn !== user.notify_low_balance) {
-      const { error: err } = await setLowBalanceAlert(user.id, alertOn)
-      if (err) {
-        setSaving(false)
-        return setError('تنبيه الرصيد ما اتحفظش، جرّب تاني')
       }
     }
     if (
@@ -116,10 +107,6 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
         <label className="check">
           <input type="checkbox" checked={active} disabled={isSelf} onChange={(e) => setActive(e.target.checked)} />
           الحساب مفعّل
-        </label>
-        <label className="check">
-          <input type="checkbox" checked={alertOn} onChange={(e) => setAlertOn(e.target.checked)} />
-          يستلم تنبيه لما رصيد أي مشروع ينزل عن 50,000
         </label>
         {isSelf && <p className="muted small">مينفعش تغيّر دورك أو توقف حسابك بنفسك.</p>}
 

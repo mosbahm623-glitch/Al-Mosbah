@@ -24,7 +24,6 @@ describe('fetchUsers', () => {
     email: `${id}@x.com`,
     role: 'user',
     is_active: true,
-    notify_low_balance: false,
     can_edit_entries: true,
     can_delete_entries: true,
     can_edit_approved: false,

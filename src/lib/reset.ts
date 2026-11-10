@@ -11,15 +11,7 @@ const REMOVE_BATCH = 100
 export const RESET_WORD = 'مسح'
 
 export type ResetGroupId =
-  | 'entries'
-  | 'contractor_dues'
-  | 'projects'
-  | 'contractors'
-  | 'advances'
-  | 'banks'
-  | 'categories'
-  | 'notifications'
-  | 'users'
+  'entries' | 'contractor_dues' | 'projects' | 'contractors' | 'advances' | 'banks' | 'categories' | 'users'
 
 export type ResetGroup = { id: ResetGroupId; label: string; hint: string; requires: ResetGroupId[] }
 
@@ -40,7 +32,6 @@ export const RESET_GROUPS: ResetGroup[] = [
   { id: 'advances', label: 'العهد', hint: 'بدفعاتها ومرتجعاتها ووصول المستخدمين ليها', requires: ['entries'] },
   { id: 'banks', label: 'البنوك', hint: 'الحسابات البنكية', requires: ['entries'] },
   { id: 'categories', label: 'البنود', hint: 'البنود وبيانات كل بند', requires: [] },
-  { id: 'notifications', label: 'الإشعارات', hint: 'كل إشعارات المستخدمين', requires: [] },
   {
     id: 'users',
     label: 'باقي المستخدمين',

@@ -8,7 +8,6 @@ export type UserRow = {
   role: 'admin' | 'owner' | 'user'
   is_active: boolean
   /** gets the low-balance alert (a project's balance fell below 50,000) */
-  notify_low_balance: boolean
   /** may edit the entries he recorded */
   can_edit_entries: boolean
   /** may delete the entries he recorded */
@@ -33,9 +32,7 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
   const [profiles, perms, access, bankAccess] = await Promise.all([
     supabase
       .from('profiles')
-      .select(
-        'id,full_name,email,role,is_active,notify_low_balance,can_edit_entries,can_delete_entries,can_edit_approved',
-      )
+      .select('id,full_name,email,role,is_active,can_edit_entries,can_delete_entries,can_edit_approved')
       .order('created_at')
       .returns<Profile[]>(),
     supabase
@@ -101,9 +98,6 @@ export const setEntryRights = (userId: string, canEdit: boolean, canDelete: bool
     .from('profiles')
     .update({ can_edit_entries: canEdit, can_delete_entries: canDelete, can_edit_approved: canEditApproved })
     .eq('id', userId)
-
-export const setLowBalanceAlert = (userId: string, on: boolean) =>
-  supabase.from('profiles').update({ notify_low_balance: on }).eq('id', userId)
 
 /** Replaces all page permissions of one user. Both results are returned so the caller can tell which step failed. */
 export async function replacePermissions(userId: string, rows: { user_id: string; module: Module; level: Level }[]) {

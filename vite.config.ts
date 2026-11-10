@@ -13,7 +13,6 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       workbox: {
-        importScripts: ['push-sw.js'],
         // the Excel library is big and rarely needed: it is cached the first time someone exports, not at install
         globIgnores: ['**/exceljs*.js', '**/xlsx*.js'],
         runtimeCaching: [

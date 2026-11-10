@@ -1,6 +1,5 @@
 import type { Module } from '../auth/permissions'
 import {
-  Bell,
   CheckSquare,
   DatabaseBackup,
   FileBarChart,
@@ -52,7 +51,6 @@ export const NAV: NavGroup[] = [
     items: [
       { path: 'search', label: 'بحث في القيود', icon: Search, module: 'tools' },
       { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
-      { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
     ],
   },
 ]

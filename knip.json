@@ -1,1 +1,1 @@
-{ "ignore": ["public/push-sw.js", "supabase/functions/**"] }
+{ "ignore": ["supabase/functions/**"] }

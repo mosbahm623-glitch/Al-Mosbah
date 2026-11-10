@@ -14,16 +14,6 @@ export type Database = {
         { id?: string; entry_id: string; path: string; file_name?: string | null; created_by?: string | null; created_at?: string },
         { file_name?: string | null }
       >
-      notifications: T<
-        { id: number; user_id: string; kind: string; title: string; body: string | null; url: string | null; entry_id: string | null; created_at: string; read_at: string | null },
-        { id?: never; user_id: string; kind: string; title: string; body?: string | null; url?: string | null; entry_id?: string | null; created_at?: string; read_at?: string | null },
-        { read_at?: string | null }
-      >
-      push_subscriptions: T<
-        { id: number; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string },
-        { id?: never; user_id: string; endpoint: string; p256dh: string; auth: string; created_at?: string },
-        { endpoint?: string; p256dh?: string; auth?: string }
-      >
       backup_log: T<
         { at: string; by: string | null; id: number; note: string | null },
         { at?: string; by?: string | null; id?: never; note?: string | null },
@@ -91,9 +81,9 @@ export type Database = {
         [{ foreignKeyName: 'expense_items_category_id_fkey'; columns: ['category_id']; isOneToOne: false; referencedRelation: 'expense_categories'; referencedColumns: ['id'] }]
       >
       profiles: T<
-        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; must_change_password: boolean; notify_low_balance: boolean; role: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; must_change_password?: boolean; notify_low_balance?: boolean; role?: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; must_change_password?: boolean; notify_low_balance?: boolean; role?: string }
+        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; must_change_password: boolean; role: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; must_change_password?: boolean; role?: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; must_change_password?: boolean; role?: string }
       >
       projects: T<
         { budget: number; created_at: string; id: string; name: string; status: string; type: string },
@@ -126,8 +116,6 @@ export type Database = {
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
       reset_data: { Args: { p_groups?: string[] }; Returns: undefined }
-      send_low_balance_reminder: { Args: never; Returns: Json }
-      send_message: { Args: { p_users: string[]; p_title: string; p_body?: string | null }; Returns: number }
       password_changed: { Args: Record<string, never>; Returns: undefined }
       project_deleted_entries: { Args: { p_project: string }; Returns: Json[] }
       deleted_entries: { Args: never; Returns: Json[] }

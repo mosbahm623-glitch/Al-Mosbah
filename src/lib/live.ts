@@ -11,7 +11,6 @@ const TABLES = [
   'bank_accounts',
   'contractors',
   'data_pings',
-  'notifications',
 ]
 
 /** Listens to database changes and tells every open page to refresh itself. Returns the function that stops it. */

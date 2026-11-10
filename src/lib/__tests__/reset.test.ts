@@ -91,7 +91,7 @@ describe('resetData', () => {
 
   it('leaves photos and the waiting entries alone when the entries are not wiped', async () => {
     vi.mocked(queueSnapshot).mockReturnValue([{ id: 'q1' }] as QueuedEntry[])
-    const res = await resetData(['categories', 'notifications'])
+    const res = await resetData(['categories'])
     expect(res).toEqual({ error: null, photosLeft: false })
     expect(from).not.toHaveBeenCalled()
     expect(remove).not.toHaveBeenCalled()

@@ -1,1 +1,0 @@
-import{n as e}from"./useAsync-DMP_f5eY.js";var t=e();function n({logo:e,name:n}){return e?(0,t.jsx)(`img`,{className:`bank-logo`,src:e,alt:``}):(0,t.jsx)(`span`,{className:`bank-logo bank-logo-empty`,"aria-hidden":`true`,children:n.trim().charAt(0).toUpperCase()})}export{n as t};

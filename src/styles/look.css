@@ -358,3 +358,13 @@
   text-align: center;
   color: var(--muted, #667);
 }
+
+/* the custody page has many tabs; on a phone they scroll sideways instead of overflowing */
+.toolbar .seg {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.toolbar .seg button {
+  flex: none;
+  white-space: nowrap;
+}

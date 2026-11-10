@@ -9,6 +9,9 @@ import { enteredByOf } from '../../lib/enteredBy'
 
 type Props = {
   entries: Entry[] | null | undefined
+  /** the panel heading and the message when the list is empty */
+  title: string
+  empty: string
   canEdit: boolean
   canTouch: (status: string) => boolean
   onSpend: () => void
@@ -16,12 +19,12 @@ type Props = {
 }
 
 /** What the holder spent out of the custody. */
-export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpend, onEdit }: Props) {
+export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, canTouch, onSpend, onEdit }: Props) {
   const pager = usePages(entries ?? [])
   return (
     <section className="panel">
       <div className="panel-head">
-        <h2 className="section-title">المصروفات من العهدة</h2>
+        <h2 className="section-title">{title}</h2>
         {canEdit && (
           <button className="btn btn-icon" onClick={() => onSpend()}>
             <Plus size={18} aria-hidden="true" />
@@ -92,7 +95,7 @@ export default function AdvanceEntriesPanel({ entries, canEdit, canTouch, onSpen
           </table>
         </div>
       ) : (
-        <p className="empty muted">مفيش مصروفات من العهدة لسه.</p>
+        <p className="empty muted">{empty}</p>
       )}
       <Pager {...pager} onChange={pager.setPage} />
     </section>

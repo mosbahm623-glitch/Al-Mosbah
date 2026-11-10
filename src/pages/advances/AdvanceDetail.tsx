@@ -19,8 +19,8 @@ import MoneyDialog from './MoneyDialog'
 
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
-/** One list at a time: what was spent, what was handed over, what came back. */
-const TABS = ['entries', 'installments', 'returns'] as const
+/** One list at a time: the approved expenses, those still waiting for approval, what was handed over, what came back. */
+const TABS = ['approved', 'pending', 'removed', 'installments', 'returns'] as const
 
 export default function AdvanceDetail({ id }: { id: string }) {
   const { can, isStaff, isAdmin, canTouch } = useAuth()
@@ -31,7 +31,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
   const [spending, setSpending] = useState(false)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
   const [editing, setEditing] = useState(false)
-  const [tab, setTab] = useState<(typeof TABS)[number]>('entries')
+  const [tab, setTab] = useState<(typeof TABS)[number]>('approved')
 
   if (loading) return <p className="muted">جارٍ التحميل...</p>
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل العهدة، جرّب تاني</p>
@@ -47,6 +47,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
   }
 
   const balance = advanceBalance(advance)
+  // a rejected expense goes back to its holder, so it waits with the pending ones until he fixes or deletes it
+  const approved = (entries ?? []).filter((e) => e.status === 'approved')
+  const waiting = (entries ?? []).filter((e) => e.status === 'pending' || e.status === 'rejected')
+  const removed = (entries ?? []).filter((e) => e.status === 'deleted')
+  const current = tab === 'removed' && removed.length === 0 ? 'approved' : tab
 
   async function toggleStatus() {
     if (!advance) return
@@ -94,9 +99,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
       <div className="toolbar">
         <Segmented
           label="أقسام العهدة"
-          value={tab}
+          value={current}
           options={[
-            { value: 'entries', label: `المصروفات · ${entries?.length ?? 0}` },
+            { value: 'approved', label: `مصروفات معتمدة · ${approved.length}` },
+            { value: 'pending', label: `تحت الموافقة · ${waiting.length}` },
+            ...(removed.length > 0 ? [{ value: 'removed' as const, label: `محذوفة · ${removed.length}` }] : []),
             { value: 'installments', label: `الدفعات · ${installments?.length ?? 0}` },
             { value: 'returns', label: `المرتجعات · ${returns?.length ?? 0}` },
           ]}
@@ -104,9 +111,12 @@ export default function AdvanceDetail({ id }: { id: string }) {
         />
       </div>
 
-      {tab === 'entries' && (
+      {current === 'approved' && (
         <AdvanceEntriesPanel
-          entries={entries}
+          key="approved"
+          entries={approved}
+          title="المصروفات المعتمدة"
+          empty="مفيش مصروفات معتمدة من العهدة لسه."
           canEdit={canEdit}
           canTouch={canTouch}
           onSpend={() => setSpending(true)}
@@ -114,7 +124,33 @@ export default function AdvanceDetail({ id }: { id: string }) {
         />
       )}
 
-      {tab === 'installments' && (
+      {current === 'pending' && (
+        <AdvanceEntriesPanel
+          key="pending"
+          entries={waiting}
+          title="مصروفات تحت الموافقة"
+          empty="مفيش مصروفات مستنية الموافقة."
+          canEdit={canEdit}
+          canTouch={canTouch}
+          onSpend={() => setSpending(true)}
+          onEdit={setEditingEntry}
+        />
+      )}
+
+      {current === 'removed' && (
+        <AdvanceEntriesPanel
+          key="removed"
+          entries={removed}
+          title="مصروفات محذوفة"
+          empty="مفيش مصروفات محذوفة."
+          canEdit={false}
+          canTouch={canTouch}
+          onSpend={() => setSpending(true)}
+          onEdit={setEditingEntry}
+        />
+      )}
+
+      {current === 'installments' && (
         <InstallmentsPanel
           installments={installments}
           isStaff={isStaff}
@@ -124,7 +160,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
         />
       )}
 
-      {tab === 'returns' && (
+      {current === 'returns' && (
         <ReturnsPanel
           returns={returns}
           isStaff={isStaff}

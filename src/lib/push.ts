@@ -42,6 +42,29 @@ export async function enablePush(userId: string): Promise<PushState> {
   return error ? 'off' : 'on'
 }
 
+/**
+ * Keeps the saved phone in step with the browser, without asking anything: when notifications are already allowed,
+ * it re-creates a lost browser subscription and re-saves a missing row, so a phone never silently stops getting them.
+ */
+export async function syncPush(userId: string): Promise<void> {
+  if (!supported() || Notification.permission !== 'granted') return
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const sub =
+      (await reg.pushManager.getSubscription()) ??
+      (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toBytes(VAPID_PUBLIC) }))
+    const j = sub.toJSON()
+    if (!j.endpoint || !j.keys?.p256dh || !j.keys.auth) return
+    const { data } = await supabase.from('push_subscriptions').select('id').eq('endpoint', j.endpoint).maybeSingle()
+    if (data) return
+    await supabase
+      .from('push_subscriptions')
+      .insert({ user_id: userId, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth })
+  } catch {
+    /* offline or blocked: the next start tries again */
+  }
+}
+
 export async function disablePush(): Promise<PushState> {
   try {
     const reg = await navigator.serviceWorker.getRegistration()

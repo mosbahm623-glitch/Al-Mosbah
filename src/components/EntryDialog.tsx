@@ -26,8 +26,6 @@ type Props = {
   /** new entries are paid from this custody (counted through the custody, not as project expense) */
   advanceId?: string
   entry?: Entry
-  /** a new entry that starts filled in (the voice assistant): the person still checks it and presses save */
-  prefill?: { kind: 'income' | 'expense'; amount: number | null; category: string; text: string }
   /** quick entry page: shown on the page itself, with a project picker; the form clears after a save instead of closing */
   inline?: boolean
   onClose: () => void
@@ -59,7 +57,6 @@ export default function EntryDialog({
   projects,
   advanceId,
   entry,
-  prefill,
   inline,
   onClose,
   onSaved,
@@ -87,17 +84,13 @@ export default function EntryDialog({
   const [editReason, setEditReason] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [savedId, setSavedId] = useState<string | null>(null)
-  const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? prefill?.kind ?? 'expense')
-  const [categoryName, setCategoryName] = useState(
-    entry?.kind === 'expense' ? entry.category : prefill?.kind === 'expense' ? prefill.category : '',
-  )
-  const [itemName, setItemName] = useState(entry?.item ?? (prefill?.kind === 'expense' ? prefill.text : ''))
+  const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
+  const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')
+  const [itemName, setItemName] = useState(entry?.item ?? '')
   const [contractorName, setContractorName] = useState(entry?.contractor?.name ?? '')
   const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
-  const [incomeLabel, setIncomeLabel] = useState(
-    entry?.kind === 'income' ? entry.category : prefill?.kind === 'income' ? prefill.text : '',
-  )
-  const [amount, setAmount] = useState(entry ? String(entry.amount) : prefill?.amount ? String(prefill.amount) : '')
+  const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
+  const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
   const [date, setDate] = useState(() => entry?.entry_date ?? todayISO())
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)

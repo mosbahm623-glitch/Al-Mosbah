@@ -3,6 +3,11 @@ import { Mic, MicOff, Send } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
 import { askAgent, describeWrite, loadContext, runTool, WRITE_TOOLS, type Content, type ToolCall } from '../lib/agent'
+import { advanceBalance, fetchAdvanceSummaries } from '../lib/advances'
+import { bankBalance, fetchBankSummaries } from '../lib/banks'
+import { fetchCategories } from '../lib/catalog'
+import { money } from '../lib/format'
+import { fetchContractorNames } from '../lib/lookups'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
 import { parseCommand } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
@@ -46,6 +51,10 @@ const todayText = () => {
 export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const { isAdmin, isOwner, can } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
+  const people = useAsync(fetchContractorNames)
+  const banks = useAsync(fetchBankSummaries)
+  const advs = useAsync(fetchAdvanceSummaries)
+  const cats = useAsync(fetchCategories)
   const [text, setText] = useState('')
   const [lines, setLines] = useState<Line[]>([])
   const [busy, setBusy] = useState(false)
@@ -58,6 +67,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const endRef = useRef<HTMLDivElement>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
+  const tools = { isAdmin, mayEnter, today: todayText(), go }
   const names = useMemo(() => new Map((projects.data ?? []).map((p) => [p.id, p.name])), [projects.data])
 
   useEffect(() => {
@@ -76,16 +86,87 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     return new Promise<boolean>((resolve) => setAsk({ text: t, resolve }))
   }
 
+  /** Answers what the fixed rules understand right away. Returns false when the AI should take over. */
+  async function quick(q: string): Promise<boolean> {
+    const all = projects.data ?? []
+    const cmd = parseCommand(
+      q,
+      all,
+      (cats.data ?? []).map((c) => c.name),
+      people.data ?? [],
+      (banks.data ?? []).map((b) => ({ id: b.id, name: b.name })),
+      (advs.data ?? []).map((a) => ({ id: a.id, name: a.holder_name })),
+    )
+    if (cmd.intent === 'close') return (onClose(), true)
+    if (cmd.intent === 'open') return (go(cmd.path), true)
+    if (cmd.intent === 'pending') {
+      const r = await runTool({ name: 'pending_entries', args: {} }, tools)
+      say(
+        'bot',
+        r.count
+          ? `فيه ${r.count} قيد مستنيين موافقة بإجمالي ${money(Number(r.total))} ج.م.`
+          : 'مفيش حاجة مستنية موافقة.',
+      )
+      return true
+    }
+    if (cmd.intent === 'query') {
+      const rows = cmd.project ? all.filter((p) => p.id === cmd.project?.id) : all.filter((p) => p.status === 'active')
+      const income = rows.reduce((t, p) => t + p.income, 0)
+      const expenses = rows.reduce((t, p) => t + p.expenses, 0)
+      const parts = {
+        income: `الوارد ${money(income)}`,
+        expenses: `المصروف ${money(expenses)}`,
+        balance: `الرصيد ${money(income - expenses)}`,
+      }
+      const body = cmd.metric === 'all' ? Object.values(parts).join(' · ') : parts[cmd.metric]
+      say('bot', `${cmd.project ? `مشروع ${cmd.project.name}` : 'كل المشاريع النشطة'}: ${body} ج.م`)
+      return true
+    }
+    if (cmd.intent === 'account') {
+      if (cmd.kind === 'bank') {
+        const b = (banks.data ?? []).find((x) => x.id === cmd.item.id)
+        if (!b) return false
+        say(
+          'bot',
+          `${b.name}: الرصيد ${money(bankBalance(b))} · وارد ${money(b.income)} · مصروف ${money(b.expenses)} ج.م`,
+        )
+        return true
+      }
+      const a = (advs.data ?? []).find((x) => x.id === cmd.item.id)
+      if (!a) return false
+      say(
+        'bot',
+        `عهدة ${a.holder_name}: استلم ${money(a.given)} · صرف ${money(a.spent)} · رجّع ${money(a.returned)} · الباقي ${money(advanceBalance(a))} ج.م`,
+      )
+      return true
+    }
+    if (cmd.intent === 'lookup') {
+      if (!cmd.contractor) return (go(`search?q=${encodeURIComponent(cmd.category)}`), true)
+      setBusy(true)
+      const r = await runTool(
+        { name: 'contractor_account', args: { contractor_id: cmd.contractor.id, project_id: cmd.project?.id ?? '' } },
+        tools,
+      )
+      setBusy(false)
+      if (r.error) return false
+      const where = cmd.project ? ` في ${cmd.project.name}` : ''
+      say(
+        'bot',
+        `${cmd.contractor.name}${where}: مستحقات ${money(Number(r.due))} · مدفوع ${money(Number(r.paid))} · الباقي ${money(Number(r.remaining))} ج.م`,
+      )
+      return true
+    }
+    return false
+  }
+
   async function send(input: string) {
     const q = input.trim()
     if (!q || busy) return
     setText('')
     say('me', q)
 
-    // the plain ones need no AI
-    const fixed = parseCommand(q, [])
-    if (fixed.intent === 'close') return onClose()
-    if (fixed.intent === 'open' && !fixed.path.startsWith('projects/')) return go(fixed.path)
+    // the plain ones are answered on the spot, with no AI and no waiting
+    if (await quick(q)) return
 
     setBusy(true)
     history.current.push({ role: 'user', parts: [{ text: q }] })
@@ -115,7 +196,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
           if (WRITE_TOOLS.has(call.name) && !(await confirm(await describeWrite(call, names)))) {
             result = { declined: true, note: 'المستخدم رفض التنفيذ.' }
           } else {
-            result = await runTool(call, { isAdmin, mayEnter, today: todayText(), go })
+            result = await runTool(call, tools)
           }
           answers.push({ functionResponse: { name: call.name, ...(call.id ? { id: call.id } : {}), response: result } })
         }

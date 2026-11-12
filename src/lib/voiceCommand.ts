@@ -16,6 +16,8 @@ export type Command =
       category: string
     }
   | { intent: 'query'; metric: 'income' | 'expenses' | 'balance' | 'all'; project: NamedProject | null }
+  | { intent: 'open'; path: string; label: string }
+  | { intent: 'close' }
   | { intent: 'unknown' }
 
 const INDIC = '٠١٢٣٤٥٦٧٨٩'
@@ -92,10 +94,37 @@ function guessCategory(t: string, categories: string[]): string {
   return hit?.c ?? ''
 }
 
+const PAGES: [RegExp, string, string][] = [
+  [/موافقات|موافقه/, 'approvals', 'الموافقات'],
+  [/قيد سريع|تسجيل سريع/, 'quick-entry', 'تسجيل قيد سريع'],
+  [/اخر القيود|آخر القيود|القيود الاخيره/, 'recent', 'آخر القيود'],
+  [/مشاريع|المشاريع/, 'projects', 'المشاريع'],
+  [/عهد|عهده/, 'advances', 'العهد'],
+  [/بنوك|بنك/, 'banks', 'البنوك'],
+  [/مقاول|مستحقات/, 'contractors', 'مستحقات المقاولين'],
+  [/تقارير|تقرير|تصدير/, 'reports', 'التقارير'],
+  [/لوحه|داشبورد|رئيسيه|الرئيسيه/, 'dashboard', 'لوحة التحكم'],
+  [/بحث/, 'search', 'البحث'],
+  [/اشعارات|اشعار/, 'notifications', 'الإشعارات'],
+  [/مستخدمين|مستخدم/, 'users', 'المستخدمين'],
+  [/نسخه احتياطيه|باك اب|backup/, 'backup', 'النسخة الاحتياطية'],
+]
+
+const OPEN = /^(افتح|فتح|روح|وديني|اعرض|ورنى|ورني)(?=\s|$)/
+const CLOSE = /^(اقفل|قفل|اغلق|سكر|خلاص|كفايه)(?=\s|$)/
+
 export function parseCommand(raw: string, projects: NamedProject[], categories: string[] = []): Command {
   const t = plain(raw)
   if (!t) return { intent: 'unknown' }
   const project = findProject(t, projects)
+
+  if (CLOSE.test(t)) return { intent: 'close' }
+  if (OPEN.test(t)) {
+    if (project) return { intent: 'open', path: `projects/${project.id}`, label: `مشروع ${project.name}` }
+    const page = PAGES.find(([re]) => re.test(t))
+    if (page) return { intent: 'open', path: page[1], label: page[2] }
+    return { intent: 'unknown' }
+  }
 
   if (ENTRY.test(t)) {
     const kind: 'income' | 'expense' = INCOME.test(t) && !EXPENSE.test(t) ? 'income' : 'expense'

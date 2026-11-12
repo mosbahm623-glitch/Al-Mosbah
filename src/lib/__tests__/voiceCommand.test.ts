@@ -59,3 +59,16 @@ describe('parseCommand: questions', () => {
     expect(parseCommand('', projects)).toEqual({ intent: 'unknown' })
   })
 })
+
+describe('parseCommand: open and close', () => {
+  it('opens a page', () => {
+    expect(parseCommand('افتح الموافقات', projects)).toEqual({ intent: 'open', path: 'approvals', label: 'الموافقات' })
+    expect(parseCommand('افتح البنوك', projects)).toMatchObject({ intent: 'open', path: 'banks' })
+  })
+  it('opens a project', () => {
+    expect(parseCommand('افتح مشروع العيادة', projects)).toMatchObject({ intent: 'open', path: 'projects/1' })
+  })
+  it('closes', () => {
+    expect(parseCommand('اقفل', projects)).toEqual({ intent: 'close' })
+  })
+})

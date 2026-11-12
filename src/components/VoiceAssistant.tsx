@@ -27,7 +27,7 @@ const speech = (): (new () => Recognition) | null => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-const EXAMPLES = ['سجّل ٥٠٠ نقاشة على الجندي', 'كام صرفنا على العيادة؟', 'رصيد الجندي', 'كام الوارد؟']
+const EXAMPLES = ['سجّل ٥٠٠ نقاشة على الجندي', 'كام صرفنا على العيادة؟', 'افتح الموافقات', 'افتح مشروع العيادة', 'اقفل']
 
 function answer(c: Extract<Command, { intent: 'query' }>, all: ProjectSummary[]): string {
   const rows = c.project ? all.filter((p) => p.id === c.project?.id) : all.filter((p) => p.status === 'active')
@@ -65,6 +65,8 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   /** Ask the AI first; if it is unreachable or unsure, fall back to the fixed rules. */
   async function understand(input: string): Promise<Command> {
     const names = (cats.data ?? []).map((c) => c.name)
+    const fixed = parseCommand(input, all, names)
+    if (fixed.intent === 'open' || fixed.intent === 'close') return fixed
     try {
       const { data, error } = await supabase.functions.invoke('assistant', {
         body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
@@ -96,6 +98,11 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     setBusy(true)
     const cmd = await understand(input)
     setBusy(false)
+    if (cmd.intent === 'close') return onClose()
+    if (cmd.intent === 'open') {
+      window.location.hash = `#/${cmd.path}`
+      return onClose()
+    }
     if (cmd.intent === 'unknown') return setReply('ما فهمتش. جرّب جملة زي اللي تحت.')
     if (cmd.intent === 'query') return setReply(answer(cmd, all))
     if (!mayEnter) return setReply('مش عندك صلاحية تسجيل قيود.')

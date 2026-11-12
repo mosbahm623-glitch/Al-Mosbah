@@ -82,7 +82,16 @@ export type ApprovalFilter = {
   max: string
 }
 
-export const NO_FILTER: ApprovalFilter = { text: '', who: '', bank: '', project: '', source: '', day: '', min: '', max: '' }
+export const NO_FILTER: ApprovalFilter = {
+  text: '',
+  who: '',
+  bank: '',
+  project: '',
+  source: '',
+  day: '',
+  min: '',
+  max: '',
+}
 
 export const isFiltering = (f: ApprovalFilter) => Object.values(f).some((v) => v.trim() !== '')
 

@@ -3,6 +3,7 @@ import { Mic, MicOff } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
 import EntryDialog from './EntryDialog'
+import { askAssistant, fetchContractorNames } from '../lib/assistant'
 import { advanceBalance, fetchAdvanceSummaries } from '../lib/advances'
 import { countPending, decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
 import { bankBalance, fetchBankSummaries } from '../lib/banks'
@@ -10,7 +11,6 @@ import { fetchCategories } from '../lib/catalog'
 import { fetchContractorLedger } from '../lib/contractors'
 import { money } from '../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
-import { supabase } from '../lib/supabase'
 import { parseCommand, type Command } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
 
@@ -59,9 +59,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const { isAdmin, isOwner, can } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const cats = useAsync(fetchCategories)
-  const people = useAsync(() =>
-    supabase.from('contractors').select('id,name').order('name').returns<{ id: string; name: string }[]>(),
-  )
+  const people = useAsync(fetchContractorNames)
   const banks = useAsync(fetchBankSummaries)
   const advs = useAsync(fetchAdvanceSummaries)
   const [link, setLink] = useState<{ label: string; path: string } | null>(null)
@@ -93,8 +91,10 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     )
     if (['open', 'close', 'approve', 'lookup', 'account', 'pending'].includes(fixed.intent)) return fixed
     try {
-      const { data, error } = await supabase.functions.invoke('assistant', {
-        body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
+      const { data, error } = await askAssistant({
+        text: input,
+        projects: all.map((p) => ({ id: p.id, name: p.name })),
+        categories: names,
       })
       if (!error && data && (data.intent === 'entry' || data.intent === 'query')) {
         const project = all.find((p) => p.id === data.project_id)

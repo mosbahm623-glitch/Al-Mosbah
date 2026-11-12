@@ -68,7 +68,7 @@ const nameWords = (name: string) =>
     .filter((w) => w.length >= 3 && !GENERIC.has(w))
 
 /** The project the sentence talks about: the one with most of its name words in it; the longer name wins a tie. */
-export function findProject(t: string, projects: NamedProject[]): NamedProject | null {
+function findProject(t: string, projects: NamedProject[]): NamedProject | null {
   const tokens = t.split(/\s+/).map(stem)
   let best: { p: NamedProject; score: number } | null = null
   for (const p of projects) {

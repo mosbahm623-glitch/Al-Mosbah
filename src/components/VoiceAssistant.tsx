@@ -10,6 +10,7 @@ import { useAsync } from '../lib/useAsync'
 type Recognition = {
   lang: string
   interimResults: boolean
+  maxAlternatives?: number
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
   onend: (() => void) | null
   onerror: ((e: { error?: string }) => void) | null
@@ -129,15 +130,21 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     if (listening) return rec.current?.stop()
     const r = new Ctor()
     r.lang = 'ar-EG'
-    r.interimResults = false
-    let heard = false
+    r.interimResults = true
+    r.maxAlternatives = 1
+    // phones often end the session without a "final" answer, so keep what was heard so far and use it at the end
+    let heard = ''
     r.onresult = (e) => {
-      heard = true
-      void send(e.results[0]?.[0]?.transcript ?? '')
+      heard = Array.from(e.results as ArrayLike<ArrayLike<{ transcript: string }>>)
+        .map((x) => x[0]?.transcript ?? '')
+        .join(' ')
+        .trim()
+      setText(heard)
     }
     r.onend = () => {
       setListening(false)
-      if (!heard && !failedRef.current) say('bot', 'ما سمعتش حاجة. دوس على الميكروفون وقول الجملة بعدها على طول.')
+      if (heard) void send(heard)
+      else if (!failedRef.current) say('bot', 'ما سمعتش حاجة. دوس على الميكروفون وابدأ كلام على طول.')
       failedRef.current = false
     }
     r.onerror = (e) => {
@@ -217,7 +224,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="قولّي عايز إيه..."
+            placeholder={listening ? 'بسمعك... اتكلم دلوقتي' : 'قولّي عايز إيه...'}
             aria-label="الأمر"
             autoFocus
           />

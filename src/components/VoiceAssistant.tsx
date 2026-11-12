@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Mic, MicOff, Send } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
-import { askAgent, describeWrite, runTool, WRITE_TOOLS, type Content, type ToolCall } from '../lib/agent'
+import { askAgent, describeWrite, loadContext, runTool, WRITE_TOOLS, type Content, type ToolCall } from '../lib/agent'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
 import { parseCommand } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
@@ -54,12 +54,16 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const rec = useRef<Recognition | null>(null)
   const history = useRef<Content[]>([])
   const failedRef = useRef(false)
+  const context = useRef<Promise<string> | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
   const names = useMemo(() => new Map((projects.data ?? []).map((p) => [p.id, p.name])), [projects.data])
 
-  useEffect(() => () => rec.current?.stop(), [])
+  useEffect(() => {
+    context.current = loadContext().catch(() => '')
+    return () => rec.current?.stop()
+  }, [])
   useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [lines, ask])
 
   const say = (who: Line['who'], t: string) => setLines((l) => [...l, { who, text: t }])
@@ -87,7 +91,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     history.current.push({ role: 'user', parts: [{ text: q }] })
     try {
       for (let step = 0; step < MAX_STEPS; step++) {
-        const { data, error } = await askAgent(history.current, todayText())
+        const { data, error } = await askAgent(history.current, todayText(), (await context.current) ?? '')
         if (error || !data?.parts) {
           say('bot', 'الذكاء الاصطناعي مش متاح دلوقتي، جرّب بعد شوية.')
           history.current.pop()

@@ -16,8 +16,42 @@ export type ToolCall = { name: string; args: Record<string, unknown>; id?: strin
 type Result = Record<string, unknown>
 
 /** One step of the model. `data.parts` is its answer: text and/or tool calls. */
-export const askAgent = (contents: Content[], today: string) =>
-  supabase.functions.invoke('agent', { body: { contents, today } })
+export const askAgent = (contents: Content[], today: string, context: string) =>
+  supabase.functions.invoke('agent', { body: { contents, today, context } })
+
+/** The names and ids the model needs most, sent along once so it does not have to look them up each time. */
+export async function loadContext(): Promise<string> {
+  const [pr, co, ba, ad, ca] = await Promise.all([
+    fetchSummaries(),
+    fetchContractorNames(),
+    fetchBankNames(),
+    fetchAdvanceSummaries(),
+    fetchCategories(),
+  ])
+  const list = (title: string, xs: string[]) => (xs.length ? `\n${title}:\n${xs.join('\n')}` : '')
+  return [
+    list(
+      'المشاريع',
+      rows(pr).map((p) => `${p.id} | ${p.name}${p.status === 'closed' ? ' (مؤرشف)' : ''}`),
+    ),
+    list(
+      'المقاولين',
+      rows(co).map((c) => `${c.id} | ${c.name}`),
+    ),
+    list(
+      'البنوك',
+      rows(ba).map((b) => `${b.id} | ${b.name}`),
+    ),
+    list(
+      'العهد',
+      rows(ad).map((a) => `${a.id} | ${a.holder_name}`),
+    ),
+    list(
+      'البنود',
+      rows(ca).map((c) => c.name),
+    ),
+  ].join('\n')
+}
 
 /** Tools that change data: the person must confirm each one first. */
 export const WRITE_TOOLS = new Set(['create_entry', 'approve_entries'])

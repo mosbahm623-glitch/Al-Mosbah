@@ -2,7 +2,7 @@
 // and sends the results back, so the model never touches the database itself.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-3.8-flash"];
+const MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"];
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -67,20 +67,22 @@ const declarations = [
   ),
 ];
 
-const system = (today: string) => `انت مساعد محاسب في تطبيق "المصباح" لإدارة مشاريع مقاولات وتشطيبات في مصر. بتتكلم بالعامية المصرية، قصير ومباشر.
+const system = (today: string, context: string) => `انت مساعد محاسب في تطبيق "المصباح" لإدارة مشاريع مقاولات وتشطيبات في مصر. بتتكلم بالعامية المصرية، قصير ومباشر.
 النهاردة ${today}. العملة جنيه مصري.
 - استخدم الأدوات دايمًا عشان تجيب الأرقام والـids. ما تخترعش رقم ولا id.
 - لو المستخدم ذكر مشروع أو مقاول أو بنك بالاسم، دوّر عليه في القوائم (حتى لو الاسم ناقص أو مكتوب بشكل تاني).
 - قبل ما تسجّل قيد لازم تكون عارف: المشروع، النوع، المبلغ، البيان، والبنك (أو العهدة). لو ناقص حاجة اسأل سؤال واحد قصير. لو المبلغ "٣٠ ألف" يبقى 30000.
 - أدوات التسجيل والموافقة بتطلب تأكيد من المستخدم لوحدها، ما تسألش تأكيد في الكلام.
 - بعد التنفيذ قول النتيجة في جملة قصيرة. لو الأداة رجّعت خطأ اشرحه وقول يعمل إيه.
-- لو الطلب خارج قدرات الأدوات قول ده بصراحة.`;
+- لو الطلب خارج قدرات الأدوات قول ده بصراحة.
+- ابدأ بالقوائم الجاهزة تحت (id | اسم) ومتنادّيش list_* غير لو محتاج الأرقام. نادّي كذا أداة مع بعض في نفس الخطوة لو تقدر.
+${context}`;
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   const key = Deno.env.get("GEMINI_API_KEY");
   if (!key) return json({ error: "no key" }, 500);
-  let body: { contents?: unknown[]; today?: string };
+  let body: { contents?: unknown[]; today?: string; context?: string };
   try {
     body = await req.json();
   } catch {
@@ -96,9 +98,9 @@ Deno.serve(async (req: Request) => {
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify({
-          systemInstruction: { parts: [{ text: system(String(body.today ?? "")) }] },
+          systemInstruction: { parts: [{ text: system(String(body.today ?? ""), String(body.context ?? "").slice(0, 20000)) }] },
           contents,
           tools: [{ functionDeclarations: declarations }],
           generationConfig: { temperature: 0.2 },

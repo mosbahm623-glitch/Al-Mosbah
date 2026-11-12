@@ -162,9 +162,9 @@ export function parseCommand(
   }
 
   const bank = findProject(t, banks)
-  if (bank && !/(^|\s)عهد/.test(t)) return { intent: 'account', kind: 'bank', item: bank }
+  if (bank && /بنك|رصيد|حساب/.test(t) && !/(^|\s)عهد/.test(t)) return { intent: 'account', kind: 'bank', item: bank }
   const advance = findProject(t, advances)
-  if (advance) return { intent: 'account', kind: 'advance', item: advance }
+  if (advance && /(^|\s)عهد/.test(t)) return { intent: 'account', kind: 'advance', item: advance }
 
   // a contractor and/or a category (البند), optionally inside a project
   const contractor = findProject(t, contractors)

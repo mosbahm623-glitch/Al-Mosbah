@@ -119,3 +119,13 @@ describe('parseCommand: banks, custody, reports', () => {
     expect(parseCommand('كام قيد مستني موافقة', projects)).toEqual({ intent: 'pending' })
   })
 })
+
+describe('a name alone must not trigger a custody or bank answer', () => {
+  const advs = [{ id: 'a1', name: 'خالد النقاش' }]
+  const banks = [{ id: 'b1', name: 'البنك الأهلي' }]
+  it('needs the word عهدة / بنك', () => {
+    expect(parseCommand('خالد النقاش', projects, cats, [], banks, advs).intent).not.toBe('account')
+    expect(parseCommand('عهدة خالد النقاش', projects, cats, [], banks, advs)).toMatchObject({ intent: 'account' })
+    expect(parseCommand('الاهلي', projects, cats, [], banks, advs).intent).not.toBe('account')
+  })
+})

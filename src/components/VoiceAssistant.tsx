@@ -9,7 +9,7 @@ import { fetchCategories } from '../lib/catalog'
 import { money } from '../lib/format'
 import { fetchContractorNames } from '../lib/lookups'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
-import { parseCommand } from '../lib/voiceCommand'
+import { parseCommand, plain, takeAmount } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
 
 type Recognition = {
@@ -89,6 +89,9 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   /** Answers what the fixed rules understand right away. Returns false when the AI should take over. */
   async function quick(q: string): Promise<boolean> {
     const all = projects.data ?? []
+    // a sentence with an amount, or that talks about recording, is never a plain lookup: the AI reads it
+    if (takeAmount(plain(q)).amount !== null || /قيد|قد سريع|سجل|ضيف|اضف|اكتب|مصروف|صرفت|دفعت|وارد|وافق/.test(plain(q)))
+      return false
     const cmd = parseCommand(
       q,
       all,

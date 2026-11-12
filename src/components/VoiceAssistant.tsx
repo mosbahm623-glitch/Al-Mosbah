@@ -44,7 +44,7 @@ function answer(c: Extract<Command, { intent: 'query' }>, all: ProjectSummary[])
 
 /** Talk or type a short command: ask about a project, or start an entry that you still check and save yourself. */
 export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
-  const { isAdmin, isOwner } = useAuth()
+  const { isAdmin, isOwner, can } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const cats = useAsync(fetchCategories)
   const [text, setText] = useState('')
@@ -54,7 +54,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const [pickId, setPickId] = useState('')
   const rec = useRef<Recognition | null>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
-  const mayEnter = isAdmin || isOwner
+  const mayEnter = isAdmin || isOwner || can('projects', 'edit')
   const all = useMemo(() => projects.data ?? [], [projects.data])
   const active = all.filter((p) => p.status === 'active')
 
@@ -70,7 +70,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     )
     if (cmd.intent === 'unknown') return setReply('ما فهمتش. جرّب جملة زي اللي تحت.')
     if (cmd.intent === 'query') return setReply(answer(cmd, all))
-    if (!mayEnter) return setReply('تسجيل القيد بالصوت للمالك والأدمن بس.')
+    if (!mayEnter) return setReply('مش عندك صلاحية تسجيل قيود.')
     if (!cmd.amount) return setReply('ما سمعتش المبلغ. قول مثلًا: سجّل ٥٠٠ نقاشة على الجندي.')
     setPickId(cmd.project?.id ?? '')
     setDraft(cmd)

@@ -3,7 +3,9 @@ import { Mic, MicOff } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
 import EntryDialog from './EntryDialog'
-import { decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
+import { advanceBalance, fetchAdvanceSummaries } from '../lib/advances'
+import { countPending, decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
+import { bankBalance, fetchBankSummaries } from '../lib/banks'
 import { fetchCategories } from '../lib/catalog'
 import { fetchContractorLedger } from '../lib/contractors'
 import { money } from '../lib/format'
@@ -60,6 +62,8 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const people = useAsync(() =>
     supabase.from('contractors').select('id,name').order('name').returns<{ id: string; name: string }[]>(),
   )
+  const banks = useAsync(fetchBankSummaries)
+  const advs = useAsync(fetchAdvanceSummaries)
   const [link, setLink] = useState<{ label: string; path: string } | null>(null)
   const [text, setText] = useState('')
   const [listening, setListening] = useState(false)
@@ -79,8 +83,15 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   /** Ask the AI first; if it is unreachable or unsure, fall back to the fixed rules. */
   async function understand(input: string): Promise<Command> {
     const names = (cats.data ?? []).map((c) => c.name)
-    const fixed = parseCommand(input, all, names, people.data ?? [])
-    if (['open', 'close', 'approve', 'lookup'].includes(fixed.intent)) return fixed
+    const fixed = parseCommand(
+      input,
+      all,
+      names,
+      people.data ?? [],
+      (banks.data ?? []).map((b) => ({ id: b.id, name: b.name })),
+      (advs.data ?? []).map((a) => ({ id: a.id, name: a.holder_name })),
+    )
+    if (['open', 'close', 'approve', 'lookup', 'account', 'pending'].includes(fixed.intent)) return fixed
     try {
       const { data, error } = await supabase.functions.invoke('assistant', {
         body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
@@ -140,6 +151,26 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
       setLink({ label: `افتح صفحة ${cmd.contractor.name}`, path: `contractors/${cmd.contractor.id}` })
       return setReply(
         `${cmd.contractor.name}${where ? ` (${where})` : ''}\nمستحقات ${money(due)} · مدفوع ${money(paid)} · الباقي ${money(due - paid)} ج.م\nمصروفات معتمدة باسمه: ${money(sum(spent.map((e) => e.amount)))} ج.م (${spent.length} قيد)`,
+      )
+    }
+    if (cmd.intent === 'pending') {
+      const n = await countPending()
+      return setReply(n ? `فيه ${n} مستنيين موافقة.` : 'مفيش حاجة مستنية موافقة.')
+    }
+    if (cmd.intent === 'account') {
+      if (cmd.kind === 'bank') {
+        const b = (banks.data ?? []).find((x) => x.id === cmd.item.id)
+        if (!b) return setReply('مش لاقي البنك ده.')
+        setLink({ label: `افتح ${b.name}`, path: `banks/${b.id}` })
+        return setReply(
+          `${b.name}\nالرصيد ${money(bankBalance(b))} ج.م · وارد ${money(b.income)} · مصروف ${money(b.expenses)}`,
+        )
+      }
+      const a = (advs.data ?? []).find((x) => x.id === cmd.item.id)
+      if (!a) return setReply('مش لاقي العهدة دي.')
+      setLink({ label: `افتح عهدة ${a.holder_name}`, path: `advances/${a.id}` })
+      return setReply(
+        `عهدة ${a.holder_name}\nاستلم ${money(a.given)} · صرف ${money(a.spent)} · رجّع ${money(a.returned)}\nالباقي معاه ${money(advanceBalance(a))} ج.م`,
       )
     }
     if (cmd.intent === 'approve') {

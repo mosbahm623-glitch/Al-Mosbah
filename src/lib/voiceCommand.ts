@@ -18,6 +18,8 @@ export type Command =
   | { intent: 'query'; metric: 'income' | 'expenses' | 'balance' | 'all'; project: NamedProject | null }
   | { intent: 'open'; path: string; label: string }
   | { intent: 'close' }
+  | { intent: 'account'; kind: 'bank' | 'advance'; item: NamedProject }
+  | { intent: 'pending' }
   | { intent: 'lookup'; contractor: NamedProject | null; project: NamedProject | null; category: string }
   | { intent: 'approve'; project: NamedProject | null }
   | { intent: 'unknown' }
@@ -123,6 +125,8 @@ export function parseCommand(
   projects: NamedProject[],
   categories: string[] = [],
   contractors: NamedProject[] = [],
+  banks: NamedProject[] = [],
+  advances: NamedProject[] = [],
 ): Command {
   const t = plain(raw)
   if (!t) return { intent: 'unknown' }
@@ -130,6 +134,10 @@ export function parseCommand(
 
   if (CLOSE.test(t)) return { intent: 'close' }
   if (APPROVE.test(t)) return { intent: 'approve', project }
+  if (/(كام|عدد|فيه).*(قيد|قيود).*(مستني|مستنيه|معلق|موافقه)/.test(t)) return { intent: 'pending' }
+  if (/تقرير/.test(t) && project) {
+    return { intent: 'open', path: `projects/${project.id}/report`, label: `تقرير مشروع ${project.name}` }
+  }
   if (OPEN.test(t)) {
     if (project) return { intent: 'open', path: `projects/${project.id}`, label: `مشروع ${project.name}` }
     const page = PAGES.find(([re]) => re.test(t))
@@ -152,6 +160,11 @@ export function parseCommand(
     const text = rest.replace(FILLER, ' ').replace(/\s+/g, ' ').trim()
     return { intent: 'entry', kind, amount, project, text, category: guessCategory(t, categories) }
   }
+
+  const bank = findProject(t, banks)
+  if (bank && !/(^|\s)عهد/.test(t)) return { intent: 'account', kind: 'bank', item: bank }
+  const advance = findProject(t, advances)
+  if (advance) return { intent: 'account', kind: 'advance', item: advance }
 
   // a contractor and/or a category (البند), optionally inside a project
   const contractor = findProject(t, contractors)

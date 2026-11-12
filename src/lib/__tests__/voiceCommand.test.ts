@@ -100,3 +100,22 @@ describe('parseCommand: contractor / category lookup', () => {
     })
   })
 })
+
+describe('parseCommand: banks, custody, reports', () => {
+  const banks = [{ id: 'b1', name: 'البنك الأهلي' }]
+  const advs = [{ id: 'a1', name: 'احمد سالم' }]
+  it('bank and custody balance', () => {
+    expect(parseCommand('رصيد البنك الاهلي', projects, cats, [], banks, advs)).toMatchObject({
+      intent: 'account',
+      kind: 'bank',
+    })
+    expect(parseCommand('عهدة احمد سالم', projects, cats, [], banks, advs)).toMatchObject({
+      intent: 'account',
+      kind: 'advance',
+    })
+  })
+  it('report and pending count', () => {
+    expect(parseCommand('تقرير العيادة', projects)).toMatchObject({ intent: 'open', path: 'projects/1/report' })
+    expect(parseCommand('كام قيد مستني موافقة', projects)).toEqual({ intent: 'pending' })
+  })
+})

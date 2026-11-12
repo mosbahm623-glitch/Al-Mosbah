@@ -79,3 +79,24 @@ describe('parseCommand: approve', () => {
     expect(parseCommand('وافق على قيود العيادة', projects)).toMatchObject({ intent: 'approve', project: { id: '1' } })
   })
 })
+
+describe('parseCommand: contractor / category lookup', () => {
+  const people = [{ id: 'c1', name: 'خالد النقاش' }]
+  it('finds a contractor with his project', () => {
+    const c = parseCommand('عايز مقاول خالد النقاش في العيادة', projects, cats, people)
+    expect(c).toMatchObject({ intent: 'lookup', contractor: { id: 'c1' }, project: { id: '1' } })
+  })
+  it('finds a contractor by name only', () => {
+    expect(parseCommand('خالد النقاش', projects, cats, people)).toMatchObject({
+      intent: 'lookup',
+      contractor: { id: 'c1' },
+    })
+  })
+  it('finds a category', () => {
+    expect(parseCommand('عايز بند نقاشة', projects, cats, people)).toMatchObject({
+      intent: 'lookup',
+      contractor: null,
+      category: 'نقاشة',
+    })
+  })
+})

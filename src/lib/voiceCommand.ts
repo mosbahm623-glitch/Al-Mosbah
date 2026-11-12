@@ -18,6 +18,7 @@ export type Command =
   | { intent: 'query'; metric: 'income' | 'expenses' | 'balance' | 'all'; project: NamedProject | null }
   | { intent: 'open'; path: string; label: string }
   | { intent: 'close' }
+  | { intent: 'lookup'; contractor: NamedProject | null; project: NamedProject | null; category: string }
   | { intent: 'approve'; project: NamedProject | null }
   | { intent: 'unknown' }
 
@@ -115,7 +116,14 @@ const OPEN = /^(افتح|فتح|روح|وديني|اعرض|ورنى|ورني)(?=
 const APPROVE = /^(وافق|اعتمد|اوافق|موافقه)(?=\s|$)/
 const CLOSE = /^(اقفل|قفل|اغلق|سكر|خلاص|كفايه)(?=\s|$)/
 
-export function parseCommand(raw: string, projects: NamedProject[], categories: string[] = []): Command {
+const WANT = /^(عايز|عاوز|عايزه|ورني|ورنى|هات|دور|ابحث|مقاول|المقاول|بند|البند)(?=\s|$)/
+
+export function parseCommand(
+  raw: string,
+  projects: NamedProject[],
+  categories: string[] = [],
+  contractors: NamedProject[] = [],
+): Command {
   const t = plain(raw)
   if (!t) return { intent: 'unknown' }
   const project = findProject(t, projects)
@@ -144,6 +152,11 @@ export function parseCommand(raw: string, projects: NamedProject[], categories: 
     const text = rest.replace(FILLER, ' ').replace(/\s+/g, ' ').trim()
     return { intent: 'entry', kind, amount, project, text, category: guessCategory(t, categories) }
   }
+
+  // a contractor and/or a category (البند), optionally inside a project
+  const contractor = findProject(t, contractors)
+  const category = guessCategory(t, categories)
+  if (contractor || (WANT.test(t) && category)) return { intent: 'lookup', contractor, project, category }
 
   const asks = /(?:^|\s)(كام|كم|قد ايه|رصيد|باقي|فاضل|صافي|اجمالي|مصروف|مصاريف|وارد|ايراد|صرفنا|صرفت)(?=\s|$)/.test(t)
   if (!asks) return { intent: 'unknown' }

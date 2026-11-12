@@ -5,6 +5,7 @@ import Dialog from './Dialog'
 import EntryDialog from './EntryDialog'
 import { decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
 import { fetchCategories } from '../lib/catalog'
+import { fetchContractorLedger } from '../lib/contractors'
 import { money } from '../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
 import { supabase } from '../lib/supabase'
@@ -56,6 +57,10 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const { isAdmin, isOwner, can } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
   const cats = useAsync(fetchCategories)
+  const people = useAsync(() =>
+    supabase.from('contractors').select('id,name').order('name').returns<{ id: string; name: string }[]>(),
+  )
+  const [link, setLink] = useState<{ label: string; path: string } | null>(null)
   const [text, setText] = useState('')
   const [listening, setListening] = useState(false)
   const [reply, setReply] = useState<string | null>(null)
@@ -74,8 +79,8 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   /** Ask the AI first; if it is unreachable or unsure, fall back to the fixed rules. */
   async function understand(input: string): Promise<Command> {
     const names = (cats.data ?? []).map((c) => c.name)
-    const fixed = parseCommand(input, all, names)
-    if (fixed.intent === 'open' || fixed.intent === 'close' || fixed.intent === 'approve') return fixed
+    const fixed = parseCommand(input, all, names, people.data ?? [])
+    if (['open', 'close', 'approve', 'lookup'].includes(fixed.intent)) return fixed
     try {
       const { data, error } = await supabase.functions.invoke('assistant', {
         body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
@@ -104,6 +109,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   async function run(input: string) {
     setReply(null)
     setDraft(null)
+    setLink(null)
     setBusy(true)
     const cmd = await understand(input)
     setBusy(false)
@@ -111,6 +117,30 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     if (cmd.intent === 'open') {
       window.location.hash = `#/${cmd.path}`
       return onClose()
+    }
+    if (cmd.intent === 'lookup') {
+      if (!cmd.contractor) {
+        window.location.hash = `#/search?q=${encodeURIComponent(cmd.category)}`
+        return onClose()
+      }
+      setBusy(true)
+      const led = await fetchContractorLedger(cmd.contractor.id)
+      setBusy(false)
+      if (!led) return setReply('مقدرناش نحمّل حساب المقاول، جرّب تاني.')
+      const pid = cmd.project?.id
+      const pname = cmd.project?.name
+      const txns = led.txns.filter((t) => !pid || t.project_id === pid)
+      const spent = led.spent.filter(
+        (e) => (!pname || e.project?.name === pname) && (!cmd.category || e.category === cmd.category),
+      )
+      const sum = (xs: number[]) => xs.reduce((t, n) => t + n, 0)
+      const due = sum(txns.filter((t) => t.kind === 'due').map((t) => t.amount))
+      const paid = sum(txns.filter((t) => t.kind === 'payment').map((t) => t.amount))
+      const where = [pname && `مشروع ${pname}`, cmd.category && `بند ${cmd.category}`].filter(Boolean).join(' · ')
+      setLink({ label: `افتح صفحة ${cmd.contractor.name}`, path: `contractors/${cmd.contractor.id}` })
+      return setReply(
+        `${cmd.contractor.name}${where ? ` (${where})` : ''}\nمستحقات ${money(due)} · مدفوع ${money(paid)} · الباقي ${money(due - paid)} ج.م\nمصروفات معتمدة باسمه: ${money(sum(spent.map((e) => e.amount)))} ج.م (${spent.length} قيد)`,
+      )
     }
     if (cmd.intent === 'approve') {
       if (!isAdmin) return setReply('الموافقة للأدمن بس.')
@@ -215,7 +245,23 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
 
       {!canSpeak && <p className="muted small">المتصفح ده مش بيدعم الصوت. افتح المصباح من كروم، أو اكتب الأمر.</p>}
       {projects.failed && <p className="msg msg-error">مقدرناش نحمّل المشاريع، جرّب تاني</p>}
-      {reply && <p className="voice-reply">{reply}</p>}
+      {reply && (
+        <p className="voice-reply" style={{ whiteSpace: 'pre-line' }}>
+          {reply}
+        </p>
+      )}
+      {link && (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => {
+            window.location.hash = `#/${link.path}`
+            onClose()
+          }}
+        >
+          {link.label}
+        </button>
+      )}
 
       {toApprove && (
         <div className="voice-pick">

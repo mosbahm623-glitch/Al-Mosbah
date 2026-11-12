@@ -9,12 +9,13 @@ import {
   fetchInstallmentsByStatus,
   filterEntries,
   isFiltering,
+  summarize,
   type ApprovalFilter,
   type PendingEntry,
   type PendingInstallment,
 } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
-import { todayISO } from '../../lib/format'
+import { money, todayISO } from '../../lib/format'
 import ApprovalFilters from './ApprovalFilters'
 import EntryApprovalCard from './EntryApprovalCard'
 import InstallmentApprovals from './InstallmentApprovals'
@@ -72,6 +73,8 @@ export default function Approvals() {
   // only what is on screen can be chosen: an entry hidden by a filter is never approved by mistake
   const chosen = rows.filter((r) => picked.has(r.id))
   const names = [...new Set(all.map(enteredByOf).filter((n): n is string => Boolean(n)))]
+  const projects = [...new Set(all.map((r) => r.project?.name).filter((n): n is string => Boolean(n)))].sort((a, b) => a.localeCompare(b, 'ar'))
+  const stats = useMemo(() => summarize(all), [all])
   const banks = [...new Set(all.map((r) => r.bank?.name).filter((n): n is string => Boolean(n)))]
   const toggle = (id: string) =>
     setPicked((s) => {
@@ -161,7 +164,34 @@ export default function Approvals() {
 
       {!other && <InstallmentApprovals rows={paymentRows} onChanged={payments.reload} />}
 
-      {!other && all.length > 0 && <ApprovalFilters filter={filter} onChange={setFilter} names={names} banks={banks} />}
+      {tab === 'pending' && all.length > 0 && (
+        <section className="appr-stats" aria-label="ملخص الموافقات">
+          <div className="appr-stat is-main">
+            <small>مستنية الموافقة</small>
+            <b>{stats.count} قيد</b>
+          </div>
+          <div className="appr-stat">
+            <small>إجمالي المبالغ</small>
+            <b>{money(stats.total)} ج.م</b>
+          </div>
+          <div className="appr-stat">
+            <small>من العهد</small>
+            <b>
+              {stats.advCount} قيد · {money(stats.advTotal)}
+            </b>
+          </div>
+          <div className="appr-stat">
+            <small>من البنك</small>
+            <b>
+              {stats.bankCount} قيد · {money(stats.bankTotal)}
+            </b>
+          </div>
+        </section>
+      )}
+
+      {!other && all.length > 0 && (
+        <ApprovalFilters filter={filter} onChange={setFilter} names={names} banks={banks} projects={projects} />
+      )}
 
       {!other && all.length > 0 && rows.length === 0 && <div className="card empty">مفيش قيود بالفلتر ده.</div>}
 

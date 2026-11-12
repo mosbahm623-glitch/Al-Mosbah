@@ -6,10 +6,11 @@ type Props = {
   /** who recorded the entries on screen, and the banks they used: the choices of the two lists */
   names: string[]
   banks: string[]
+  projects: string[]
 }
 
 /** The search fields above the approvals list. An empty field does not filter. */
-export default function ApprovalFilters({ filter, onChange, names, banks }: Props) {
+export default function ApprovalFilters({ filter, onChange, names, banks, projects }: Props) {
   const setF = (patch: Partial<ApprovalFilter>) => onChange({ ...filter, ...patch })
   return (
     <section className="card appr-filters" aria-label="فلتر القيود">
@@ -37,6 +38,25 @@ export default function ApprovalFilters({ filter, onChange, names, banks }: Prop
               {n}
             </option>
           ))}
+        </select>
+      </label>
+      <label className="field">
+        المشروع
+        <select value={filter.project} onChange={(e) => setF({ project: e.target.value })}>
+          <option value="">كل المشاريع</option>
+          {projects.map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        المصدر
+        <select value={filter.source} onChange={(e) => setF({ source: e.target.value as ApprovalFilter['source'] })}>
+          <option value="">بنك + عهدة</option>
+          <option value="bank">بنك</option>
+          <option value="advance">عهدة</option>
         </select>
       </label>
       <label className="field">

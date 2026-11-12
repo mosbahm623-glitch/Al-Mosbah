@@ -71,6 +71,10 @@ export type ApprovalFilter = {
   /** name of the person who recorded the entry */
   who: string
   bank: string
+  /** the project name */
+  project: string
+  /** where the money came from: the bank, or a custody (عهدة) */
+  source: '' | 'bank' | 'advance'
   /** the date of the entry (YYYY-MM-DD) */
   day: string
   /** amount range, both ends included */
@@ -78,7 +82,7 @@ export type ApprovalFilter = {
   max: string
 }
 
-export const NO_FILTER: ApprovalFilter = { text: '', who: '', bank: '', day: '', min: '', max: '' }
+export const NO_FILTER: ApprovalFilter = { text: '', who: '', bank: '', project: '', source: '', day: '', min: '', max: '' }
 
 export const isFiltering = (f: ApprovalFilter) => Object.values(f).some((v) => v.trim() !== '')
 
@@ -104,11 +108,29 @@ export function filterEntries(rows: PendingEntry[], f: ApprovalFilter): PendingE
     }
     if (f.who && (enteredByOf(e) ?? '') !== f.who) return false
     if (f.bank && (e.bank?.name ?? '') !== f.bank) return false
+    if (f.project && (e.project?.name ?? '') !== f.project) return false
+    if (f.source === 'advance' && !e.advance_id) return false
+    if (f.source === 'bank' && e.advance_id) return false
     if (f.day && e.entry_date !== f.day) return false
     if (min !== null && e.amount < min) return false
     if (max !== null && e.amount > max) return false
     return true
   })
+}
+
+/** The numbers on top of the approvals page: how many, how much, and how much of it is custody (عهدة) or bank. */
+export function summarize(rows: PendingEntry[]) {
+  const sum = (list: PendingEntry[]) => list.reduce((t, e) => t + e.amount, 0)
+  const adv = rows.filter((e) => e.advance_id)
+  const bank = rows.filter((e) => !e.advance_id)
+  return {
+    count: rows.length,
+    total: sum(rows),
+    advCount: adv.length,
+    advTotal: sum(adv),
+    bankCount: bank.length,
+    bankTotal: sum(bank),
+  }
 }
 
 /** Everything waiting for the admin: entries and custody payments (this is the number on the red badge). */

@@ -73,8 +73,10 @@ export default function Approvals() {
   // only what is on screen can be chosen: an entry hidden by a filter is never approved by mistake
   const chosen = rows.filter((r) => picked.has(r.id))
   const names = [...new Set(all.map(enteredByOf).filter((n): n is string => Boolean(n)))]
-  const projects = [...new Set(all.map((r) => r.project?.name).filter((n): n is string => Boolean(n)))].sort((a, b) => a.localeCompare(b, 'ar'))
-  const stats = useMemo(() => summarize(all), [all])
+  const projects = [...new Set(all.map((r) => r.project?.name).filter((n): n is string => Boolean(n)))].sort((a, b) =>
+    a.localeCompare(b, 'ar'),
+  )
+  const stats = useMemo(() => summarize(rows), [rows])
   const banks = [...new Set(all.map((r) => r.bank?.name).filter((n): n is string => Boolean(n)))]
   const toggle = (id: string) =>
     setPicked((s) => {
@@ -167,7 +169,7 @@ export default function Approvals() {
       {tab === 'pending' && all.length > 0 && (
         <section className="appr-stats" aria-label="ملخص الموافقات">
           <div className="appr-stat is-main">
-            <small>مستنية الموافقة</small>
+            <small>{filtering ? 'المعروض بعد الفلتر' : 'مستنية الموافقة'}</small>
             <b>{stats.count} قيد</b>
           </div>
           <div className="appr-stat">

@@ -1,17 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Mic, MicOff } from 'lucide-react'
+import { Mic, MicOff, Send } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
-import EntryDialog from './EntryDialog'
-import { askAssistant, fetchContractorNames } from '../lib/assistant'
-import { advanceBalance, fetchAdvanceSummaries } from '../lib/advances'
-import { countPending, decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
-import { bankBalance, fetchBankSummaries } from '../lib/banks'
-import { fetchCategories } from '../lib/catalog'
-import { fetchContractorLedger } from '../lib/contractors'
-import { money } from '../lib/format'
+import { askAgent, describeWrite, runTool, WRITE_TOOLS, type Content, type ToolCall } from '../lib/agent'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
-import { parseCommand, type Command } from '../lib/voiceCommand'
+import { parseCommand } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
 
 type Recognition = {
@@ -32,160 +25,101 @@ const speech = (): (new () => Recognition) | null => {
 }
 
 const EXAMPLES = [
-  'سجّل ٥٠٠ نقاشة على الجندي',
-  'كام صرفنا على العيادة؟',
-  'افتح الموافقات',
-  'افتح مشروع العيادة',
-  'وافق على كل القيود',
-  'اقفل',
+  'سجّل ٣٠ ألف لخالد النقاش على الجندي من البنك الأهلي',
+  'كام الباقي لخالد النقاش في العيادة؟',
+  'وافق على قيود العيادة',
+  'افتح تقرير الجندي',
 ]
+const MAX_STEPS = 8
 
-function answer(c: Extract<Command, { intent: 'query' }>, all: ProjectSummary[]): string {
-  const rows = c.project ? all.filter((p) => p.id === c.project?.id) : all.filter((p) => p.status === 'active')
-  const income = rows.reduce((t, p) => t + p.income, 0)
-  const expenses = rows.reduce((t, p) => t + p.expenses, 0)
-  const who = c.project ? `مشروع ${c.project.name}` : 'كل المشاريع النشطة'
-  const parts = {
-    income: `الوارد ${money(income)} ج.م`,
-    expenses: `المصروف ${money(expenses)} ج.م`,
-    balance: `الرصيد ${money(income - expenses)} ج.م`,
-  }
-  if (c.metric === 'all') return `${who}: ${parts.income} · ${parts.expenses} · ${parts.balance}`
-  return `${who}: ${parts[c.metric]}`
+type Line = { who: 'me' | 'bot'; text: string }
+type Ask = { text: string; resolve: (ok: boolean) => void }
+
+const todayText = () => {
+  const d = new Date()
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
-/** Talk or type a short command: ask about a project, or start an entry that you still check and save yourself. */
+/** A chat with an AI agent: it looks things up, opens pages, and (after you confirm) records entries and approves. */
 export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const { isAdmin, isOwner, can } = useAuth()
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
-  const cats = useAsync(fetchCategories)
-  const people = useAsync(fetchContractorNames)
-  const banks = useAsync(fetchBankSummaries)
-  const advs = useAsync(fetchAdvanceSummaries)
-  const [link, setLink] = useState<{ label: string; path: string } | null>(null)
   const [text, setText] = useState('')
-  const [listening, setListening] = useState(false)
-  const [reply, setReply] = useState<string | null>(null)
-  const [draft, setDraft] = useState<Extract<Command, { intent: 'entry' }> | null>(null)
-  const [pickId, setPickId] = useState('')
+  const [lines, setLines] = useState<Line[]>([])
   const [busy, setBusy] = useState(false)
-  const [toApprove, setToApprove] = useState<{ rows: PendingEntry[]; who: string } | null>(null)
+  const [listening, setListening] = useState(false)
+  const [ask, setAsk] = useState<Ask | null>(null)
   const rec = useRef<Recognition | null>(null)
+  const history = useRef<Content[]>([])
+  const endRef = useRef<HTMLDivElement>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
-  const all = useMemo(() => projects.data ?? [], [projects.data])
-  const active = all.filter((p) => p.status === 'active')
+  const names = useMemo(() => new Map((projects.data ?? []).map((p) => [p.id, p.name])), [projects.data])
 
   useEffect(() => () => rec.current?.stop(), [])
+  useEffect(() => endRef.current?.scrollIntoView({ block: 'end' }), [lines, ask])
 
-  /** Ask the AI first; if it is unreachable or unsure, fall back to the fixed rules. */
-  async function understand(input: string): Promise<Command> {
-    const names = (cats.data ?? []).map((c) => c.name)
-    const fixed = parseCommand(
-      input,
-      all,
-      names,
-      people.data ?? [],
-      (banks.data ?? []).map((b) => ({ id: b.id, name: b.name })),
-      (advs.data ?? []).map((a) => ({ id: a.id, name: a.holder_name })),
-    )
-    if (['open', 'close', 'approve', 'lookup', 'account', 'pending'].includes(fixed.intent)) return fixed
-    try {
-      const { data, error } = await askAssistant({
-        text: input,
-        projects: all.map((p) => ({ id: p.id, name: p.name })),
-        categories: names,
-      })
-      if (!error && data && (data.intent === 'entry' || data.intent === 'query')) {
-        const project = all.find((p) => p.id === data.project_id)
-        const named = project ? { id: project.id, name: project.name } : null
-        if (data.intent === 'query') {
-          return { intent: 'query', metric: data.metric ?? 'all', project: named }
-        }
-        return {
-          intent: 'entry',
-          kind: data.kind === 'income' ? 'income' : 'expense',
-          amount: Number(data.amount) > 0 ? Number(data.amount) : null,
-          project: named,
-          text: String(data.text ?? ''),
-          category: names.includes(data.category) ? data.category : '',
-        }
-      }
-    } catch {
-      /* fall through to the rules */
-    }
-    return parseCommand(input, all, names)
+  const say = (who: Line['who'], t: string) => setLines((l) => [...l, { who, text: t }])
+  const go = (path: string) => {
+    window.location.hash = `#/${path}`
+    onClose()
   }
 
-  async function run(input: string) {
-    setReply(null)
-    setDraft(null)
-    setLink(null)
+  function confirm(t: string) {
+    return new Promise<boolean>((resolve) => setAsk({ text: t, resolve }))
+  }
+
+  async function send(input: string) {
+    const q = input.trim()
+    if (!q || busy) return
+    setText('')
+    say('me', q)
+
+    // the plain ones need no AI
+    const fixed = parseCommand(q, [])
+    if (fixed.intent === 'close') return onClose()
+    if (fixed.intent === 'open' && !fixed.path.startsWith('projects/')) return go(fixed.path)
+
     setBusy(true)
-    const cmd = await understand(input)
-    setBusy(false)
-    if (cmd.intent === 'close') return onClose()
-    if (cmd.intent === 'open') {
-      window.location.hash = `#/${cmd.path}`
-      return onClose()
-    }
-    if (cmd.intent === 'lookup') {
-      if (!cmd.contractor) {
-        window.location.hash = `#/search?q=${encodeURIComponent(cmd.category)}`
-        return onClose()
+    history.current.push({ role: 'user', parts: [{ text: q }] })
+    try {
+      for (let step = 0; step < MAX_STEPS; step++) {
+        const { data, error } = await askAgent(history.current, todayText())
+        if (error || !data?.parts) {
+          say('bot', 'الذكاء الاصطناعي مش متاح دلوقتي، جرّب بعد شوية.')
+          history.current.pop()
+          return
+        }
+        const parts = data.parts as Content['parts']
+        history.current.push({ role: 'model', parts })
+        const said = parts
+          .filter((p) => typeof p.text === 'string' && !p.thought)
+          .map((p) => p.text as string)
+          .join('')
+          .trim()
+        if (said) say('bot', said)
+        const calls = parts.filter((p) => p.functionCall).map((p) => p.functionCall as ToolCall)
+        if (!calls.length) return
+
+        const answers: Content['parts'] = []
+        for (const call of calls) {
+          call.args = call.args ?? {}
+          let result: Record<string, unknown>
+          if (WRITE_TOOLS.has(call.name) && !(await confirm(await describeWrite(call, names)))) {
+            result = { declined: true, note: 'المستخدم رفض التنفيذ.' }
+          } else {
+            result = await runTool(call, { isAdmin, mayEnter, today: todayText(), go })
+          }
+          answers.push({ functionResponse: { name: call.name, ...(call.id ? { id: call.id } : {}), response: result } })
+        }
+        history.current.push({ role: 'user', parts: answers })
       }
-      setBusy(true)
-      const led = await fetchContractorLedger(cmd.contractor.id)
+      say('bot', 'الموضوع طوّل. قولّي تاني بشكل أبسط.')
+    } finally {
       setBusy(false)
-      if (!led) return setReply('مقدرناش نحمّل حساب المقاول، جرّب تاني.')
-      const pid = cmd.project?.id
-      const pname = cmd.project?.name
-      const txns = led.txns.filter((t) => !pid || t.project_id === pid)
-      const spent = led.spent.filter(
-        (e) => (!pname || e.project?.name === pname) && (!cmd.category || e.category === cmd.category),
-      )
-      const sum = (xs: number[]) => xs.reduce((t, n) => t + n, 0)
-      const due = sum(txns.filter((t) => t.kind === 'due').map((t) => t.amount))
-      const paid = sum(txns.filter((t) => t.kind === 'payment').map((t) => t.amount))
-      const where = [pname && `مشروع ${pname}`, cmd.category && `بند ${cmd.category}`].filter(Boolean).join(' · ')
-      setLink({ label: `افتح صفحة ${cmd.contractor.name}`, path: `contractors/${cmd.contractor.id}` })
-      return setReply(
-        `${cmd.contractor.name}${where ? ` (${where})` : ''}\nمستحقات ${money(due)} · مدفوع ${money(paid)} · الباقي ${money(due - paid)} ج.م\nمصروفات معتمدة باسمه: ${money(sum(spent.map((e) => e.amount)))} ج.م (${spent.length} قيد)`,
-      )
+      setAsk(null)
     }
-    if (cmd.intent === 'pending') {
-      const n = await countPending()
-      return setReply(n ? `فيه ${n} مستنيين موافقة.` : 'مفيش حاجة مستنية موافقة.')
-    }
-    if (cmd.intent === 'account') {
-      if (cmd.kind === 'bank') {
-        const b = (banks.data ?? []).find((x) => x.id === cmd.item.id)
-        if (!b) return setReply('مش لاقي البنك ده.')
-        setLink({ label: `افتح ${b.name}`, path: `banks/${b.id}` })
-        return setReply(
-          `${b.name}\nالرصيد ${money(bankBalance(b))} ج.م · وارد ${money(b.income)} · مصروف ${money(b.expenses)}`,
-        )
-      }
-      const a = (advs.data ?? []).find((x) => x.id === cmd.item.id)
-      if (!a) return setReply('مش لاقي العهدة دي.')
-      setLink({ label: `افتح عهدة ${a.holder_name}`, path: `advances/${a.id}` })
-      return setReply(
-        `عهدة ${a.holder_name}\nاستلم ${money(a.given)} · صرف ${money(a.spent)} · رجّع ${money(a.returned)}\nالباقي معاه ${money(advanceBalance(a))} ج.م`,
-      )
-    }
-    if (cmd.intent === 'approve') {
-      if (!isAdmin) return setReply('الموافقة للأدمن بس.')
-      const { data } = await fetchByStatus('pending')
-      const rows = (data ?? []).filter((e) => !cmd.project || e.project_id === cmd.project.id)
-      if (!rows.length) return setReply('مفيش قيود مستنية موافقة.')
-      return setToApprove({ rows, who: cmd.project ? `مشروع ${cmd.project.name}` : 'كل المشاريع' })
-    }
-    if (cmd.intent === 'unknown') return setReply('ما فهمتش. جرّب جملة زي اللي تحت.')
-    if (cmd.intent === 'query') return setReply(answer(cmd, all))
-    if (!mayEnter) return setReply('مش عندك صلاحية تسجيل قيود.')
-    if (!cmd.amount) return setReply('ما سمعتش المبلغ. قول مثلًا: سجّل ٥٠٠ نقاشة على الجندي.')
-    setPickId(cmd.project?.id ?? '')
-    setDraft(cmd)
   }
 
   function listen() {
@@ -195,65 +129,78 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     const r = new Ctor()
     r.lang = 'ar-EG'
     r.interimResults = false
-    r.onresult = (e) => {
-      const heard = e.results[0]?.[0]?.transcript ?? ''
-      setText(heard)
-      run(heard)
-    }
+    r.onresult = (e) => void send(e.results[0]?.[0]?.transcript ?? '')
     r.onend = () => setListening(false)
     r.onerror = () => {
       setListening(false)
-      setReply('ما قدرناش نسمعك. اتأكد إن الميكروفون شغّال، أو اكتب الجملة.')
+      say('bot', 'ما قدرناش نسمعك. اتأكد إن الميكروفون شغّال، أو اكتب.')
     }
     rec.current = r
     setListening(true)
     r.start()
   }
 
-  async function approveAll() {
-    if (!toApprove) return
-    setBusy(true)
-    const r = await decide(
-      toApprove.rows.map((e) => ({ id: e.id, rev: e.rev })),
-      'approved',
-    )
-    setBusy(false)
-    setToApprove(null)
-    setReply(
-      r.failed
-        ? 'حصلت مشكلة، راجع صفحة الموافقات.'
-        : `اتوافق على ${r.done} قيد${r.skipped ? ` (${r.skipped} اتغيّروا ومحتاجين مراجعة)` : ''}.`,
-    )
-  }
-
-  const chosen = active.find((p) => p.id === pickId)
-
-  if (draft && chosen) {
-    return (
-      <EntryDialog
-        projectId={chosen.id}
-        projectName={chosen.name}
-        prefill={{ kind: draft.kind, amount: draft.amount, category: draft.category, text: draft.text }}
-        onClose={onClose}
-        onSaved={onClose}
-      />
-    )
-  }
-
   return (
     <Dialog title="المساعد" subtitle="اتكلم أو اكتب" onClose={onClose}>
+      <div className="agent-log" aria-live="polite">
+        {lines.length === 0 && (
+          <div className="voice-examples">
+            <span className="muted small">جرّب:</span>
+            {EXAMPLES.map((x) => (
+              <button key={x} type="button" className="chip chip-neutral" onClick={() => void send(x)}>
+                {x}
+              </button>
+            ))}
+          </div>
+        )}
+        {lines.map((l, i) => (
+          <p key={i} className={`agent-msg agent-${l.who}`}>
+            {l.text}
+          </p>
+        ))}
+        {busy && !ask && <p className="agent-msg agent-bot muted">بفكّر...</p>}
+        {ask && (
+          <div className="voice-pick">
+            <p style={{ whiteSpace: 'pre-line' }}>{ask.text}</p>
+            <div className="voice-row">
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  ask.resolve(true)
+                  setAsk(null)
+                }}
+              >
+                أيوه، نفّذ
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => {
+                  ask.resolve(false)
+                  setAsk(null)
+                }}
+              >
+                لأ
+              </button>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+
       <form
         className="voice-form"
         onSubmit={(e) => {
           e.preventDefault()
-          run(text)
+          void send(text)
         }}
       >
         <div className="voice-row">
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="مثلًا: سجّل ٥٠٠ نقاشة على الجندي"
+            placeholder="قولّي عايز إيه..."
             aria-label="الأمر"
             autoFocus
           />
@@ -265,85 +212,14 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
               aria-label={listening ? 'إيقاف التسجيل' : 'اتكلم'}
             >
               {listening ? <MicOff size={18} /> : <Mic size={18} />}
-              {listening ? 'بسمعك...' : 'اتكلم'}
             </button>
           )}
-          <button className="btn" disabled={!text.trim() || !projects.data || busy}>
-            {busy ? 'بفكّر...' : 'نفّذ'}
+          <button className="btn btn-icon" disabled={!text.trim() || busy} aria-label="إرسال">
+            <Send size={18} />
           </button>
         </div>
       </form>
-
-      {!canSpeak && <p className="muted small">المتصفح ده مش بيدعم الصوت. افتح المصباح من كروم، أو اكتب الأمر.</p>}
-      {projects.failed && <p className="msg msg-error">مقدرناش نحمّل المشاريع، جرّب تاني</p>}
-      {reply && (
-        <p className="voice-reply" style={{ whiteSpace: 'pre-line' }}>
-          {reply}
-        </p>
-      )}
-      {link && (
-        <button
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => {
-            window.location.hash = `#/${link.path}`
-            onClose()
-          }}
-        >
-          {link.label}
-        </button>
-      )}
-
-      {toApprove && (
-        <div className="voice-pick">
-          <p>
-            {toApprove.who}: {toApprove.rows.length} قيد بإجمالي{' '}
-            {money(toApprove.rows.reduce((t, e) => t + e.amount, 0))} ج.م. أوافق عليهم كلهم؟
-          </p>
-          <div className="voice-row">
-            <button type="button" className="btn" disabled={busy} onClick={approveAll}>
-              أيوه، وافق
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={() => setToApprove(null)}>
-              لأ
-            </button>
-          </div>
-        </div>
-      )}
-
-      {draft && !chosen && (
-        <div className="voice-pick">
-          <p>
-            فهمت: {draft.kind === 'income' ? 'وارد' : 'مصروف'} {money(draft.amount ?? 0)} ج.م
-            {draft.text ? ` — ${draft.text}` : ''}. على أنهي مشروع؟
-          </p>
-          <select value={pickId} onChange={(e) => setPickId(e.target.value)} aria-label="المشروع">
-            <option value="">اختار المشروع</option>
-            {active.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      <div className="voice-examples">
-        <span className="muted small">أمثلة:</span>
-        {EXAMPLES.map((x) => (
-          <button
-            key={x}
-            type="button"
-            className="chip chip-neutral"
-            onClick={() => {
-              setText(x)
-              run(x)
-            }}
-          >
-            {x}
-          </button>
-        ))}
-      </div>
+      {!canSpeak && <p className="muted small">المتصفح ده مش بيدعم الصوت. افتح المصباح من كروم، أو اكتب.</p>}
     </Dialog>
   )
 }

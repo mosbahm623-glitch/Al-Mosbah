@@ -295,3 +295,29 @@
   cursor: pointer;
   border: 0;
 }
+
+.agent-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 55vh;
+  min-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+.agent-msg {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  max-width: 88%;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+.agent-me {
+  align-self: flex-start;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.agent-bot {
+  align-self: flex-end;
+  background: var(--fill-strong);
+}

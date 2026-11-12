@@ -18,6 +18,7 @@ export type Command =
   | { intent: 'query'; metric: 'income' | 'expenses' | 'balance' | 'all'; project: NamedProject | null }
   | { intent: 'open'; path: string; label: string }
   | { intent: 'close' }
+  | { intent: 'approve'; project: NamedProject | null }
   | { intent: 'unknown' }
 
 const INDIC = '٠١٢٣٤٥٦٧٨٩'
@@ -111,6 +112,7 @@ const PAGES: [RegExp, string, string][] = [
 ]
 
 const OPEN = /^(افتح|فتح|روح|وديني|اعرض|ورنى|ورني)(?=\s|$)/
+const APPROVE = /^(وافق|اعتمد|اوافق|موافقه)(?=\s|$)/
 const CLOSE = /^(اقفل|قفل|اغلق|سكر|خلاص|كفايه)(?=\s|$)/
 
 export function parseCommand(raw: string, projects: NamedProject[], categories: string[] = []): Command {
@@ -119,6 +121,7 @@ export function parseCommand(raw: string, projects: NamedProject[], categories: 
   const project = findProject(t, projects)
 
   if (CLOSE.test(t)) return { intent: 'close' }
+  if (APPROVE.test(t)) return { intent: 'approve', project }
   if (OPEN.test(t)) {
     if (project) return { intent: 'open', path: `projects/${project.id}`, label: `مشروع ${project.name}` }
     const page = PAGES.find(([re]) => re.test(t))

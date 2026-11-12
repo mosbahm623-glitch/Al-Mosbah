@@ -72,3 +72,10 @@ describe('parseCommand: open and close', () => {
     expect(parseCommand('اقفل', projects)).toEqual({ intent: 'close' })
   })
 })
+
+describe('parseCommand: approve', () => {
+  it('approves everything or one project', () => {
+    expect(parseCommand('وافق على كل القيود', projects)).toEqual({ intent: 'approve', project: null })
+    expect(parseCommand('وافق على قيود العيادة', projects)).toMatchObject({ intent: 'approve', project: { id: '1' } })
+  })
+})

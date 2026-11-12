@@ -3,6 +3,7 @@ import { Mic, MicOff } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import Dialog from './Dialog'
 import EntryDialog from './EntryDialog'
+import { decide, fetchByStatus, type PendingEntry } from '../lib/approvals'
 import { fetchCategories } from '../lib/catalog'
 import { money } from '../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
@@ -27,7 +28,14 @@ const speech = (): (new () => Recognition) | null => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-const EXAMPLES = ['سجّل ٥٠٠ نقاشة على الجندي', 'كام صرفنا على العيادة؟', 'افتح الموافقات', 'افتح مشروع العيادة', 'اقفل']
+const EXAMPLES = [
+  'سجّل ٥٠٠ نقاشة على الجندي',
+  'كام صرفنا على العيادة؟',
+  'افتح الموافقات',
+  'افتح مشروع العيادة',
+  'وافق على كل القيود',
+  'اقفل',
+]
 
 function answer(c: Extract<Command, { intent: 'query' }>, all: ProjectSummary[]): string {
   const rows = c.project ? all.filter((p) => p.id === c.project?.id) : all.filter((p) => p.status === 'active')
@@ -54,6 +62,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const [draft, setDraft] = useState<Extract<Command, { intent: 'entry' }> | null>(null)
   const [pickId, setPickId] = useState('')
   const [busy, setBusy] = useState(false)
+  const [toApprove, setToApprove] = useState<{ rows: PendingEntry[]; who: string } | null>(null)
   const rec = useRef<Recognition | null>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
@@ -66,7 +75,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   async function understand(input: string): Promise<Command> {
     const names = (cats.data ?? []).map((c) => c.name)
     const fixed = parseCommand(input, all, names)
-    if (fixed.intent === 'open' || fixed.intent === 'close') return fixed
+    if (fixed.intent === 'open' || fixed.intent === 'close' || fixed.intent === 'approve') return fixed
     try {
       const { data, error } = await supabase.functions.invoke('assistant', {
         body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
@@ -103,6 +112,13 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
       window.location.hash = `#/${cmd.path}`
       return onClose()
     }
+    if (cmd.intent === 'approve') {
+      if (!isAdmin) return setReply('الموافقة للأدمن بس.')
+      const { data } = await fetchByStatus('pending')
+      const rows = (data ?? []).filter((e) => !cmd.project || e.project_id === cmd.project.id)
+      if (!rows.length) return setReply('مفيش قيود مستنية موافقة.')
+      return setToApprove({ rows, who: cmd.project ? `مشروع ${cmd.project.name}` : 'كل المشاريع' })
+    }
     if (cmd.intent === 'unknown') return setReply('ما فهمتش. جرّب جملة زي اللي تحت.')
     if (cmd.intent === 'query') return setReply(answer(cmd, all))
     if (!mayEnter) return setReply('مش عندك صلاحية تسجيل قيود.')
@@ -131,6 +147,22 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     rec.current = r
     setListening(true)
     r.start()
+  }
+
+  async function approveAll() {
+    if (!toApprove) return
+    setBusy(true)
+    const r = await decide(
+      toApprove.rows.map((e) => ({ id: e.id, rev: e.rev })),
+      'approved',
+    )
+    setBusy(false)
+    setToApprove(null)
+    setReply(
+      r.failed
+        ? 'حصلت مشكلة، راجع صفحة الموافقات.'
+        : `اتوافق على ${r.done} قيد${r.skipped ? ` (${r.skipped} اتغيّروا ومحتاجين مراجعة)` : ''}.`,
+    )
   }
 
   const chosen = active.find((p) => p.id === pickId)
@@ -184,6 +216,23 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
       {!canSpeak && <p className="muted small">المتصفح ده مش بيدعم الصوت. افتح المصباح من كروم، أو اكتب الأمر.</p>}
       {projects.failed && <p className="msg msg-error">مقدرناش نحمّل المشاريع، جرّب تاني</p>}
       {reply && <p className="voice-reply">{reply}</p>}
+
+      {toApprove && (
+        <div className="voice-pick">
+          <p>
+            {toApprove.who}: {toApprove.rows.length} قيد بإجمالي{' '}
+            {money(toApprove.rows.reduce((t, e) => t + e.amount, 0))} ج.م. أوافق عليهم كلهم؟
+          </p>
+          <div className="voice-row">
+            <button type="button" className="btn" disabled={busy} onClick={approveAll}>
+              أيوه، وافق
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={() => setToApprove(null)}>
+              لأ
+            </button>
+          </div>
+        </div>
+      )}
 
       {draft && !chosen && (
         <div className="voice-pick">

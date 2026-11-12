@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, LogOut, Menu, Mic, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
@@ -8,6 +8,7 @@ import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
+import VoiceAssistant from '../components/VoiceAssistant'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -29,6 +30,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
+  const [assistant, setAssistant] = useState(false)
 
   useEffect(() => startLive(), [])
   useEffect(() => startSync(), [])
@@ -127,6 +129,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         </form>
 
         <div className="top-actions">
+          <button
+            className="top-btn"
+            onClick={() => setAssistant(true)}
+            aria-label="المساعد"
+            title="المساعد (صوت أو كتابة)"
+          >
+            <Mic size={20} />
+          </button>
           <a className="top-btn search-link" href="#/search" aria-label="بحث">
             <Search size={20} />
           </a>
@@ -160,6 +170,8 @@ export default function Layout({ children }: { children: ReactNode }) {
           </button>
         </div>
       </header>
+
+      {assistant && <VoiceAssistant onClose={() => setAssistant(false)} />}
 
       {open && <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />}
 

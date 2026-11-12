@@ -51,7 +51,7 @@ export const NAV: NavGroup[] = [
     title: 'أدوات',
     items: [
       { path: 'search', label: 'بحث في القيود', icon: Search, module: 'tools' },
-      { path: 'recent', label: 'آخر التحركات', icon: History, module: 'tools' },
+      { path: 'recent', label: 'آخر القيود', icon: History, module: 'tools' },
       { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
     ],
   },

@@ -8,7 +8,6 @@ import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
-import SidebarLatest from './SidebarLatest'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -198,7 +197,6 @@ export default function Layout({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
-        {can('dashboard') && <SidebarLatest onNavigate={onNavigate} />}
       </aside>
 
       <main className="content">

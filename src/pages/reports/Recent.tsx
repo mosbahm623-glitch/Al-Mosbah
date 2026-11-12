@@ -45,7 +45,7 @@ export default function Recent() {
   return (
     <div className="page-stack">
       <PageHead
-        title="آخر التحركات"
+        title="آخر القيود"
         note={`آخر ${LIMIT} حركة اتسجلت، الأحدث الأول. القيود المعلّقة بتظهر هنا وعليها علامة.`}
         actions={
           <button className="btn" onClick={reload} disabled={loading}>

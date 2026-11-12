@@ -12,7 +12,7 @@ type Recognition = {
   interimResults: boolean
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
   onend: (() => void) | null
-  onerror: (() => void) | null
+  onerror: ((e: { error?: string }) => void) | null
   start: () => void
   stop: () => void
 }
@@ -52,6 +52,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const [ask, setAsk] = useState<Ask | null>(null)
   const rec = useRef<Recognition | null>(null)
   const history = useRef<Content[]>([])
+  const failedRef = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
@@ -129,11 +130,27 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     const r = new Ctor()
     r.lang = 'ar-EG'
     r.interimResults = false
-    r.onresult = (e) => void send(e.results[0]?.[0]?.transcript ?? '')
-    r.onend = () => setListening(false)
-    r.onerror = () => {
+    let heard = false
+    r.onresult = (e) => {
+      heard = true
+      void send(e.results[0]?.[0]?.transcript ?? '')
+    }
+    r.onend = () => {
       setListening(false)
-      say('bot', 'ما قدرناش نسمعك. اتأكد إن الميكروفون شغّال، أو اكتب.')
+      if (!heard && !failedRef.current) say('bot', 'ما سمعتش حاجة. دوس على الميكروفون وقول الجملة بعدها على طول.')
+      failedRef.current = false
+    }
+    r.onerror = (e) => {
+      failedRef.current = true
+      setListening(false)
+      const why: Record<string, string> = {
+        'not-allowed': 'المتصفح مانع الميكروفون. دوس على القفل جنب العنوان فوق وسمح للميكروفون، وبعدين جرّب.',
+        'service-not-allowed': 'المتصفح مانع الميكروفون. دوس على القفل جنب العنوان فوق وسمح للميكروفون، وبعدين جرّب.',
+        'audio-capture': 'مفيش ميكروفون شغّال على الجهاز.',
+        network: 'الصوت محتاج نت. اتأكد من الاتصال وجرّب تاني.',
+        'no-speech': 'ما سمعتش حاجة. قول الجملة بعد ما تدوس.',
+      }
+      say('bot', why[e.error ?? ''] ?? 'ما قدرناش نسمعك. اكتب الجملة.')
     }
     rec.current = r
     setListening(true)

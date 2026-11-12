@@ -67,7 +67,6 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const endRef = useRef<HTMLDivElement>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
-  const tools = { isAdmin, mayEnter, today: todayText(), go }
   const names = useMemo(() => new Map((projects.data ?? []).map((p) => [p.id, p.name])), [projects.data])
 
   useEffect(() => {
@@ -81,6 +80,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
     window.location.hash = `#/${path}`
     onClose()
   }
+  const tools = { isAdmin, mayEnter, today: todayText(), go }
 
   function confirm(t: string) {
     return new Promise<boolean>((resolve) => setAsk({ text: t, resolve }))

@@ -6,6 +6,7 @@ import EntryDialog from './EntryDialog'
 import { fetchCategories } from '../lib/catalog'
 import { money } from '../lib/format'
 import { fetchSummaries, type ProjectSummary } from '../lib/projects'
+import { supabase } from '../lib/supabase'
 import { parseCommand, type Command } from '../lib/voiceCommand'
 import { useAsync } from '../lib/useAsync'
 
@@ -52,6 +53,7 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
   const [reply, setReply] = useState<string | null>(null)
   const [draft, setDraft] = useState<Extract<Command, { intent: 'entry' }> | null>(null)
   const [pickId, setPickId] = useState('')
+  const [busy, setBusy] = useState(false)
   const rec = useRef<Recognition | null>(null)
   const canSpeak = useMemo(() => speech() !== null, [])
   const mayEnter = isAdmin || isOwner || can('projects', 'edit')
@@ -60,14 +62,40 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
 
   useEffect(() => () => rec.current?.stop(), [])
 
-  function run(input: string) {
+  /** Ask the AI first; if it is unreachable or unsure, fall back to the fixed rules. */
+  async function understand(input: string): Promise<Command> {
+    const names = (cats.data ?? []).map((c) => c.name)
+    try {
+      const { data, error } = await supabase.functions.invoke('assistant', {
+        body: { text: input, projects: all.map((p) => ({ id: p.id, name: p.name })), categories: names },
+      })
+      if (!error && data && (data.intent === 'entry' || data.intent === 'query')) {
+        const project = all.find((p) => p.id === data.project_id)
+        const named = project ? { id: project.id, name: project.name } : null
+        if (data.intent === 'query') {
+          return { intent: 'query', metric: data.metric ?? 'all', project: named }
+        }
+        return {
+          intent: 'entry',
+          kind: data.kind === 'income' ? 'income' : 'expense',
+          amount: Number(data.amount) > 0 ? Number(data.amount) : null,
+          project: named,
+          text: String(data.text ?? ''),
+          category: names.includes(data.category) ? data.category : '',
+        }
+      }
+    } catch {
+      /* fall through to the rules */
+    }
+    return parseCommand(input, all, names)
+  }
+
+  async function run(input: string) {
     setReply(null)
     setDraft(null)
-    const cmd = parseCommand(
-      input,
-      all,
-      (cats.data ?? []).map((c) => c.name),
-    )
+    setBusy(true)
+    const cmd = await understand(input)
+    setBusy(false)
     if (cmd.intent === 'unknown') return setReply('ما فهمتش. جرّب جملة زي اللي تحت.')
     if (cmd.intent === 'query') return setReply(answer(cmd, all))
     if (!mayEnter) return setReply('مش عندك صلاحية تسجيل قيود.')
@@ -140,8 +168,8 @@ export default function VoiceAssistant({ onClose }: { onClose: () => void }) {
               {listening ? 'بسمعك...' : 'اتكلم'}
             </button>
           )}
-          <button className="btn" disabled={!text.trim() || !projects.data}>
-            نفّذ
+          <button className="btn" disabled={!text.trim() || !projects.data || busy}>
+            {busy ? 'بفكّر...' : 'نفّذ'}
           </button>
         </div>
       </form>

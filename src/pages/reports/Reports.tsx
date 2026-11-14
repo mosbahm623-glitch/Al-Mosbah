@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import { TYPE_LABEL, todayISO, type ProjectType } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
@@ -21,7 +21,7 @@ import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './repor
 import ReportFilters from '../../components/ReportFilters'
 import { fetchCategories, type Category } from '../../lib/catalog'
 import { NO_FILTER, only, type ReportFilter } from '../../lib/reportFilter'
-import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
+import { fetchContractorNames, fetchPeople, fetchProjectContractors, type Named } from '../../lib/lookups'
 
 export default function Reports() {
   const projects = useAsync<ProjectSummary[]>(fetchSummaries)
@@ -30,6 +30,12 @@ export default function Reports() {
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const people = useAsync<{ id: string; full_name: string | null }[]>(fetchPeople)
   const categories = useAsync<Category[]>(fetchCategories)
+  const projectContractors = useAsync<Map<string, Set<string>>>(
+    useCallback(async () => {
+      const m = await fetchProjectContractors()
+      return { data: m, error: m === null }
+    }, []),
+  )
 
   const [type, setType] = useState<ReportType>('journal')
   const [day, setDay] = useState(todayISO)
@@ -56,15 +62,27 @@ export default function Reports() {
   const firstProject = projects.data?.[0]?.id ?? ''
   const pickedProject = type === 'period' ? projectId : projectId || firstProject
   const pickedAdvance = advanceId || advances.data?.[0]?.id || ''
-  const pickedContractor = contractorId || contractors.data?.[0]?.id || ''
+  // with a project chosen, only the contractors who worked on it are offered
+  const projectsOnly = filterAll.project ? projectContractors.data?.get(filterAll.project) : undefined
+  const contractorList = useMemo(
+    () =>
+      filterAll.project
+        ? (contractors.data ?? []).filter((c) => projectContractors.data?.get(filterAll.project)?.has(c.name))
+        : (contractors.data ?? []),
+    [contractors.data, projectContractors.data, filterAll.project],
+  )
+  const pickedContractor = contractorList.find((c) => c.id === contractorId)?.id ?? contractorList[0]?.id ?? ''
   const pickedBank = bankId || banks.data?.[0]?.id || ''
   const bank = banks.data?.find((b) => b.id === pickedBank)
 
   // only the filters this report offers take part
-  const filter = useMemo(() => only(filterAll, FILTERS[type]), [filterAll, type])
+  const filter = useMemo(() => {
+    const f = only(filterAll, FILTERS[type])
+    return projectsOnly && f.contractor && !projectsOnly.has(f.contractor) ? { ...f, contractor: '' } : f
+  }, [filterAll, type, projectsOnly])
   const filterOptions = {
     project: (projects.data ?? []).map((p) => p.name),
-    contractor: (contractors.data ?? []).map((c) => c.name),
+    contractor: contractorList.map((c) => c.name),
     bank: (banks.data ?? []).map((b) => b.name),
     category: (categories.data ?? []).map((c) => c.name),
   }
@@ -143,6 +161,10 @@ export default function Reports() {
     </label>
   )
 
+  const filtersBox = (
+    <ReportFilters keys={FILTERS[type]} value={filterAll} options={filterOptions} onChange={setFilterAll} />
+  )
+
   return (
     <div className="page-stack">
       <div className="no-print">
@@ -181,6 +203,7 @@ export default function Reports() {
             </label>
           )}
 
+          {type === 'contractor' && filtersBox}
           {type === 'project' &&
             select(
               'المشروع',
@@ -217,9 +240,9 @@ export default function Reports() {
               'المقاول',
               pickedContractor,
               setContractorId,
-              contractors.data ?? undefined,
-              contractors.loading,
-              'مفيش مقاولين',
+              contractorList,
+              contractors.loading || projectContractors.loading,
+              filterAll.project ? 'مفيش مقاولين على المشروع ده' : 'مفيش مقاولين',
             )}
           {type === 'bank' &&
             select(
@@ -276,7 +299,7 @@ export default function Reports() {
             </label>
           )}
 
-          <ReportFilters keys={FILTERS[type]} value={filterAll} options={filterOptions} onChange={setFilterAll} />
+          {type !== 'contractor' && filtersBox}
 
           {hasPeriod(type) && (
             <div className="field-row">
@@ -396,7 +419,7 @@ export default function Reports() {
             <ContractorStatement
               key={n}
               id={pickedContractor}
-              name={contractors.data?.find((c) => c.id === pickedContractor)?.name ?? ''}
+              name={contractorList.find((c) => c.id === pickedContractor)?.name ?? ''}
               from={from}
               to={to}
               filter={filter}

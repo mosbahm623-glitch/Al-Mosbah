@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
+import AdvancePaymentForm from '../components/AdvancePaymentForm'
 import EntryDialog from '../components/EntryDialog'
 import { Pencil } from 'lucide-react'
 import PageHead from '../components/PageHead'
@@ -22,7 +23,7 @@ export default function QuickEntry() {
   const uid = profile?.id
   const fetchMine = useCallback(() => fetchMyEntries(uid ?? ''), [uid])
   const mine = useAsync<MyEntry[]>(fetchMine)
-  const [tab, setTab] = useState<'new' | 'mine'>('new')
+  const [tab, setTab] = useState<'new' | 'mine' | 'advance'>('new')
   const [editing, setEditing] = useState<MyEntry | null>(null)
   const active = pickableProjects(projects.data ?? [])
 
@@ -48,6 +49,15 @@ export default function QuickEntry() {
         >
           آخر قيودك
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'advance'}
+          className={tab === 'advance' ? 'on' : ''}
+          onClick={() => setTab('advance')}
+        >
+          دفعة عهدة
+        </button>
       </div>
       {projects.failed && <p className="msg msg-error">مقدرناش نحمّل المشاريع، جرّب تاني</p>}
       {tab === 'new' && projects.data && active.length === 0 && <div className="card empty">مفيش مشاريع شغّالة.</div>}
@@ -61,6 +71,8 @@ export default function QuickEntry() {
           onSaved={mine.reload}
         />
       )}
+
+      {tab === 'advance' && <AdvancePaymentForm />}
 
       {tab === 'mine' && mine.data && mine.data.length === 0 && <div className="card empty">لسه ما سجلتش قيود.</div>}
       {tab === 'mine' && mine.data && mine.data.length > 0 && (

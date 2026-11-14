@@ -40,7 +40,7 @@ const SAVE_ERRORS: Record<Exclude<SaveError, 'changed'>, string> = {
   project: 'اختار المشروع',
   contractor: 'ما قدرناش نحفظ اسم المقاول، جرّب تاني',
   'contractor-choice': 'اختار المقاول، أو علّم على «بدون مقاول»',
-  photo: 'صورة الفاتورة إجبارية. ضيف صورة واحدة على الأقل',
+  photo: 'ضيف صورة الفاتورة، أو علّم على «بدون فاتورة»',
   bank: 'ما قدرناش نحفظ اسم البنك، جرّب تاني',
   'bank-required': 'اختار البنك',
   'bank-denied': 'البنك ده مش من البنوك المسموحة ليك. اختار من القايمة أو كلّم الأدمن',
@@ -91,6 +91,7 @@ export default function EntryDialog({
   const [itemName, setItemName] = useState(entry?.item ?? '')
   const [contractorName, setContractorName] = useState(entry?.contractor?.name ?? '')
   const [noContractor, setNoContractor] = useState(false)
+  const [noInvoice, setNoInvoice] = useState(false)
   const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
   const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
   const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
@@ -138,6 +139,7 @@ export default function EntryDialog({
   /** quick entry: keep the project, kind and date for the next one */
   function resetForNext(message: string) {
     setFiles([])
+    setNoInvoice(false)
     setDone(message)
     setCategoryName('')
     setItemName('')
@@ -172,7 +174,8 @@ export default function EntryDialog({
       notes,
       targetProject,
       editReason,
-      files,
+      files: noInvoice ? [] : files,
+      noInvoice,
       contractors: contractors.data ?? undefined,
       banks: (isOwner ? ownerBanks : banks.data) ?? undefined,
       banksOnly: isOwner,
@@ -324,14 +327,29 @@ export default function EntryDialog({
             />
           </label>
         )}
-        <InvoiceField
-          entryId={entry?.id ?? savedId ?? undefined}
-          files={files}
-          onFiles={setFiles}
-          canRemove={isStaff || entry?.status !== 'approved'}
-          readOnly={locked}
-          required={strict}
-        />
+        {!noInvoice && (
+          <InvoiceField
+            entryId={entry?.id ?? savedId ?? undefined}
+            files={files}
+            onFiles={setFiles}
+            canRemove={isStaff || entry?.status !== 'approved'}
+            readOnly={locked}
+            required={strict && !noInvoice}
+          />
+        )}
+        {strict && (
+          <label className="check span-2">
+            <input
+              type="checkbox"
+              checked={noInvoice}
+              onChange={(e) => {
+                setNoInvoice(e.target.checked)
+                if (e.target.checked) setFiles([])
+              }}
+            />
+            بدون فاتورة
+          </label>
+        )}
       </fieldset>
       {locked && <p className="msg span-2 muted">مفيش عندك صلاحية تعدّل القيود.</p>}
       {entry?.status === 'rejected' && entry.reject_reason && (

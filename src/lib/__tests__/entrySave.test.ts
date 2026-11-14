@@ -222,6 +222,10 @@ describe('saveEntry: custody and owner rules', () => {
     expect(await saveEntry(strict({ files: [] }))).toEqual({ status: 'error', error: 'photo' })
     expect(m.insertEntry).not.toHaveBeenCalled()
   })
+  it('accepts «بدون فاتورة» in place of a photo, and sends no photos', async () => {
+    expect((await saveEntry(strict({ files: [], noInvoice: true }))).status).toBe('saved')
+    expect(m.uploadInvoices).not.toHaveBeenCalled()
+  })
   it('refuses an expense that names no contractor and does not say «بدون مقاول»', async () => {
     expect(await saveEntry(strict({ contractorName: '  ' }))).toEqual({ status: 'error', error: 'contractor-choice' })
     expect(m.insertEntry).not.toHaveBeenCalled()

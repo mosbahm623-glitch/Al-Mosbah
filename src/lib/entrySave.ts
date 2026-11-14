@@ -30,6 +30,8 @@ export type SaveInput = {
   banksOnly?: boolean
   /** a new entry from a custody or an owner: at least one invoice photo is a must */
   requirePhoto?: boolean
+  /** the person says outright that there is no invoice (only counts when a photo would be required) */
+  noInvoice?: boolean
   /** same people: an expense names its contractor, or says outright that it has none */
   requireContractorChoice?: boolean
   noContractor?: boolean
@@ -84,7 +86,7 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   if (input.requireContractorChoice && isExpense && !typedContractor && !input.noContractor) {
     return fail('contractor-choice')
   }
-  if (input.requirePhoto && input.files.length === 0) return fail('photo')
+  if (input.requirePhoto && !input.noInvoice && input.files.length === 0) return fail('photo')
   const typedBank = input.fromAdvance ? '' : input.bankName.trim()
   // every entry carries a bank (a payment from a custody has none)
   if (!input.fromAdvance && !typedBank) return fail('bank-required')

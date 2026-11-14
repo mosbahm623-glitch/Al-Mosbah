@@ -297,6 +297,10 @@ select:disabled {
   .dialog-wide .entry-history {
     grid-column: 1 / -1;
   }
+  /* the edit reason sits beside the notes instead of taking its own row */
+  .dialog-wide .field.reason {
+    grid-column: span 1;
+  }
   .dialog-wide .inv-add,
   .dialog-wide .inv-thumb {
     width: 64px;

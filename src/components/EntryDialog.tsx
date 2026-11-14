@@ -313,7 +313,7 @@ export default function EntryDialog({
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
         {entry && !locked && (
-          <label className="field span-2">
+          <label className="field span-2 reason">
             سبب التعديل
             <input
               value={editReason}

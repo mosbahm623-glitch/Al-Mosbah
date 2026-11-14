@@ -45,7 +45,12 @@ export default function AdvanceReport({
     .filter(
       (e) =>
         e.status === 'approved' &&
-        matches(filter, { project: e.project?.name, contractor: e.contractor?.name, category: e.category }),
+        matches(filter, {
+          project: e.project?.name,
+          contractor: e.contractor?.name,
+          bank: e.bank?.name,
+          category: e.category,
+        }),
     )
     .sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
   const given = [...(installments ?? [])]

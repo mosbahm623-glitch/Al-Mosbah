@@ -53,14 +53,14 @@ export const FILTERS: Record<ReportType, readonly FilterKey[]> = {
   journal: ['project', 'contractor', 'bank', 'category'],
   period: ['contractor', 'bank', 'category'],
   project: ['contractor', 'bank', 'category'],
-  category: ['project', 'contractor', 'bank'],
+  category: ['project', 'contractor', 'bank', 'category'],
   budget: ['project'],
-  advance: ['project', 'contractor', 'category'],
+  advance: ['project', 'contractor', 'bank', 'category'],
   contractor: ['project', 'category'],
-  contractors: ['project'],
+  contractors: ['project', 'contractor'],
   bank: ['project', 'contractor', 'category'],
   pending: ['project', 'contractor', 'bank', 'category'],
-  approvals: ['project', 'contractor', 'category'],
+  approvals: ['project', 'contractor', 'bank', 'category'],
 }
 
 /** Which reports take a from / to period, and which let the person hide columns. */

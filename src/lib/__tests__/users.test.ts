@@ -4,7 +4,7 @@ import { query } from './supabaseMock'
 vi.mock('../supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn(), functions: { invoke: vi.fn() } } }))
 
 import { supabase } from '../supabase'
-import { createUser, fetchUsers } from '../users'
+import { createUser, fetchUsers, resetUserPassword } from '../users'
 
 const from = vi.mocked(supabase.from)
 const invoke = vi.mocked(supabase.functions.invoke)
@@ -99,5 +99,23 @@ describe('createUser', () => {
     }
     invoke.mockResolvedValueOnce({ data: null, error: { context } } as never)
     expect(await createUser(input)).toBe(generic)
+  })
+})
+
+describe('resetUserPassword', () => {
+  it('returns null when the function says ok', async () => {
+    invoke.mockResolvedValue({ data: { ok: true }, error: null } as never)
+    expect(await resetUserPassword('u1', 'abcd1234')).toBeNull()
+    expect(invoke).toHaveBeenCalledWith('reset-password', { body: { user_id: 'u1', password: 'abcd1234' } })
+  })
+
+  it('shows a clear message for a known error code', async () => {
+    invoke.mockResolvedValue({ data: { error: 'weak_password' }, error: null } as never)
+    expect(await resetUserPassword('u1', 'abc')).toBe('كلمة السر لازم 8 حروف على الأقل')
+  })
+
+  it('falls back to a generic message otherwise', async () => {
+    invoke.mockResolvedValue({ data: null, error: new Error('boom') } as never)
+    expect(await resetUserPassword('u1', 'abcd1234')).toMatch(/جرّب تاني/)
   })
 })

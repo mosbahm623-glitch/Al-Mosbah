@@ -90,6 +90,29 @@ export async function createUser(input: { full_name: string; email: string; pass
   return (code && CREATE_ERRORS[code]) || 'ما قدرناش ننشئ المستخدم، جرّب تاني'
 }
 
+const RESET_ERRORS: Record<string, string> = {
+  weak_password: 'كلمة السر لازم 8 حروف على الأقل',
+  forbidden: 'الأدمن بس هو اللي يغيّر كلمات السر',
+  not_found: 'المستخدم مش موجود',
+}
+
+/** The admin sets a new temporary password for a user who forgot his (the `reset-password` edge function). Returns an error message, or null. */
+export async function resetUserPassword(userId: string, password: string) {
+  const { data, error } = await supabase.functions.invoke<{ ok?: boolean; error?: string }>('reset-password', {
+    body: { user_id: userId, password },
+  })
+  if (!error && data?.ok) return null
+  let code = data?.error
+  if (!code && error && 'context' in error) {
+    try {
+      code = ((await (error as { context: Response }).context.json()) as { error?: string }).error
+    } catch {
+      /* no body */
+    }
+  }
+  return (code && RESET_ERRORS[code]) || 'ما قدرناش نغيّر كلمة السر، جرّب تاني'
+}
+
 export const updateRole = (userId: string, role: UserRow['role'], isActive: boolean) =>
   supabase.from('profiles').update({ role, is_active: isActive }).eq('id', userId)
 

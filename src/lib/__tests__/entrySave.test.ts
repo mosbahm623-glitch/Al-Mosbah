@@ -223,6 +223,7 @@ describe('saveEntry: custody and owner rules', () => {
     expect(m.insertEntry).not.toHaveBeenCalled()
   })
   it('accepts «بدون فاتورة» in place of a photo, and sends no photos', async () => {
+    m.createContractor.mockResolvedValue('k1')
     expect((await saveEntry(strict({ files: [], noInvoice: true }))).status).toBe('saved')
     expect(m.uploadInvoices).not.toHaveBeenCalled()
   })

@@ -207,6 +207,16 @@
   object-fit: cover;
   display: block;
 }
+.inv-file {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted, #555);
+}
 .inv-remove {
   position: absolute;
   top: 4px;

@@ -1,9 +1,15 @@
 import { supabase } from './supabase'
 
 const BUCKET = 'invoices'
-const TYPES = ['image/jpeg', 'image/png', 'image/webp']
-/** Most photos on one entry. */
+const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_PDF_BYTES = 10 * 1024 * 1024
+/** Most files (photos or PDFs) on one entry. */
 export const MAX_INVOICES = 8
+
+/** A PDF is stored as it is (no photo shrinking) and shown as a file icon instead of a picture. */
+export const isPdf = (a: { path?: string | null; file_name?: string | null; type?: string }) =>
+  a.type === 'application/pdf' || /\.pdf$/i.test(a.path ?? '') || /\.pdf$/i.test(a.file_name ?? '')
 
 export type Attachment = { id: string; entry_id: string; path: string; file_name: string | null; created_at: string }
 
@@ -46,22 +52,27 @@ async function shrinkImage(file: File, maxSide = 1600, quality = 0.8): Promise<B
   }
 }
 
-const EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
+const EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'application/pdf': 'pdf',
+}
 
-/** Stores one invoice photo on an entry. Returns an error message, or null when it went through. */
+/** Stores one invoice photo or PDF on an entry. Returns an error message, or null when it went through. */
 async function uploadInvoice(entryId: string, file: File): Promise<string | null> {
-  const blob = await shrinkImage(file)
-  if (!TYPES.includes(blob.type)) return 'نوع الصورة مش مدعوم (JPG أو PNG أو WebP)'
-  if (blob.size > 5 * 1024 * 1024) return 'الصورة كبيرة قوي'
+  const blob: Blob = file.type === 'application/pdf' ? file : await shrinkImage(file)
+  if (!TYPES.includes(blob.type)) return 'نوع الملف مش مدعوم (صورة JPG أو PNG أو WebP، أو PDF)'
+  if (blob.size > (blob.type === 'application/pdf' ? MAX_PDF_BYTES : MAX_IMAGE_BYTES)) return 'الملف كبير قوي'
   const path = `${entryId}/${crypto.randomUUID()}.${EXT[blob.type]}`
   const up = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type })
-  if (up.error) return 'الصورة ما اترفعتش، جرّب تاني'
+  if (up.error) return 'الملف ما اترفعش، جرّب تاني'
   const row = await supabase
     .from('entry_attachments')
     .insert({ entry_id: entryId, path, file_name: file.name.slice(0, 120) || null })
   if (row.error) {
     await supabase.storage.from(BUCKET).remove([path])
-    return 'الصورة ما اتسجّلتش على القيد، جرّب تاني'
+    return 'الملف ما اتسجّلش على القيد، جرّب تاني'
   }
   return null
 }

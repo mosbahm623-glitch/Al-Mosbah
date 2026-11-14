@@ -22,6 +22,7 @@ export default function QuickEntry() {
   const fetchMine = useCallback(() => fetchMyEntries(uid ?? ''), [uid])
   const mine = useAsync<MyEntry[]>(fetchMine)
   const [tab, setTab] = useState<'new' | 'mine'>('new')
+  const [editing, setEditing] = useState<MyEntry | null>(null)
   const active = (projects.data ?? []).filter((p) => p.status === 'active')
 
   return (
@@ -76,6 +77,7 @@ export default function QuickEntry() {
                   <th>البند</th>
                   <th>المبلغ</th>
                   <th className="sm-hide">الحالة</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
@@ -99,12 +101,30 @@ export default function QuickEntry() {
                       {money(e.amount)}
                     </td>
                     <td className="muted sm-hide">{STATUS[e.status] ?? e.status}</td>
+                    <td>
+                      {e.status === 'pending' && (
+                        <button type="button" className="btn btn-ghost" onClick={() => setEditing(e)}>
+                          تعديل
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </section>
+      )}
+
+      {editing && (
+        <EntryDialog
+          projectId={editing.project_id ?? ''}
+          projectName={editing.project?.name ?? ''}
+          projects={active}
+          entry={editing}
+          onClose={() => setEditing(null)}
+          onSaved={mine.reload}
+        />
       )}
     </div>
   )

@@ -53,23 +53,13 @@ export const deleteEntry = (id: string, rev: number, reason: string) =>
 export const fetchEntryHistory = (entryId: string) =>
   supabase.rpc('entry_history_of', { p_id: entryId }).returns<EntryChange[]>()
 
-export type MyEntry = {
-  id: string
-  seq: number
-  kind: 'income' | 'expense'
-  category: string
-  item: string | null
-  amount: number
-  entry_date: string
-  status: string
-  project: { name: string } | null
-}
+export type MyEntry = Entry
 
 /** The last 8 entries one person recorded. */
 export const fetchMyEntries = (userId: string) =>
   supabase
     .from('entries')
-    .select('id,seq,kind,category,item,amount,entry_date,status,project:projects(name)')
+    .select(`${ENTRY_COLUMNS},project_id,project:projects(name)`)
     .eq('created_by', userId)
     .order('seq', { ascending: false })
     .limit(8)

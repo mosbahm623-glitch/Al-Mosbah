@@ -101,11 +101,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
           label="أقسام العهدة"
           value={current}
           options={[
-            { value: 'approved', label: `مصروفات معتمدة · ${approved.length}` },
-            { value: 'pending', label: `تحت الموافقة · ${waiting.length}` },
+            { value: 'approved', label: `مصروفات معتمدة · ${approved.length}`, tone: 'ok' as const },
+            { value: 'pending', label: `تحت الموافقة · ${waiting.length}`, tone: 'warn' as const },
             ...(removed.length > 0 ? [{ value: 'removed' as const, label: `محذوفة · ${removed.length}` }] : []),
-            { value: 'installments', label: `الدفعات · ${installments?.length ?? 0}` },
-            { value: 'returns', label: `المرتجعات · ${returns?.length ?? 0}` },
+            { value: 'installments', label: `الدفعات · ${installments?.length ?? 0}`, tone: 'blue' as const },
+            { value: 'returns', label: `المرتجعات · ${returns?.length ?? 0}`, tone: 'blue' as const },
           ]}
           onChange={setTab}
         />

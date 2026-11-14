@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import EntryDialog from '../components/EntryDialog'
+import { Pencil } from 'lucide-react'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
 import { fetchSummaries, pickableProjects, type ProjectSummary } from '../lib/projects'
@@ -103,8 +104,13 @@ export default function QuickEntry() {
                     <td className="muted sm-hide">{STATUS[e.status] ?? e.status}</td>
                     <td>
                       {e.status === 'pending' && (
-                        <button type="button" className="btn btn-ghost" onClick={() => setEditing(e)}>
-                          تعديل
+                        <button
+                          type="button"
+                          className="icon-btn"
+                          aria-label={`تعديل القيد ${e.seq}`}
+                          onClick={() => setEditing(e)}
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </button>
                       )}
                     </td>

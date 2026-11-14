@@ -30,3 +30,13 @@ describe('signedUrls', () => {
     expect(await signedUrls(['a/1.jpg', 'a/2.jpg'])).toEqual({ 'a/1.jpg': 'https://x/1' })
   })
 })
+
+describe('isPdf', () => {
+  it('recognises a PDF by type, path or file name', async () => {
+    const { isPdf } = await import('../attachments')
+    expect(isPdf({ type: 'application/pdf' })).toBe(true)
+    expect(isPdf({ path: 'e/1.pdf' })).toBe(true)
+    expect(isPdf({ file_name: 'Invoice.PDF' })).toBe(true)
+    expect(isPdf({ path: 'e/1.jpg', file_name: 'a.jpg' })).toBe(false)
+  })
+})

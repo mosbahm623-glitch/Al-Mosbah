@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Camera, X } from 'lucide-react'
+import { Camera, FileText, X } from 'lucide-react'
 import {
   MAX_INVOICES,
   fetchAttachments,
+  isPdf,
   removeInvoice,
   signedUrls,
   uploadInvoices,
@@ -48,17 +49,17 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
   const total = saved.length + files.length
 
   async function pick(list: FileList | null) {
-    const picked = Array.from(list ?? []).filter((f) => f.type.startsWith('image/'))
+    const picked = Array.from(list ?? []).filter((f) => f.type.startsWith('image/') || f.type === 'application/pdf')
     if (!picked.length) return
     const room = MAX_INVOICES - total
-    if (room <= 0) return setError(`أقصى عدد ${MAX_INVOICES} صور للقيد`)
+    if (room <= 0) return setError(`أقصى عدد ${MAX_INVOICES} ملفات للقيد`)
     const take = picked.slice(0, room)
-    setError(picked.length > room ? `أقصى عدد ${MAX_INVOICES} صور للقيد` : null)
+    setError(picked.length > room ? `أقصى عدد ${MAX_INVOICES} ملفات للقيد` : null)
     if (!entryId) return onFiles([...files, ...take])
     setBusy(true)
     const failed = await uploadInvoices(entryId, take)
     setBusy(false)
-    if (failed) setError(`${failed} صورة ما اترفعتش، جرّب تاني`)
+    if (failed) setError(`${failed} ملف ما اترفعش، جرّب تاني`)
     stored.reload()
   }
 
@@ -66,20 +67,32 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
     setBusy(true)
     const ok = await removeInvoice(a)
     setBusy(false)
-    if (!ok) return setError('الصورة ما اتمسحتش')
+    if (!ok) return setError('الملف ما اتمسحش')
     stored.reload()
   }
 
   if (readOnly && total === 0) return null
   return (
     <div className="field span-2 inv-field">
-      <span>صور الفواتير{total > 0 ? ` (${total})` : ''}</span>
+      <span>الفواتير{total > 0 ? ` (${total})` : ''}</span>
       <div className="inv-grid">
         {saved.map((a) => (
           <div className="inv-thumb" key={a.id}>
             {urls[a.path] ? (
-              <a href={urls[a.path]} target="_blank" rel="noopener noreferrer" aria-label="فتح الصورة">
-                <img src={urls[a.path]} alt={a.file_name ?? 'فاتورة'} loading="lazy" />
+              <a
+                href={urls[a.path]}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={isPdf(a) ? 'فتح الملف' : 'فتح الصورة'}
+              >
+                {isPdf(a) ? (
+                  <span className="inv-file">
+                    <FileText size={26} aria-hidden="true" />
+                    <span>PDF</span>
+                  </span>
+                ) : (
+                  <img src={urls[a.path]} alt={a.file_name ?? 'فاتورة'} loading="lazy" />
+                )}
               </a>
             ) : (
               <span className="muted small">...</span>
@@ -88,7 +101,7 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
               <button
                 type="button"
                 className="inv-remove"
-                aria-label="مسح الصورة"
+                aria-label="مسح الملف"
                 disabled={busy}
                 onClick={() => void remove(a)}
               >
@@ -99,11 +112,18 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
         ))}
         {files.map((f, i) => (
           <div className="inv-thumb" key={`${f.name}-${i}`}>
-            <img src={previews[i]} alt={f.name} />
+            {isPdf({ type: f.type, file_name: f.name }) ? (
+              <span className="inv-file">
+                <FileText size={26} aria-hidden="true" />
+                <span>PDF</span>
+              </span>
+            ) : (
+              <img src={previews[i]} alt={f.name} />
+            )}
             <button
               type="button"
               className="inv-remove"
-              aria-label="شيل الصورة"
+              aria-label="شيل الملف"
               onClick={() => onFiles(files.filter((_, j) => j !== i))}
             >
               <X size={14} aria-hidden="true" />
@@ -116,7 +136,7 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
             <span>{busy ? 'جارٍ الرفع...' : 'إضافة فاتورة'}</span>
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               multiple
               disabled={busy}
               onChange={(e) => {

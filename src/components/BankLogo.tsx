@@ -1,7 +1,10 @@
-/** A bank's logo, or its first letter when it has none. */
+import { knownBankLogo } from '../lib/bankLogos'
+
+/** A bank's logo (uploaded, else a known bank's built-in one), or its first letter when it has none. */
 export default function BankLogo({ logo, name }: { logo: string | null; name: string }) {
-  return logo ? (
-    <img className="bank-logo" src={logo} alt="" />
+  const src = logo ?? knownBankLogo(name)
+  return src ? (
+    <img className="bank-logo" src={src} alt="" />
   ) : (
     <span className="bank-logo bank-logo-empty" aria-hidden="true">
       {name.trim().charAt(0).toUpperCase()}

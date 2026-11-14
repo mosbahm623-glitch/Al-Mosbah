@@ -3,6 +3,7 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
+import { TYPE_LABEL, type ProjectType } from '../../lib/format'
 import type { Named } from '../../lib/lookups'
 import {
   replaceAdvanceAccess,
@@ -10,6 +11,7 @@ import {
   replacePermissions,
   resetUserPassword,
   setEntryRights,
+  setProjectTypes,
   updateRole,
   type AdvanceOption,
   type UserRow,
@@ -46,6 +48,7 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
   const [canEditOwn, setCanEditOwn] = useState(user.can_edit_entries)
   const [canDeleteOwn, setCanDeleteOwn] = useState(user.can_delete_entries)
   const [canEditApproved, setCanEditApproved] = useState(user.can_edit_approved)
+  const [types, setTypes] = useState<ProjectType[]>(user.project_types)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [bankIds, setBankIds] = useState<string[]>(user.bankIds)
   const [error, setError] = useState<string | null>(null)
@@ -86,6 +89,13 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
         return setError('صلاحيات القيود ما اتحفظتش، جرّب تاني')
       }
     }
+    if (role !== 'admin' && [...types].sort().join() !== [...user.project_types].sort().join()) {
+      const { error: err } = await setProjectTypes(user.id, types)
+      if (err) {
+        setSaving(false)
+        return setError('أنواع المشاريع ما اتحفظتش، جرّب تاني')
+      }
+    }
     const rows = MODULES.flatMap((m) =>
       levels[m.id] === 'none' ? [] : [{ user_id: user.id, module: m.id, level: levels[m.id] as Level }],
     )
@@ -123,6 +133,25 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
           الحساب مفعّل
         </label>
         {isSelf && <p className="muted small">مينفعش تغيّر دورك أو توقف حسابك بنفسك.</p>}
+
+        {role !== 'admin' && (
+          <div className="perm-block">
+            <span className="strong">أنواع المشاريع المسموحة</span>
+            <div className="perm-sub">
+              {(Object.keys(TYPE_LABEL) as ProjectType[]).map((t) => (
+                <label key={t} className="check">
+                  <input
+                    type="checkbox"
+                    checked={types.includes(t)}
+                    onChange={(e) => setTypes((s) => (e.target.checked ? [...s, t] : s.filter((x) => x !== t)))}
+                  />
+                  {TYPE_LABEL[t]}
+                </label>
+              ))}
+              <small className="muted">المستخدم بيشوف ويصرف على المشاريع من النوع المحدد بس.</small>
+            </div>
+          </div>
+        )}
 
         {role !== 'user' ? (
           <>
@@ -257,7 +286,7 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
 
         {error && <p className="msg msg-error">{error}</p>}
         <div className="dialog-actions">
-          <button className="btn" disabled={saving}>
+          <button className="btn" disabled={saving || (role !== 'admin' && types.length === 0)}>
             {saving ? 'جارٍ الحفظ...' : 'حفظ'}
           </button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>

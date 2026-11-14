@@ -8,6 +8,7 @@ import {
   replaceAdvanceAccess,
   replaceBankAccess,
   replacePermissions,
+  resetUserPassword,
   setEntryRights,
   updateRole,
   type AdvanceOption,
@@ -49,6 +50,19 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
   const [bankIds, setBankIds] = useState<string[]>(user.bankIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [resetting, setResetting] = useState(false)
+  const [resetMsg, setResetMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function resetPassword() {
+    setResetting(true)
+    setResetMsg(null)
+    const err = await resetUserPassword(user.id, newPassword)
+    setResetting(false)
+    if (err) return setResetMsg({ ok: false, text: err })
+    setNewPassword('')
+    setResetMsg({ ok: true, text: 'اتغيّرت. ابعتها للمستخدم، وهو هيختار كلمة سر خاصة بيه أول ما يدخل.' })
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -207,6 +221,37 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
               </div>
             </div>
             <p className="muted small">مشاهدة = يشوف بس · تعديل = يشوف ويضيف ويعدّل ويحذف في الصفحة دي.</p>
+          </div>
+        )}
+
+        {isAdmin && !isSelf && (
+          <div className="perm-block">
+            <span className="strong">نسي كلمة السر</span>
+            <div className="perm-sub">
+              <label className="field">
+                كلمة سر جديدة مؤقتة (8 حروف على الأقل)
+                <input
+                  type="text"
+                  dir="ltr"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="off"
+                />
+              </label>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={resetting || newPassword.length < 8}
+                onClick={() => void resetPassword()}
+              >
+                {resetting ? 'جارٍ التغيير...' : 'تغيير كلمة السر'}
+              </button>
+              {resetMsg && (
+                <p className={resetMsg.ok ? 'msg' : 'msg msg-error'} role="status">
+                  {resetMsg.text}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

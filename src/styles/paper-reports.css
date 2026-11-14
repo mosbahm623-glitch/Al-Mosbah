@@ -268,6 +268,14 @@ a.btn[aria-disabled='true'] {
   display: grid;
   gap: 0;
 }
+.cols-inline {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.25rem;
+}
+.cols-inline legend {
+  width: 100%;
+}
 .cols legend {
   font-size: 0.85rem;
   font-weight: 600;

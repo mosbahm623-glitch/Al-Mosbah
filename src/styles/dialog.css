@@ -308,3 +308,15 @@ select:disabled {
     font-size: 0.78rem;
   }
 }
+
+/* the statement box: full width, wraps and grows with its text, never scrolls */
+.bank-picker-box textarea.multiline {
+  width: 100%;
+  min-height: 4.2rem;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: inherit;
+}

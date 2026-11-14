@@ -237,22 +237,6 @@ export default function EntryDialog({
               }}
               onCreate={createCategory}
             />
-            <label className="field">
-              البيان
-              <input
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                list="item-names"
-                placeholder={categoryName ? 'اكتب البيان' : 'اختار البند الأول'}
-                disabled={!categoryName}
-                required
-              />
-              <datalist id="item-names">
-                {category?.expense_items.map((i) => (
-                  <option key={i.id} value={i.name} />
-                ))}
-              </datalist>
-            </label>
             <SearchSelect
               label="اسم المقاول"
               value={noContractor ? '' : contractorName}
@@ -277,6 +261,18 @@ export default function EntryDialog({
                 )
               }
             />
+            <div className="span-2">
+              <SearchSelect
+                label="البيان"
+                value={itemName}
+                options={category?.expense_items.map((i) => i.name) ?? []}
+                placeholder={categoryName ? 'اكتب البيان' : 'اختار البند الأول'}
+                disabled={!categoryName}
+                freeText
+                multiline
+                onChange={setItemName}
+              />
+            </div>
           </>
         ) : (
           <label className="field span-2">

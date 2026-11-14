@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 type Props = {
   label: string
@@ -8,6 +8,8 @@ type Props = {
   disabled?: boolean
   /** true: any typed text is the value (suggestions only); false: the value can only be picked from the list */
   freeText?: boolean
+  /** a roomy box that wraps long text and grows with it, so nothing is cut off or scrolls */
+  multiline?: boolean
   onChange: (value: string) => void
   /** shown on the label line, at the far end (a small checkbox, say), so it takes no row of its own */
   labelExtra?: ReactNode
@@ -23,6 +25,7 @@ export default function SearchSelect({
   placeholder,
   disabled,
   freeText,
+  multiline,
   onChange,
   labelExtra,
   onCreate,
@@ -31,8 +34,16 @@ export default function SearchSelect({
   const [query, setQuery] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const area = useRef<HTMLTextAreaElement>(null)
 
   const text = query ?? value
+
+  useLayoutEffect(() => {
+    const el = area.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [text, multiline])
   const q = (query ?? '').trim().toLowerCase()
   const shown = q ? options.filter((o) => o.toLowerCase().includes(q)) : options
   const exact = options.some((o) => o.toLowerCase() === q)
@@ -70,21 +81,45 @@ export default function SearchSelect({
         }}
       >
         <div className="bank-picker-box">
-          <input
-            value={text}
-            disabled={disabled}
-            placeholder={placeholder}
-            aria-label={label}
-            autoComplete="off"
-            onChange={(e) => {
-              setQuery(e.target.value)
-              if (freeText || !e.target.value) onChange(e.target.value)
-              setOpen(true)
-            }}
-            onFocus={() => setOpen(true)}
-            onClick={() => setOpen(true)}
-            onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
-          />
+          {multiline ? (
+            <textarea
+              ref={area}
+              rows={2}
+              className="multiline"
+              value={text}
+              disabled={disabled}
+              placeholder={placeholder}
+              aria-label={label}
+              autoComplete="off"
+              onChange={(e) => {
+                setQuery(e.target.value)
+                if (freeText || !e.target.value) onChange(e.target.value)
+                setOpen(true)
+              }}
+              onFocus={() => setOpen(true)}
+              onClick={() => setOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setOpen(false)
+                if (e.key === 'Enter') e.preventDefault()
+              }}
+            />
+          ) : (
+            <input
+              value={text}
+              disabled={disabled}
+              placeholder={placeholder}
+              aria-label={label}
+              autoComplete="off"
+              onChange={(e) => {
+                setQuery(e.target.value)
+                if (freeText || !e.target.value) onChange(e.target.value)
+                setOpen(true)
+              }}
+              onFocus={() => setOpen(true)}
+              onClick={() => setOpen(true)}
+              onKeyDown={(e) => e.key === 'Escape' && setOpen(false)}
+            />
+          )}
         </div>
         {open && (
           <ul className="bank-picker-list" role="listbox">

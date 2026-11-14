@@ -155,22 +155,27 @@ export default function InvoiceField({
               </button>
             </div>
           ))}
-          {!readOnly && total < MAX_INVOICES && (
-            <label className={`inv-add${busy ? ' is-busy' : ''}`}>
-              <Camera size={20} aria-hidden="true" />
-              <span>{busy ? 'جارٍ الرفع...' : 'إضافة فاتورة'}</span>
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                multiple
-                disabled={busy}
-                onChange={(e) => {
-                  void pick(e.target.files)
-                  e.target.value = ''
-                }}
-              />
-            </label>
-          )}
+          {!readOnly &&
+            total < MAX_INVOICES &&
+            [
+              { icon: Camera, text: 'صورة فاتورة', accept: 'image/*' },
+              { icon: FileText, text: 'ملف PDF', accept: 'application/pdf' },
+            ].map(({ icon: Icon, text, accept }) => (
+              <label key={accept} className={`inv-add${busy ? ' is-busy' : ''}`}>
+                <Icon size={20} aria-hidden="true" />
+                <span>{busy ? 'جارٍ الرفع...' : text}</span>
+                <input
+                  type="file"
+                  accept={accept}
+                  multiple
+                  disabled={busy}
+                  onChange={(e) => {
+                    void pick(e.target.files)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            ))}
         </div>
       )}
       {error && <span className="msg msg-error">{error}</span>}

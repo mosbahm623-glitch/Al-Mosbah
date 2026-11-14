@@ -51,6 +51,7 @@ export default function Reports() {
   const [pendingStatus, setPendingStatus] = useState<PendingStatus>('pending')
   const [creatorId, setCreatorId] = useState('')
   const [filterAll, setFilterAll] = useState<ReportFilter>(NO_FILTER)
+  const [includeClosed, setIncludeClosed] = useState(false)
   const [withContractor, setWithContractor] = useState(true)
   const [withBank, setWithBank] = useState(true)
   const [withNotes, setWithNotes] = useState(true)
@@ -113,6 +114,7 @@ export default function Reports() {
         type === 'category' ? kindFilter : '',
         type === 'budget' ? budgetMode : '',
         type === 'pending' ? [pendingStatus, creatorId] : '',
+        type === 'contractor' ? includeClosed : '',
         hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes, withEnteredBy] : '',
         type === 'advance' ? parts : '',
         filter,
@@ -127,6 +129,7 @@ export default function Reports() {
       budgetMode,
       pendingStatus,
       creatorId,
+      includeClosed,
       withContractor,
       withBank,
       withNotes,
@@ -316,6 +319,13 @@ export default function Reports() {
           {hasPeriod(type) && <p className="muted small">سيب التواريخ فاضية لو عايز كل الفترات.</p>}
           {!rangeOk && <p className="msg msg-error">تاريخ البداية بعد تاريخ النهاية.</p>}
 
+          {type === 'contractor' && (
+            <label className="check">
+              <input type="checkbox" checked={includeClosed} onChange={(e) => setIncludeClosed(e.target.checked)} />
+              تضمين المشاريع المقفولة
+            </label>
+          )}
+
           {type === 'advance' && (
             <fieldset className="cols">
               <legend>اعرض في الكشف</legend>
@@ -417,6 +427,7 @@ export default function Reports() {
               from={from}
               to={to}
               filter={filter}
+              includeClosed={includeClosed}
             />
           )}
           {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} filter={filter} />}

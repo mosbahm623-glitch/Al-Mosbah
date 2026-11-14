@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ProjectSummary } from '../projects'
-import { budgetRows, categoryTotals, inRange, runLedger } from '../reportBuilders'
+import { budgetRows, categoryTotals, inRange, monthTotals, projectGroups, runLedger } from '../reportBuilders'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
   id: '1',
@@ -96,5 +96,48 @@ describe('inRange', () => {
     expect(inRange('2026-10-05', '2026-10-05', '2026-10-05')).toBe(true)
     expect(inRange('2026-10-04', '2026-10-05', '')).toBe(false)
     expect(inRange('2026-10-06', '', '2026-10-05')).toBe(false)
+  })
+})
+
+describe('monthTotals', () => {
+  it('counts and totals per month, oldest first, without floating point noise', () => {
+    expect(
+      monthTotals([
+        { entry_date: '2026-09-17', amount: 0.1 },
+        { entry_date: '2026-07-02', amount: 500 },
+        { entry_date: '2026-09-28', amount: 0.2 },
+      ]),
+    ).toEqual([
+      { month: '2026-07', count: 1, total: 500 },
+      { month: '2026-09', count: 2, total: 0.3 },
+    ])
+  })
+  it('skips rows with no usable date', () => {
+    expect(monthTotals([{ entry_date: '', amount: 5 }])).toEqual([])
+  })
+})
+
+describe('projectGroups', () => {
+  const row = (seq: number, entry_date: string, amount: number, project: string | null) => ({
+    seq,
+    entry_date,
+    amount,
+    project: project ? { name: project } : null,
+  })
+  it('groups by project with a total each, rows oldest first then by number', () => {
+    const g = projectGroups([
+      row(3, '2026-09-19', 100, 'ب'),
+      row(2, '2026-09-17', 50, 'ب'),
+      row(1, '2026-09-17', 25, 'ب'),
+      row(4, '2026-08-01', 7, 'أ'),
+    ])
+    expect(g.map((x) => [x.name, x.total])).toEqual([
+      ['أ', 7],
+      ['ب', 175],
+    ])
+    expect(g[1].rows.map((r) => r.seq)).toEqual([1, 2, 3])
+  })
+  it('puts a row with no project under a dash', () => {
+    expect(projectGroups([row(1, '2026-01-01', 5, null)])[0].name).toBe('—')
   })
 })

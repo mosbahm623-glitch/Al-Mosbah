@@ -21,3 +21,9 @@ export const periodText = (from: string, to: string) =>
   !from && !to
     ? 'كل الفترات'
     : `${from ? `من ${dateText(from)}` : ''}${from && to ? ' ' : ''}${to ? `إلى ${dateText(to)}` : ''}`
+
+/** "2026-09" as "سبتمبر 2026". */
+export const monthLabel = (ym: string) => {
+  const [y = '', m = ''] = ym.split('-')
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('ar-EG-u-nu-latn', { month: 'long', year: 'numeric' })
+}

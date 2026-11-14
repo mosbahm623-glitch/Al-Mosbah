@@ -64,3 +64,40 @@ export function runLedger<T extends { date: string; delta: number }>(
 }
 
 export const inRange = (date: string, from: string, to: string) => (!from || date >= from) && (!to || date <= to)
+
+type Dated = { entry_date: string; amount: number }
+
+/** Count and total per month (YYYY-MM), oldest first. Rows without a usable date are left out. */
+export function monthTotals(rows: Dated[]) {
+  const by = new Map<string, { count: number; cents: number }>()
+  for (const r of rows) {
+    const month = r.entry_date.slice(0, 7)
+    if (!/^\d{4}-\d{2}$/.test(month)) continue
+    const m = by.get(month) ?? { count: 0, cents: 0 }
+    m.count += 1
+    m.cents += toCents(r.amount)
+    by.set(month, m)
+  }
+  return [...by.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, m]) => ({ month, count: m.count, total: m.cents / 100 }))
+}
+
+/** Rows grouped by project (by name), each group oldest first with its total. A row with no project goes under "—". */
+export function projectGroups<T extends Dated & { seq: number; project: { name: string } | null }>(rows: T[]) {
+  const by = new Map<string, { rows: T[]; cents: number }>()
+  for (const r of rows) {
+    const name = r.project?.name ?? '—'
+    const g = by.get(name) ?? { rows: [], cents: 0 }
+    g.rows.push(r)
+    g.cents += toCents(r.amount)
+    by.set(name, g)
+  }
+  return [...by.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'ar'))
+    .map(([name, g]) => ({
+      name,
+      rows: g.rows.sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq),
+      total: g.cents / 100,
+    }))
+}

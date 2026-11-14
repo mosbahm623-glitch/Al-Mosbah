@@ -18,7 +18,7 @@ export type Spent = {
   item: string | null
   amount: number
   entry_date: string
-  project: { name: string } | null
+  project: { name: string; status: string } | null
 }
 
 /** One contractor's dues and payments, and the approved expenses recorded under his name. Null on failure. */
@@ -37,7 +37,7 @@ export async function fetchContractorLedger(contractorId: string) {
     fetchPaged<Spent>((a, b) =>
       supabase
         .from('entries')
-        .select('id,seq,category,item,amount,entry_date,project:projects(name)')
+        .select('id,seq,category,item,amount,entry_date,project:projects(name,status)')
         .eq('contractor_id', contractorId)
         .eq('status', 'approved')
         .order('entry_date')

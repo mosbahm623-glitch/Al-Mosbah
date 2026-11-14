@@ -1,26 +1,31 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import type { Cell } from '../../lib/tableTypes'
-import { money, periodText, todayISO } from '../../lib/format'
+import type { Cell, Section } from '../../lib/tableTypes'
+import { money, monthLabel, periodText, todayISO } from '../../lib/format'
 import { fetchContractorLedger, type LedgerTxn as Txn, type Spent } from '../../lib/contractors'
-import { inRange, runLedger } from '../../lib/reportBuilders'
+import { inRange, monthTotals, projectGroups, runLedger } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
-/** What we owe one contractor (dues − payments, with a running balance) and what was spent under his name. */
+/**
+ * Everything recorded under one contractor's name (the total, by month, and by project with a subtotal each),
+ * then the dues and payments ledger with its running balance. Closed projects are left out unless asked for.
+ */
 export default function ContractorStatement({
   id,
   name,
   from,
   to,
   filter,
+  includeClosed,
 }: {
   id: string
   name: string
   from: string
   to: string
   filter: ReportFilter
+  includeClosed: boolean
 }) {
   const load = useCallback(async () => {
     const ledger = await fetchContractorLedger(id)
@@ -41,14 +46,25 @@ export default function ContractorStatement({
     const dues = ledger.rows.filter((r) => r.kind === 'due').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const paid = ledger.rows.filter((r) => r.kind === 'payment').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const spent = data.spent.filter(
-      (e) => inRange(e.entry_date, from, to) && matches(filter, { project: e.project?.name, category: e.category }),
+      (e) =>
+        inRange(e.entry_date, from, to) &&
+        (includeClosed || e.project?.status !== 'closed') &&
+        matches(filter, { project: e.project?.name, category: e.category }),
     )
-    return { ledger, dues, paid, spent, spentTotal: spent.reduce((s, e) => s + toCents(e.amount), 0) / 100 }
-  }, [data, from, to, filter])
+    return {
+      ledger,
+      dues,
+      paid,
+      spent,
+      spentTotal: spent.reduce((s, e) => s + toCents(e.amount), 0) / 100,
+      months: monthTotals(spent),
+      groups: projectGroups(spent),
+    }
+  }, [data, from, to, filter, includeClosed])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الكشف، جرّب تاني</p>
   if (!view) return <p className="muted">جارٍ التحميل...</p>
-  const { ledger, dues, paid, spent, spentTotal } = view
+  const { ledger, dues, paid, spent, spentTotal, months, groups } = view
 
   const ledgerRows: Cell[][] = [
     ...(from ? [[from, 'رصيد قبل الفترة', null, null, null, null, ledger.opening] as Cell[]] : []),
@@ -70,15 +86,33 @@ export default function ContractorStatement({
       meta={[
         { label: 'المقاول', value: name },
         { label: 'الفترة', value: periodText(from, to) },
+        { label: 'المشاريع المقفولة', value: includeClosed ? 'مضمّنة' : 'مستبعدة' },
         ...filterMeta(filter),
       ]}
       kpis={[
-        { label: 'مستحقات الفترة', value: money(dues), tone: 'warn' },
-        { label: 'مدفوعات الفترة', value: money(paid), tone: 'ok' },
-        { label: 'الرصيد الختامي', value: money(ledger.closing), tone: 'neutral', neg: ledger.closing < 0 },
-        { label: 'مصروفات مسجلة باسمه', value: money(spentTotal), tone: 'err' },
+        { label: 'إجمالي المدفوعات', value: money(spentTotal), tone: 'err' },
+        { label: 'عدد القيود', value: String(spent.length), tone: 'blue' },
       ]}
       sections={[
+        {
+          heading: 'التوزيع الشهري',
+          cols: [{ h: 'الشهر' }, { h: 'عدد القيود', kind: 'int' }, { h: 'المبلغ', kind: 'money' }],
+          rows: months.map((m): Cell[] => [monthLabel(m.month), m.count, m.total]),
+          footer: ['الإجمالي', spent.length, spentTotal],
+          empty: 'مفيش قيود مسجلة باسمه في الفترة دي.',
+        },
+        ...groups.map((g): Section => ({
+          heading: `تفاصيل المصروفات: ${g.name}`,
+          cols: [
+            { h: 'رقم', kind: 'int' },
+            { h: 'التاريخ', kind: 'date' },
+            { h: 'البند' },
+            { h: 'البيان' },
+            { h: 'المبلغ', kind: 'money' },
+          ],
+          rows: g.rows.map((e): Cell[] => [e.seq, e.entry_date, e.category, e.item, e.amount]),
+          footer: [`إجمالي ${g.name}`, null, null, null, g.total],
+        })),
         {
           heading: 'المستحقات والمدفوعات',
           cols: [
@@ -94,22 +128,8 @@ export default function ContractorStatement({
           footer: ['الإجمالي', null, null, null, dues, paid, ledger.closing],
           empty: 'مفيش مستحقات أو مدفوعات في الفترة دي.',
         },
-        {
-          heading: 'المصروفات المسجلة باسم المقاول',
-          cols: [
-            { h: 'رقم', kind: 'int' },
-            { h: 'التاريخ', kind: 'date' },
-            { h: 'المشروع' },
-            { h: 'البند' },
-            { h: 'البيان' },
-            { h: 'المبلغ', kind: 'money' },
-          ],
-          rows: spent.map((e): Cell[] => [e.seq, e.entry_date, e.project?.name ?? null, e.category, e.item, e.amount]),
-          footer: ['إجمالي المصروفات المسجلة', null, null, null, null, spentTotal],
-          empty: 'مفيش مصروفات مسجلة باسمه في الفترة دي.',
-        },
       ]}
-      note="الرصيد = المستحق − المدفوع، والرصيد الموجب معناه إن للمقاول فلوس عندنا. المصروفات المسجلة باسمه للعلم بس ومش داخلة في الرصيد."
+      note="إجمالي المدفوعات = كل المصروفات المسجلة باسم المقاول. الرصيد في جدول المستحقات = المستحق − المدفوع، والرصيد الموجب معناه إن للمقاول فلوس عندنا، وهو منفصل عن إجمالي المدفوعات."
     />
   )
 }

@@ -34,7 +34,7 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
       </div>
       {entries?.length ? (
         <div className="table-wrap">
-          <table className="table">
+          <table className="table wrap-desc">
             <thead>
               <tr>
                 <th className="sm-hide">رقم</th>

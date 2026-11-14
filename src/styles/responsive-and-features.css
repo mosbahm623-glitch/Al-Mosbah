@@ -159,6 +159,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* the custody tables show the whole statement over as many lines as it needs */
+  .table.wrap-desc td.strong:not(.num) {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
   .table .chip {
     padding: 0.05rem 0.4rem;
     font-size: 0.62rem;

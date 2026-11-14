@@ -29,6 +29,10 @@ export type ProjectSummary = {
   /** expense entries not paid from a custody */
 }
 
+/** The projects a new entry may go to: the open ones, plus `keepId` (an entry already on a closed project keeps it). */
+export const pickableProjects = (list: ProjectSummary[], keepId?: string | null) =>
+  list.filter((p) => p.status === 'active' || p.id === keepId)
+
 export type Entry = {
   id: string
   seq: number

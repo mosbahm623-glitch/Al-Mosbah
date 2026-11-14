@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
-import { fetchSummaries, type ProjectSummary } from '../lib/projects'
+import { fetchSummaries, pickableProjects, type ProjectSummary } from '../lib/projects'
 import { fetchMyEntries, type MyEntry } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
 
@@ -23,7 +23,7 @@ export default function QuickEntry() {
   const mine = useAsync<MyEntry[]>(fetchMine)
   const [tab, setTab] = useState<'new' | 'mine'>('new')
   const [editing, setEditing] = useState<MyEntry | null>(null)
-  const active = (projects.data ?? []).filter((p) => p.status === 'active')
+  const active = pickableProjects(projects.data ?? [])
 
   return (
     <div className="page-stack quick-page">
@@ -120,7 +120,7 @@ export default function QuickEntry() {
         <EntryDialog
           projectId={editing.project_id ?? ''}
           projectName={editing.project?.name ?? ''}
-          projects={active}
+          projects={pickableProjects(projects.data ?? [], editing.project_id)}
           entry={editing}
           onClose={() => setEditing(null)}
           onSaved={mine.reload}

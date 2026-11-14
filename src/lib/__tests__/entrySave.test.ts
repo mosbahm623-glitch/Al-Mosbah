@@ -212,3 +212,36 @@ describe('saveEntry: without a network', () => {
     expect(await saveEntry(base())).toEqual({ status: 'error', error: 'device' })
   })
 })
+
+describe('saveEntry: custody and owner rules', () => {
+  const photo = new File(['x'], 'inv.jpg', { type: 'image/jpeg' })
+  const strict = (over: Partial<SaveInput> = {}) =>
+    base({ requirePhoto: true, requireContractorChoice: true, files: [photo], contractorName: 'رجب رخام', ...over })
+
+  it('refuses a new entry with no invoice photo', async () => {
+    expect(await saveEntry(strict({ files: [] }))).toEqual({ status: 'error', error: 'photo' })
+    expect(m.insertEntry).not.toHaveBeenCalled()
+  })
+  it('refuses an expense that names no contractor and does not say «بدون مقاول»', async () => {
+    expect(await saveEntry(strict({ contractorName: '  ' }))).toEqual({ status: 'error', error: 'contractor-choice' })
+    expect(m.insertEntry).not.toHaveBeenCalled()
+  })
+  it('accepts «بدون مقاول» and saves with no contractor, even if a name was typed before', async () => {
+    const r = await saveEntry(strict({ noContractor: true, contractorName: 'رجب رخام' }))
+    expect(r.status).toBe('saved')
+    expect(m.insertEntry.mock.calls[0][0].contractor_id).toBeNull()
+  })
+  it('accepts a named contractor with a photo', async () => {
+    m.createContractor.mockResolvedValue('k1')
+    expect((await saveEntry(strict())).status).toBe('saved')
+    expect(m.insertEntry.mock.calls[0][0].contractor_id).toBe('k1')
+  })
+  it('does not ask an income entry for a contractor, but still wants its photo', async () => {
+    const income = { kind: 'income' as const, incomeLabel: 'دفعة عميل', contractorName: '' }
+    expect(await saveEntry(strict({ ...income, files: [] }))).toEqual({ status: 'error', error: 'photo' })
+    expect((await saveEntry(strict(income))).status).toBe('saved')
+  })
+  it('leaves everyone else alone: no photo and no contractor is fine', async () => {
+    expect((await saveEntry(base())).status).toBe('saved')
+  })
+})

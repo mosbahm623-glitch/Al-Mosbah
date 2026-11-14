@@ -5,7 +5,7 @@ import Segmented from '../../components/Segmented'
 import { FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
-import type { Entry } from '../../lib/projects'
+import { pickableProjects, type Entry } from '../../lib/projects'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
@@ -192,7 +192,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
         <EntryDialog
           projectId=""
           projectName={advance.holder_name}
-          projects={projects.data}
+          projects={pickableProjects(projects.data)}
           advanceId={id}
           onClose={() => setSpending(false)}
           onSaved={reload}
@@ -202,7 +202,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
         <EntryDialog
           projectId={editingEntry.project_id ?? ''}
           projectName={advance.holder_name}
-          projects={projects.data}
+          projects={pickableProjects(projects.data, editingEntry.project_id)}
           entry={editingEntry}
           onClose={() => setEditingEntry(null)}
           onSaved={reload}

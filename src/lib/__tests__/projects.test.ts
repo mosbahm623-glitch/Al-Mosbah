@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dateText, money } from '../format'
-import { isOver, percentOf, type ProjectSummary } from '../projects'
+import { isOver, percentOf, pickableProjects, type ProjectSummary } from '../projects'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
   id: '1',
@@ -36,5 +36,19 @@ describe('formatting', () => {
   })
   it('turns an ISO date into dd-mm-yyyy', () => {
     expect(dateText('2026-10-27')).toBe('27-10-2026')
+  })
+})
+
+describe('pickableProjects', () => {
+  const list = [
+    project({ id: 'a', status: 'active' }),
+    project({ id: 'b', status: 'closed' }),
+    project({ id: 'c', status: 'closed' }),
+  ]
+  it('hides closed projects from the picker', () => {
+    expect(pickableProjects(list).map((p) => p.id)).toEqual(['a'])
+  })
+  it('keeps the closed project an entry is already on', () => {
+    expect(pickableProjects(list, 'b').map((p) => p.id)).toEqual(['a', 'b'])
   })
 })

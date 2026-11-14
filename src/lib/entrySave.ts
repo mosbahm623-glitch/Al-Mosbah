@@ -28,6 +28,11 @@ export type SaveInput = {
   banks?: Named[]
   /** an owner picks the bank from his list only: a name that is not in `banks` is refused, never created */
   banksOnly?: boolean
+  /** a new entry from a custody or an owner: at least one invoice photo is a must */
+  requirePhoto?: boolean
+  /** same people: an expense names its contractor, or says outright that it has none */
+  requireContractorChoice?: boolean
+  noContractor?: boolean
   /** chosen once per try, so a try whose answer got lost can never become a second entry */
   newId: string
 }
@@ -39,6 +44,8 @@ export type SaveError =
   | 'amount'
   | 'project'
   | 'contractor'
+  | 'contractor-choice'
+  | 'photo'
   | 'bank'
   | 'bank-denied'
   | 'bank-required'
@@ -73,7 +80,11 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   if (!Number.isFinite(value) || value <= 0) return fail('amount')
   if (!input.targetProject) return fail('project')
 
-  const typedContractor = isExpense ? input.contractorName.trim() : ''
+  const typedContractor = isExpense && !input.noContractor ? input.contractorName.trim() : ''
+  if (input.requireContractorChoice && isExpense && !typedContractor && !input.noContractor) {
+    return fail('contractor-choice')
+  }
+  if (input.requirePhoto && input.files.length === 0) return fail('photo')
   const typedBank = input.fromAdvance ? '' : input.bankName.trim()
   // every entry carries a bank (a payment from a custody has none)
   if (!input.fromAdvance && !typedBank) return fail('bank-required')

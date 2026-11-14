@@ -20,10 +20,12 @@ type Props = {
   canRemove: boolean
   /** show the photos only (no adding) */
   readOnly?: boolean
+  /** the entry cannot be saved without a photo */
+  required?: boolean
 }
 
 /** Invoice photos of one entry: add (camera or gallery), see, and remove. */
-export default function InvoiceField({ entryId, files, onFiles, canRemove, readOnly }: Props) {
+export default function InvoiceField({ entryId, files, onFiles, canRemove, readOnly, required }: Props) {
   const load = useCallback(
     () => (entryId ? fetchAttachments(entryId) : Promise.resolve({ data: [], error: null })),
     [entryId],
@@ -74,7 +76,10 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
   if (readOnly && total === 0) return null
   return (
     <div className="field span-2 inv-field">
-      <span>الفواتير{total > 0 ? ` (${total})` : ''}</span>
+      <span>
+        الفواتير{total > 0 ? ` (${total})` : ''}
+        {required && ' (إجبارية)'}
+      </span>
       <div className="inv-grid">
         {saved.map((a) => (
           <div className="inv-thumb" key={a.id}>

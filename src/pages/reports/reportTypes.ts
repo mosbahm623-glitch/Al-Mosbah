@@ -1,3 +1,5 @@
+import type { FilterKey } from '../../lib/reportFilter'
+
 export type ReportType =
   | 'journal'
   | 'period'
@@ -45,6 +47,21 @@ export const GROUPS: { label: string; items: { value: ReportType; label: string 
     ],
   },
 ]
+
+/** Which optional filters each report offers (the thing a report is already about is not repeated). */
+export const FILTERS: Record<ReportType, readonly FilterKey[]> = {
+  journal: ['project', 'contractor', 'bank', 'category'],
+  period: ['contractor', 'bank', 'category'],
+  project: ['contractor', 'bank', 'category'],
+  category: ['project', 'contractor', 'bank'],
+  budget: ['project'],
+  advance: ['project', 'contractor', 'category'],
+  contractor: ['project', 'category'],
+  contractors: ['project'],
+  bank: ['project', 'contractor', 'category'],
+  pending: ['project', 'contractor', 'bank', 'category'],
+  approvals: ['project', 'contractor', 'category'],
+}
 
 /** Which reports take a from / to period, and which let the person hide columns. */
 export const hasPeriod = (t: ReportType) =>

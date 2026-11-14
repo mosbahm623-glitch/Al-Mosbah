@@ -6,6 +6,7 @@ import { dateText, money } from '../../lib/format'
 import { fetchDecidedOn, type DecidedEntry as Decided } from '../../lib/entries'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
+import { NO_FILTER, filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 const timeText = (iso: string) => {
   const d = new Date(iso)
@@ -13,7 +14,7 @@ const timeText = (iso: string) => {
 }
 
 /** What was approved or rejected on one day, whatever the date of the entries themselves. */
-export default function ApprovalsReport({ day }: { day: string }) {
+export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: string; filter?: ReportFilter }) {
   const load = useCallback(async () => {
     const rows = await fetchDecidedOn(day)
     return { data: rows, error: rows === null }
@@ -21,7 +22,9 @@ export default function ApprovalsReport({ day }: { day: string }) {
   const { data, failed } = useAsync<Decided[]>(load)
 
   const view = useMemo(() => {
-    const rows = data ?? []
+    const rows = (data ?? []).filter((e) =>
+      matches(filter, { project: e.project?.name, contractor: e.contractor?.name, category: e.category }),
+    )
     const sum = (f: (e: Decided) => boolean) => rows.filter(f).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const ok = (e: Decided) => e.status === 'approved'
     return {
@@ -31,7 +34,7 @@ export default function ApprovalsReport({ day }: { day: string }) {
       income: sum((e) => ok(e) && e.kind === 'income'),
       expense: sum((e) => ok(e) && e.kind === 'expense'),
     }
-  }, [data])
+  }, [data, filter])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>
@@ -41,7 +44,7 @@ export default function ApprovalsReport({ day }: { day: string }) {
     <TableReport
       title={title}
       filename={`المصباح - موافقات ${day}.xlsx`}
-      meta={[{ label: 'يوم القرار', value: dateText(day) }]}
+      meta={[{ label: 'يوم القرار', value: dateText(day) }, ...filterMeta(filter)]}
       kpis={[
         { label: 'اتوافق عليه', value: String(view.approved), tone: 'ok' },
         { label: 'وارد مقبول', value: money(view.income), tone: 'ok' },

@@ -68,7 +68,7 @@ export default function SearchSelect({
             autoComplete="off"
             onChange={(e) => {
               setQuery(e.target.value)
-              if (freeText) onChange(e.target.value)
+              if (freeText || !e.target.value) onChange(e.target.value)
               setOpen(true)
             }}
             onFocus={() => setOpen(true)}

@@ -254,6 +254,14 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
   return sortMovements([...a.map(fromEntry), ...b.map(fromInstallment), ...c.map(fromReturn), ...d.map(fromTxn)])
 }
 
+/** A movement as the report filters see it (custody installments and returns have no contractor, bank or بند). */
+export const movementRow = (m: Movement) => ({
+  project: m.project,
+  category: m.category,
+  bank: m.detail,
+  contractor: m.kind === 'installment' || m.kind === 'return' ? null : m.party,
+})
+
 /** Newest recorded first; entries of the same moment keep their serial order. */
 export const sortMovements = (rows: Movement[]) =>
   [...rows].sort((x, y) => y.at.localeCompare(x.at) || (y.seq ?? 0) - (x.seq ?? 0))

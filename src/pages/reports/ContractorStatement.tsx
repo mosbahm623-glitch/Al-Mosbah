@@ -6,6 +6,7 @@ import { fetchContractorLedger, type LedgerTxn as Txn, type Spent } from '../../
 import { inRange, runLedger } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 /** What we owe one contractor (dues − payments, with a running balance) and what was spent under his name. */
 export default function ContractorStatement({
@@ -13,11 +14,13 @@ export default function ContractorStatement({
   name,
   from,
   to,
+  filter,
 }: {
   id: string
   name: string
   from: string
   to: string
+  filter: ReportFilter
 }) {
   const load = useCallback(async () => {
     const ledger = await fetchContractorLedger(id)
@@ -29,15 +32,19 @@ export default function ContractorStatement({
     if (!data) return null
     const ledger = runLedger(
       0,
-      data.txns.map((t) => ({ ...t, date: t.txn_date, delta: t.kind === 'due' ? t.amount : -t.amount })),
+      data.txns
+        .filter((t) => matches(filter, { project: t.project?.name }))
+        .map((t) => ({ ...t, date: t.txn_date, delta: t.kind === 'due' ? t.amount : -t.amount })),
       from,
       to,
     )
     const dues = ledger.rows.filter((r) => r.kind === 'due').reduce((s, r) => s + toCents(r.amount), 0) / 100
     const paid = ledger.rows.filter((r) => r.kind === 'payment').reduce((s, r) => s + toCents(r.amount), 0) / 100
-    const spent = data.spent.filter((e) => inRange(e.entry_date, from, to))
+    const spent = data.spent.filter(
+      (e) => inRange(e.entry_date, from, to) && matches(filter, { project: e.project?.name, category: e.category }),
+    )
     return { ledger, dues, paid, spent, spentTotal: spent.reduce((s, e) => s + toCents(e.amount), 0) / 100 }
-  }, [data, from, to])
+  }, [data, from, to, filter])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الكشف، جرّب تاني</p>
   if (!view) return <p className="muted">جارٍ التحميل...</p>
@@ -63,6 +70,7 @@ export default function ContractorStatement({
       meta={[
         { label: 'المقاول', value: name },
         { label: 'الفترة', value: periodText(from, to) },
+        ...filterMeta(filter),
       ]}
       kpis={[
         { label: 'مستحقات الفترة', value: money(dues), tone: 'warn' },

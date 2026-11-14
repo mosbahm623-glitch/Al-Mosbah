@@ -5,6 +5,7 @@ import { fetchSummaries, type ProjectSummary } from '../../lib/projects'
 import { NEAR_LIMIT, budgetRows, type BudgetMode } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 const TITLE: Record<BudgetMode, string> = {
   all: 'متابعة الميزانيات',
@@ -13,9 +14,12 @@ const TITLE: Record<BudgetMode, string> = {
 }
 
 /** Budget against spending per project, most used first. */
-export default function BudgetReport({ mode }: { mode: BudgetMode }) {
+export default function BudgetReport({ mode, filter }: { mode: BudgetMode; filter: ReportFilter }) {
   const { data, failed } = useAsync<ProjectSummary[]>(fetchSummaries)
-  const rows = useMemo(() => budgetRows(data ?? [], mode), [data, mode])
+  const rows = useMemo(
+    () => budgetRows(data ?? [], mode).filter((r) => matches(filter, { project: r.p.name })),
+    [data, mode, filter],
+  )
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>
@@ -28,6 +32,7 @@ export default function BudgetReport({ mode }: { mode: BudgetMode }) {
     <TableReport
       title={TITLE[mode]}
       filename={`المصباح - ${TITLE[mode]} - ${todayISO()}.xlsx`}
+      meta={filterMeta(filter)}
       kpis={[
         { label: 'عدد المشاريع', value: String(rows.length), tone: 'neutral' },
         { label: 'إجمالي الميزانيات', value: money(budget), tone: 'blue' },

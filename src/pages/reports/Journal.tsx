@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 import { FileSpreadsheet, Printer } from 'lucide-react'
 import { dateText, money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
-import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement } from '../../lib/movements'
+import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/movements'
 import { exportJournalExcel } from '../../lib/export/exportJournalExcel'
 import { Kpis, Signatures } from '../../components/PaperExtras'
 import DataGrid from '../../components/DataGrid'
@@ -10,6 +10,7 @@ import PrintTables from '../../components/PrintTables'
 import type { Section, Tone } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 import type { ReportColumns } from '../../lib/reportColumns'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 const PILL: Record<string, Tone> = {
   [KIND_LABEL.income]: 'ok',
@@ -27,7 +28,8 @@ export default function Journal({
   withBank: bankWanted,
   withNotes,
   withEnteredBy,
-}: { day: string } & ReportColumns) {
+  filter,
+}: { day: string; filter: ReportFilter } & ReportColumns) {
   const fetchDay = useCallback(async () => {
     const rows = await fetchMovements({ from: day, to: day })
     return { data: rows, error: rows === null }
@@ -39,8 +41,11 @@ export default function Journal({
 
   // oldest first, the way a paper journal is read
   const rows = useMemo(
-    () => [...(data ?? [])].sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)),
-    [data],
+    () =>
+      (data ?? [])
+        .filter((m) => matches(filter, movementRow(m)))
+        .sort((a, b) => a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)),
+    [data, filter],
   )
   const t = useMemo(() => totalsOfDay(rows), [rows])
   const withBank = bankWanted && rows.some((m) => m.detail)
@@ -116,6 +121,12 @@ export default function Journal({
               <dt>عدد الحركات</dt>
               <dd>{t.count}</dd>
             </div>
+            {filterMeta(filter).map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
             {preparedBy && (
               <div>
                 <dt>أعدّه</dt>

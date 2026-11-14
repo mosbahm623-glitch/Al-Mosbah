@@ -2,11 +2,12 @@ import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell, Col } from '../../lib/tableTypes'
 import { money, periodText, todayISO } from '../../lib/format'
-import { KIND_LABEL, fetchMovements, totalsOfDay, type Movement } from '../../lib/movements'
+import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/movements'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 import { useAsync } from '../../lib/useAsync'
 import type { ReportColumns } from '../../lib/reportColumns'
 
-type Props = { from: string; to: string; projectId: string; projectName: string } & ReportColumns
+type Props = { from: string; to: string; projectId: string; projectName: string; filter: ReportFilter } & ReportColumns
 
 /** Every approved movement between two dates, for one project or all of them. */
 export default function PeriodReport({
@@ -18,6 +19,7 @@ export default function PeriodReport({
   withBank: bankWanted,
   withNotes,
   withEnteredBy,
+  filter,
 }: Props) {
   const fetchRows = useCallback(async () => {
     const rows = await fetchMovements({
@@ -31,10 +33,10 @@ export default function PeriodReport({
 
   const rows = useMemo(
     () =>
-      [...(data ?? [])].sort(
-        (a, b) => a.date.localeCompare(b.date) || a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0),
-      ),
-    [data],
+      (data ?? [])
+        .filter((m) => matches(filter, movementRow(m)))
+        .sort((a, b) => a.date.localeCompare(b.date) || a.at.localeCompare(b.at) || (a.seq ?? 0) - (b.seq ?? 0)),
+    [data, filter],
   )
   const t = useMemo(() => totalsOfDay(rows), [rows])
 
@@ -76,6 +78,7 @@ export default function PeriodReport({
       meta={[
         { label: 'الفترة', value: periodText(from, to) },
         { label: 'المشروع', value: projectId ? projectName : 'كل المشاريع' },
+        ...filterMeta(filter),
       ]}
       kpis={[
         { label: 'إجمالي الوارد', value: money(t.income), tone: 'ok' },

@@ -5,9 +5,20 @@ import { fetchApprovedExpenses, type ExpenseRow as Row } from '../../lib/entries
 import { categoryTotals } from '../../lib/reportBuilders'
 import { useAsync } from '../../lib/useAsync'
 import { sumMoney } from '../../lib/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 /** Where the money went: expenses per بند across all projects (including what was paid from custodies). */
-export default function CategoryReport({ from, to, type }: { from: string; to: string; type: 'all' | ProjectType }) {
+export default function CategoryReport({
+  from,
+  to,
+  type,
+  filter,
+}: {
+  from: string
+  to: string
+  type: 'all' | ProjectType
+  filter: ReportFilter
+}) {
   const load = useCallback(async () => {
     const rows = await fetchApprovedExpenses(from, to)
     return { data: rows, error: rows === null }
@@ -15,8 +26,19 @@ export default function CategoryReport({ from, to, type }: { from: string; to: s
   const { data, failed } = useAsync<Row[]>(load)
 
   const rows = useMemo(
-    () => categoryTotals((data ?? []).filter((r) => type === 'all' || r.project?.type === type)),
-    [data, type],
+    () =>
+      categoryTotals(
+        (data ?? []).filter(
+          (r) =>
+            (type === 'all' || r.project?.type === type) &&
+            matches(filter, {
+              project: r.project?.name,
+              contractor: r.contractor?.name,
+              bank: r.bank?.name,
+            }),
+        ),
+      ),
+    [data, type, filter],
   )
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
@@ -32,6 +54,7 @@ export default function CategoryReport({ from, to, type }: { from: string; to: s
       meta={[
         { label: 'الفترة', value: periodText(from, to) },
         { label: 'نوع المشاريع', value: type === 'all' ? 'كل الأنواع' : TYPE_LABEL[type] },
+        ...filterMeta(filter),
       ]}
       kpis={[
         { label: 'إجمالي المصروفات', value: money(total), tone: 'err' },

@@ -9,6 +9,10 @@ import PrintTables from '../../components/PrintTables'
 import type { Section } from '../../lib/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 import { enteredByOf } from '../../lib/enteredBy'
+import { toCents } from '../../lib/money'
+import { NO_FILTER, filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reportFilter'
+
+const spentSum = (rows: { amount: number }[]) => rows.reduce((t, e) => t + toCents(e.amount), 0) / 100
 
 type Parts = { given: boolean; spent: boolean; returned: boolean }
 
@@ -16,8 +20,10 @@ type Parts = { given: boolean; spent: boolean; returned: boolean }
 export default function AdvanceReport({
   id,
   embedded,
+  filter = NO_FILTER,
 }: {
   id: string
+  filter?: ReportFilter
   embedded?: { withContractor: boolean; withNotes: boolean; withEnteredBy?: boolean; parts?: Parts }
 }) {
   const preparedBy = usePreparedBy()
@@ -34,12 +40,18 @@ export default function AdvanceReport({
   if (!advance) return <p className="msg msg-error">العهدة مش موجودة</p>
 
   const balance = advanceBalance(advance)
+  const narrowed = isFiltering(filter)
   const spent = [...(entries ?? [])]
-    .filter((e) => e.status === 'approved')
+    .filter(
+      (e) =>
+        e.status === 'approved' &&
+        matches(filter, { project: e.project?.name, contractor: e.contractor?.name, category: e.category }),
+    )
     .sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
   const given = [...(installments ?? [])]
     .filter((i) => i.status === 'approved')
     .sort((a, b) => a.paid_on.localeCompare(b.paid_on))
+  const spentTotal = narrowed ? spentSum(spent) : advance.spent
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))
 
   const allSections: (Section & { part: keyof Parts })[] = [
@@ -82,7 +94,7 @@ export default function AdvanceReport({
       footer: [
         'إجمالي المصروف',
         ...Array(4 + (withContractor ? 1 : 0) + (withNotes ? 1 : 0) + (withEnteredBy ? 1 : 0)).fill(null),
-        advance.spent,
+        spentTotal,
       ],
       empty: 'مفيش مصروفات.',
     },
@@ -129,6 +141,12 @@ export default function AdvanceReport({
               <dt>الحالة</dt>
               <dd>{advance.status === 'open' ? 'مفتوحة' : 'مقفولة'}</dd>
             </div>
+            {filterMeta(filter).map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
             <div>
               <dt>تاريخ الكشف</dt>
               <dd>{today}</dd>
@@ -145,7 +163,7 @@ export default function AdvanceReport({
         <Kpis
           items={[
             { label: 'المستلم', value: money(advance.given), tone: 'ok' },
-            { label: 'المصروف', value: money(advance.spent), tone: 'err' },
+            { label: narrowed ? 'المصروف (بالفلتر)' : 'المصروف', value: money(spentTotal), tone: 'err' },
             { label: 'المرتجع', value: money(advance.returned), tone: 'warn' },
             { label: 'المتبقي مع المستلم', value: money(balance), tone: 'neutral', neg: balance < 0 },
           ]}

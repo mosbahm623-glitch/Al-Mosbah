@@ -55,6 +55,7 @@ export type SummaryTxn = {
   amount: number
   txn_date: string
   contractor: { name: string } | null
+  project: { name: string } | null
 }
 
 /** Every contractor transaction, for the all-contractors summary. Null on failure. */
@@ -62,7 +63,7 @@ export const fetchAllContractorTxns = () =>
   fetchPaged<SummaryTxn>((a, b) =>
     supabase
       .from('contractor_transactions')
-      .select('kind,amount,txn_date,contractor_id,contractor:contractors(name)')
+      .select('kind,amount,txn_date,contractor_id,contractor:contractors(name),project:projects(name)')
       .order('id')
       .range(a, b)
       .returns<SummaryTxn[]>(),

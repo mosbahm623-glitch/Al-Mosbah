@@ -1,6 +1,6 @@
 /** لوجوهات البنوك المعروفة: ملفات ثابتة في التطبيق، فمبتتأثرش بإعادة الضبط. */
 const RULES: { file: string; match: RegExp }[] = [
-  { file: 'nbe.png', match: /الأهلي|الاهلي|nbe|national\s*bank/i },
+  { file: 'nbe.png', match: /الأهلي|الاهلي|al[\s-]*ahly|\bahly\b|\bnbe\b|national\s*bank/i },
   { file: 'cib.png', match: /التجاري\s*الدولي|\bcib\b|commercial\s*international/i },
   { file: 'cash.png', match: /كاش|\bcash\b/i },
 ]

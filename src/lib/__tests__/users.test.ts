@@ -27,6 +27,7 @@ describe('fetchUsers', () => {
     can_edit_entries: true,
     can_delete_entries: true,
     can_edit_approved: false,
+    project_types: ['finishing', 'furnishing'],
     must_change_password: false,
   })
 

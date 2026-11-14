@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { Level, Module } from '../auth/permissions'
+import type { ProjectType } from './format'
 
 export type UserRow = {
   id: string
@@ -14,6 +15,8 @@ export type UserRow = {
   can_delete_entries: boolean
   /** may edit his entries even after they were approved (they go back to the admin for approval) */
   can_edit_approved: boolean
+  /** project types he may see and spend on (the admin is never limited) */
+  project_types: ProjectType[]
   permissions: { module: Module; level: Level }[]
   /** custodies this user may see (matters only when he has the العهد page) */
   advanceIds: string[]
@@ -32,7 +35,7 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
   const [profiles, perms, access, bankAccess] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id,full_name,email,role,is_active,can_edit_entries,can_delete_entries,can_edit_approved')
+      .select('id,full_name,email,role,is_active,can_edit_entries,can_delete_entries,can_edit_approved,project_types')
       .order('created_at')
       .returns<Profile[]>(),
     supabase
@@ -121,6 +124,9 @@ export const setEntryRights = (userId: string, canEdit: boolean, canDelete: bool
     .from('profiles')
     .update({ can_edit_entries: canEdit, can_delete_entries: canDelete, can_edit_approved: canEditApproved })
     .eq('id', userId)
+
+export const setProjectTypes = (userId: string, types: ProjectType[]) =>
+  supabase.from('profiles').update({ project_types: types }).eq('id', userId)
 
 /** Replaces all page permissions of one user. Both results are returned so the caller can tell which step failed. */
 export async function replacePermissions(userId: string, rows: { user_id: string; module: Module; level: Level }[]) {

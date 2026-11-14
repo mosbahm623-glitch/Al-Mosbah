@@ -91,9 +91,9 @@ export type Database = {
         [{ foreignKeyName: 'expense_items_category_id_fkey'; columns: ['category_id']; isOneToOne: false; referencedRelation: 'expense_categories'; referencedColumns: ['id'] }]
       >
       profiles: T<
-        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; must_change_password: boolean; role: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; must_change_password?: boolean; role?: string },
-        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; must_change_password?: boolean; role?: string }
+        { can_delete_entries: boolean; can_edit_approved: boolean; can_edit_entries: boolean; created_at: string; email: string | null; full_name: string | null; id: string; is_active: boolean; must_change_password: boolean; project_types: string[]; role: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id: string; is_active?: boolean; must_change_password?: boolean; project_types?: string[]; role?: string },
+        { can_delete_entries?: boolean; can_edit_approved?: boolean; can_edit_entries?: boolean; created_at?: string; email?: string | null; full_name?: string | null; id?: string; is_active?: boolean; must_change_password?: boolean; project_types?: string[]; role?: string }
       >
       projects: T<
         { budget: number; created_at: string; id: string; name: string; status: string; type: string },

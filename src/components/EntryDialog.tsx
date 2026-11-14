@@ -3,7 +3,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
 import Segmented from './Segmented'
-import CreatableSelect from './CreatableSelect'
+import SearchSelect from './SearchSelect'
 import EntryHistory from './EntryHistory'
 import { createCategory as saveCategory, fetchCategories, type Category } from '../lib/catalog'
 import { deleteEntry } from '../lib/entries'
@@ -105,8 +105,10 @@ export default function EntryDialog({
   const categoryOptions = useMemo(() => {
     const names = (categories.data ?? []).map((c) => c.name)
     if (categoryName && !names.includes(categoryName)) names.push(categoryName)
-    return names.map((n) => ({ value: n, label: n }))
+    return names
   }, [categories.data, categoryName])
+
+  const contractorOptions = useMemo(() => (contractors.data ?? []).map((c) => c.name), [contractors.data])
 
   async function createCategory(name: string) {
     if (!(await saveCategory(name))) return null
@@ -212,12 +214,11 @@ export default function EntryDialog({
 
         {kind === 'expense' ? (
           <>
-            <CreatableSelect
+            <SearchSelect
               label="البند"
               value={categoryName}
               options={categoryOptions}
-              placeholder="اختار البند"
-              required
+              placeholder="دوّر أو اختار البند"
               onChange={(v) => {
                 setCategoryName(v)
                 setItemName('')
@@ -240,20 +241,14 @@ export default function EntryDialog({
                 ))}
               </datalist>
             </label>
-            <label className="field">
-              اسم المقاول
-              <input
-                value={contractorName}
-                onChange={(e) => setContractorName(e.target.value)}
-                list="contractor-names"
-                placeholder="اكتب اسم المقاول (اختياري)"
-              />
-              <datalist id="contractor-names">
-                {contractors.data?.map((c) => (
-                  <option key={c.id} value={c.name} />
-                ))}
-              </datalist>
-            </label>
+            <SearchSelect
+              label="اسم المقاول"
+              value={contractorName}
+              options={contractorOptions}
+              placeholder="دوّر أو اكتب اسم المقاول (اختياري)"
+              freeText
+              onChange={setContractorName}
+            />
           </>
         ) : (
           <label className="field span-2">

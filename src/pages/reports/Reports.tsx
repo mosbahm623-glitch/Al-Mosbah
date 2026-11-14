@@ -354,7 +354,7 @@ export default function Reports() {
           )}
 
           {hasColumns(type) && (
-            <fieldset className="cols">
+            <fieldset className="cols cols-inline">
               <legend>أعمدة التقرير</legend>
               <label className="check">
                 <input type="checkbox" checked={withContractor} onChange={(e) => setWithContractor(e.target.checked)} />

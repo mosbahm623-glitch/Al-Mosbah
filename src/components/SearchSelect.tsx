@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 type Props = {
   label: string
@@ -9,6 +9,8 @@ type Props = {
   /** true: any typed text is the value (suggestions only); false: the value can only be picked from the list */
   freeText?: boolean
   onChange: (value: string) => void
+  /** shown on the label line, at the far end (a small checkbox, say), so it takes no row of its own */
+  labelExtra?: ReactNode
   /** Saves a typed name that is not in the list and returns it, or null when it failed. */
   onCreate?: (name: string) => Promise<string | null>
 }
@@ -22,6 +24,7 @@ export default function SearchSelect({
   disabled,
   freeText,
   onChange,
+  labelExtra,
   onCreate,
 }: Props) {
   const [open, setOpen] = useState(false)
@@ -51,7 +54,14 @@ export default function SearchSelect({
 
   return (
     <div className="field">
-      {label}
+      {labelExtra ? (
+        <span className="label-row">
+          {label}
+          {labelExtra}
+        </span>
+      ) : (
+        label
+      )}
       <div
         className="bank-picker"
         onBlur={() => {

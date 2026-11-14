@@ -20,12 +20,23 @@ type Props = {
   canRemove: boolean
   /** show the photos only (no adding) */
   readOnly?: boolean
-  /** the entry cannot be saved without a photo */
+  /** the entry cannot be saved without a photo, unless «بدون فاتورة» is ticked */
   required?: boolean
+  noInvoice?: boolean
+  onNoInvoice?: (value: boolean) => void
 }
 
 /** Invoice photos of one entry: add (camera or gallery), see, and remove. */
-export default function InvoiceField({ entryId, files, onFiles, canRemove, readOnly, required }: Props) {
+export default function InvoiceField({
+  entryId,
+  files,
+  onFiles,
+  canRemove,
+  readOnly,
+  required,
+  noInvoice,
+  onNoInvoice,
+}: Props) {
   const load = useCallback(
     () => (entryId ? fetchAttachments(entryId) : Promise.resolve({ data: [], error: null })),
     [entryId],
@@ -76,82 +87,92 @@ export default function InvoiceField({ entryId, files, onFiles, canRemove, readO
   if (readOnly && total === 0) return null
   return (
     <div className="field span-2 inv-field">
-      <span>
-        الفواتير{total > 0 ? ` (${total})` : ''}
-        {required && ' (إجبارية)'}
+      <span className="label-row">
+        <span>
+          الفواتير{total > 0 ? ` (${total})` : ''}
+          {required && ' (إجبارية)'}
+        </span>
+        {onNoInvoice && (
+          <label className="check">
+            <input type="checkbox" checked={Boolean(noInvoice)} onChange={(e) => onNoInvoice(e.target.checked)} />
+            بدون فاتورة
+          </label>
+        )}
       </span>
-      <div className="inv-grid">
-        {saved.map((a) => (
-          <div className="inv-thumb" key={a.id}>
-            {urls[a.path] ? (
-              <a
-                href={urls[a.path]}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={isPdf(a) ? 'فتح الملف' : 'فتح الصورة'}
-              >
-                {isPdf(a) ? (
-                  <span className="inv-file">
-                    <FileText size={26} aria-hidden="true" />
-                    <span>PDF</span>
-                  </span>
-                ) : (
-                  <img src={urls[a.path]} alt={a.file_name ?? 'فاتورة'} loading="lazy" />
-                )}
-              </a>
-            ) : (
-              <span className="muted small">...</span>
-            )}
-            {canRemove && !readOnly && (
+      {!noInvoice && (
+        <div className="inv-grid">
+          {saved.map((a) => (
+            <div className="inv-thumb" key={a.id}>
+              {urls[a.path] ? (
+                <a
+                  href={urls[a.path]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={isPdf(a) ? 'فتح الملف' : 'فتح الصورة'}
+                >
+                  {isPdf(a) ? (
+                    <span className="inv-file">
+                      <FileText size={26} aria-hidden="true" />
+                      <span>PDF</span>
+                    </span>
+                  ) : (
+                    <img src={urls[a.path]} alt={a.file_name ?? 'فاتورة'} loading="lazy" />
+                  )}
+                </a>
+              ) : (
+                <span className="muted small">...</span>
+              )}
+              {canRemove && !readOnly && (
+                <button
+                  type="button"
+                  className="inv-remove"
+                  aria-label="مسح الملف"
+                  disabled={busy}
+                  onClick={() => void remove(a)}
+                >
+                  <X size={14} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+          {files.map((f, i) => (
+            <div className="inv-thumb" key={`${f.name}-${i}`}>
+              {isPdf({ type: f.type, file_name: f.name }) ? (
+                <span className="inv-file">
+                  <FileText size={26} aria-hidden="true" />
+                  <span>PDF</span>
+                </span>
+              ) : (
+                <img src={previews[i]} alt={f.name} />
+              )}
               <button
                 type="button"
                 className="inv-remove"
-                aria-label="مسح الملف"
-                disabled={busy}
-                onClick={() => void remove(a)}
+                aria-label="شيل الملف"
+                onClick={() => onFiles(files.filter((_, j) => j !== i))}
               >
                 <X size={14} aria-hidden="true" />
               </button>
-            )}
-          </div>
-        ))}
-        {files.map((f, i) => (
-          <div className="inv-thumb" key={`${f.name}-${i}`}>
-            {isPdf({ type: f.type, file_name: f.name }) ? (
-              <span className="inv-file">
-                <FileText size={26} aria-hidden="true" />
-                <span>PDF</span>
-              </span>
-            ) : (
-              <img src={previews[i]} alt={f.name} />
-            )}
-            <button
-              type="button"
-              className="inv-remove"
-              aria-label="شيل الملف"
-              onClick={() => onFiles(files.filter((_, j) => j !== i))}
-            >
-              <X size={14} aria-hidden="true" />
-            </button>
-          </div>
-        ))}
-        {!readOnly && total < MAX_INVOICES && (
-          <label className={`inv-add${busy ? ' is-busy' : ''}`}>
-            <Camera size={20} aria-hidden="true" />
-            <span>{busy ? 'جارٍ الرفع...' : 'إضافة فاتورة'}</span>
-            <input
-              type="file"
-              accept="image/*,application/pdf"
-              multiple
-              disabled={busy}
-              onChange={(e) => {
-                void pick(e.target.files)
-                e.target.value = ''
-              }}
-            />
-          </label>
-        )}
-      </div>
+            </div>
+          ))}
+          {!readOnly && total < MAX_INVOICES && (
+            <label className={`inv-add${busy ? ' is-busy' : ''}`}>
+              <Camera size={20} aria-hidden="true" />
+              <span>{busy ? 'جارٍ الرفع...' : 'إضافة فاتورة'}</span>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                multiple
+                disabled={busy}
+                onChange={(e) => {
+                  void pick(e.target.files)
+                  e.target.value = ''
+                }}
+              />
+            </label>
+          )}
+        </div>
+      )}
       {error && <span className="msg msg-error">{error}</span>}
     </div>
   )

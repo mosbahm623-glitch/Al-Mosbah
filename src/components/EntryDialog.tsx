@@ -253,30 +253,30 @@ export default function EntryDialog({
                 ))}
               </datalist>
             </label>
-            <div>
-              <SearchSelect
-                label="اسم المقاول"
-                value={noContractor ? '' : contractorName}
-                options={contractorOptions}
-                placeholder={strict ? 'دوّر أو اختار المقاول' : 'دوّر أو اكتب اسم المقاول (اختياري)'}
-                freeText
-                disabled={noContractor}
-                onChange={setContractorName}
-              />
-              {strict && (
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={noContractor}
-                    onChange={(e) => {
-                      setNoContractor(e.target.checked)
-                      if (e.target.checked) setContractorName('')
-                    }}
-                  />
-                  بدون مقاول
-                </label>
-              )}
-            </div>
+            <SearchSelect
+              label="اسم المقاول"
+              value={noContractor ? '' : contractorName}
+              options={contractorOptions}
+              placeholder={strict ? 'دوّر أو اختار المقاول' : 'دوّر أو اكتب اسم المقاول (اختياري)'}
+              freeText
+              disabled={noContractor}
+              onChange={setContractorName}
+              labelExtra={
+                strict && (
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={noContractor}
+                      onChange={(e) => {
+                        setNoContractor(e.target.checked)
+                        if (e.target.checked) setContractorName('')
+                      }}
+                    />
+                    بدون مقاول
+                  </label>
+                )
+              }
+            />
           </>
         ) : (
           <label className="field span-2">
@@ -327,29 +327,23 @@ export default function EntryDialog({
             />
           </label>
         )}
-        {!noInvoice && (
-          <InvoiceField
-            entryId={entry?.id ?? savedId ?? undefined}
-            files={files}
-            onFiles={setFiles}
-            canRemove={isStaff || entry?.status !== 'approved'}
-            readOnly={locked}
-            required={strict && !noInvoice}
-          />
-        )}
-        {strict && (
-          <label className="check span-2">
-            <input
-              type="checkbox"
-              checked={noInvoice}
-              onChange={(e) => {
-                setNoInvoice(e.target.checked)
-                if (e.target.checked) setFiles([])
-              }}
-            />
-            بدون فاتورة
-          </label>
-        )}
+        <InvoiceField
+          entryId={entry?.id ?? savedId ?? undefined}
+          files={files}
+          onFiles={setFiles}
+          canRemove={isStaff || entry?.status !== 'approved'}
+          readOnly={locked}
+          required={strict && !noInvoice}
+          noInvoice={strict ? noInvoice : undefined}
+          onNoInvoice={
+            strict
+              ? (v) => {
+                  setNoInvoice(v)
+                  if (v) setFiles([])
+                }
+              : undefined
+          }
+        />
       </fieldset>
       {locked && <p className="msg span-2 muted">مفيش عندك صلاحية تعدّل القيود.</p>}
       {entry?.status === 'rejected' && entry.reject_reason && (

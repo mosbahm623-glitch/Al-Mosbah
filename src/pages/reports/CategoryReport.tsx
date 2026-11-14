@@ -35,6 +35,7 @@ export default function CategoryReport({
               project: r.project?.name,
               contractor: r.contractor?.name,
               bank: r.bank?.name,
+              category: r.category,
             }),
         ),
       ),

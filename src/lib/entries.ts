@@ -85,12 +85,13 @@ export type DecidedEntry = {
   decided_at: string
   project: { name: string } | null
   contractor: { name: string } | null
+  bank: { name: string } | null
   creator: { full_name: string | null } | null
   decider: { full_name: string | null } | null
 }
 
 const DECIDED_COLUMNS =
-  'id,seq,kind,category,item,amount,entry_date,status,decided_at,project:projects(name),contractor:contractors(name),creator:profiles!entries_created_by_profile_fkey(full_name),decider:profiles!entries_decided_by_fkey(full_name)'
+  'id,seq,kind,category,item,amount,entry_date,status,decided_at,project:projects(name),contractor:contractors(name),bank:bank_accounts(name),creator:profiles!entries_created_by_profile_fkey(full_name),decider:profiles!entries_decided_by_fkey(full_name)'
 
 /** What was approved or rejected on one day (YYYY-MM-DD, by the person's own clock). Null on failure. */
 export function fetchDecidedOn(day: string) {

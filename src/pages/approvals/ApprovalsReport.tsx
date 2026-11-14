@@ -23,7 +23,12 @@ export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: stri
 
   const view = useMemo(() => {
     const rows = (data ?? []).filter((e) =>
-      matches(filter, { project: e.project?.name, contractor: e.contractor?.name, category: e.category }),
+      matches(filter, {
+        project: e.project?.name,
+        contractor: e.contractor?.name,
+        bank: e.bank?.name,
+        category: e.category,
+      }),
     )
     const sum = (f: (e: Decided) => boolean) => rows.filter(f).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const ok = (e: Decided) => e.status === 'approved'

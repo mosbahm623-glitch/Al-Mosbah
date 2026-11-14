@@ -20,7 +20,7 @@ export default function ContractorsSummary({ from, to, filter }: { from: string;
     const by = new Map<string, { opening: number; dues: number; paid: number }>()
     for (const t of data) {
       if (to && t.txn_date > to) continue
-      if (!matches(filter, { project: t.project?.name })) continue
+      if (!matches(filter, { project: t.project?.name, contractor: t.contractor?.name })) continue
       const name = t.contractor?.name ?? 'بدون اسم'
       const r = by.get(name) ?? { opening: 0, dues: 0, paid: 0 }
       const c = toCents(t.amount)

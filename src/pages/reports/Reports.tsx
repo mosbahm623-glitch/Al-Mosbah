@@ -18,6 +18,7 @@ import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
 import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
+import SearchSelect from '../../components/SearchSelect'
 import ReportFilters from '../../components/ReportFilters'
 import { fetchCategories, type Category } from '../../lib/catalog'
 import { NO_FILTER, only, type ReportFilter } from '../../lib/reportFilter'
@@ -147,18 +148,14 @@ export default function Reports() {
     emptyText: string,
     all?: string,
   ) => (
-    <label className="field">
-      {label}
-      <select value={value} onChange={(e) => set(e.target.value)} disabled={!options?.length}>
-        {all && <option value="">{all}</option>}
-        {!options?.length && !all && <option value="">{loading ? 'جارٍ التحميل...' : emptyText}</option>}
-        {options?.map((o) => (
-          <option key={o.id} value={o.id}>
-            {o.name}
-          </option>
-        ))}
-      </select>
-    </label>
+    <SearchSelect
+      label={label}
+      value={options?.find((o) => o.id === value)?.name ?? ''}
+      options={(options ?? []).map((o) => o.name)}
+      placeholder={all ?? (options?.length ? 'اختار...' : loading ? 'جارٍ التحميل...' : emptyText)}
+      disabled={!options?.length}
+      onChange={(name) => set(options?.find((o) => o.name === name)?.id ?? '')}
+    />
   )
 
   const filtersBox = (
@@ -285,19 +282,16 @@ export default function Reports() {
               </select>
             </label>
           )}
-          {type === 'pending' && (
-            <label className="field">
-              سجّله
-              <select value={creatorId} onChange={(e) => setCreatorId(e.target.value)}>
-                <option value="">كل الأسماء</option>
-                {(people.data ?? []).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.full_name || 'بدون اسم'}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+          {type === 'pending' &&
+            select(
+              'سجّله',
+              creatorId,
+              setCreatorId,
+              (people.data ?? []).map((u) => ({ id: u.id, name: u.full_name || 'بدون اسم' })),
+              people.loading,
+              'مفيش أسماء',
+              'كل الأسماء',
+            )}
 
           {type !== 'contractor' && filtersBox}
 

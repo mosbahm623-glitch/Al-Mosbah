@@ -5,7 +5,7 @@ const RULES: { file: string; match: RegExp }[] = [
     file: 'cib-corp.png',
     match: /(cib|التجاري\s*الدولي).*(شركات|corporate)|(شركات|corporate).*(cib|التجاري\s*الدولي)/i,
   },
-  { file: 'cib.png', match: /التجاري\s*الدولي|\bcib\b|commercial\s*international/i },
+  { file: 'cib-icon.png', match: /التجاري\s*الدولي|\bcib\b|commercial\s*international/i },
   { file: 'cash.png', match: /كاش|\bcash\b/i },
 ]
 

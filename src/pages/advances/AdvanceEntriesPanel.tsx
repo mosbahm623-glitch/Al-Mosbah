@@ -37,7 +37,7 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
           <table className="table">
             <thead>
               <tr>
-                <th>رقم</th>
+                <th className="sm-hide">رقم</th>
                 <th>التاريخ</th>
                 <th className="sm-hide">المشروع</th>
                 <th className="sm-hide">البند</th>
@@ -57,7 +57,7 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
             <tbody>
               {pager.items.map((e) => (
                 <tr key={e.id}>
-                  <td className="strong num">#{e.seq}</td>
+                  <td className="strong num sm-hide">#{e.seq}</td>
                   <td className="num muted">
                     <span className="sm-hide">{dateText(e.entry_date)}</span>
                     <span className="sm-only">{dateShort(e.entry_date)}</span>

@@ -6,8 +6,32 @@ import { todayISO } from '../format'
 type Row = Record<string, unknown>
 type Kind = 'text' | 'money' | 'date' | 'time' | 'int' | 'tech'
 type Col = { h: string; kind?: Kind; w?: number; get: (r: Row) => unknown }
+type Sheet = { name: string; cols: Col[]; rows: Row[]; tab?: string }
 
 const BACKUP_EVERY_DAYS = 7
+const SHEET_NAME_MAX = 31
+const PROJECT_TAB = 'FF1F5FA8'
+
+/**
+ * An Excel-safe sheet name that is not taken yet: no \ / ? * [ ] :, no quote at either end, at most 31 characters.
+ * A clash (the letter case does not matter) gets " (2)", " (3)" … Records the name in `taken`.
+ */
+export function sheetName(raw: string, taken: Set<string>): string {
+  const base =
+    raw
+      .replace(/[\\/?*[\]:]/g, '-')
+      .replace(/^'+|'+$/g, '')
+      .trim()
+      .slice(0, SHEET_NAME_MAX)
+      .trim() || 'مشروع'
+  let name = base
+  for (let n = 2; taken.has(name.toLowerCase()); n++) {
+    const suffix = ` (${n})`
+    name = base.slice(0, SHEET_NAME_MAX - suffix.length).trim() + suffix
+  }
+  taken.add(name.toLowerCase())
+  return name
+}
 
 export type LastBackup = { at: string | null; stale: boolean }
 
@@ -147,31 +171,30 @@ export async function downloadBackup(userId: string): Promise<boolean> {
   const col = (h: string, key: string, kind?: Kind, w?: number): Col => ({ h, kind, w, get: (r) => r[key] })
   const id = (key = 'id'): Col => ({ h: 'المعرّف (للأرشيف)', kind: 'tech', w: 14, get: (r) => r[key] })
 
-  const sheets: { name: string; cols: Col[]; rows: Row[] }[] = [
-    {
-      name: 'القيود',
-      rows: T(entries),
-      cols: [
-        col('رقم القيد', 'seq', 'int', 12),
-        col('التاريخ', 'entry_date', 'date'),
-        { h: 'النوع', w: 10, get: (r) => tr(KIND, r.kind) },
-        { h: 'المشروع', w: 22, get: (r) => P(r.project_id) },
-        col('البند', 'category', 'text', 18),
-        col('البيان', 'item', 'text', 26),
-        { h: 'المقاول', w: 18, get: (r) => C(r.contractor_id) },
-        { h: 'البنك', w: 18, get: (r) => B(r.bank_id) },
-        { h: 'من عهدة', w: 16, get: (r) => H(r.advance_id) },
-        col('المبلغ', 'amount', 'money'),
-        { h: 'الحالة', w: 14, get: (r) => tr(STATUS, r.status) },
-        col('ملاحظات', 'notes', 'text', 28),
-        { h: 'سجّله', w: 16, get: (r) => U(r.created_by) },
-        col('وقت التسجيل', 'created_at', 'time'),
-        { h: 'قرّر', w: 16, get: (r) => U(r.decided_by) },
-        col('وقت القرار', 'decided_at', 'time'),
-        col('رقم التعديل', 'rev', 'int', 11),
-        id(),
-      ],
-    },
+  const projectCol: Col = { h: 'المشروع', w: 22, get: (r) => P(r.project_id) }
+  const entryCols: Col[] = [
+    col('رقم القيد', 'seq', 'int', 12),
+    col('التاريخ', 'entry_date', 'date'),
+    { h: 'النوع', w: 10, get: (r) => tr(KIND, r.kind) },
+    projectCol,
+    col('البند', 'category', 'text', 18),
+    col('البيان', 'item', 'text', 26),
+    { h: 'المقاول', w: 18, get: (r) => C(r.contractor_id) },
+    { h: 'البنك', w: 18, get: (r) => B(r.bank_id) },
+    { h: 'من عهدة', w: 16, get: (r) => H(r.advance_id) },
+    col('المبلغ', 'amount', 'money'),
+    { h: 'الحالة', w: 14, get: (r) => tr(STATUS, r.status) },
+    col('ملاحظات', 'notes', 'text', 28),
+    { h: 'سجّله', w: 16, get: (r) => U(r.created_by) },
+    col('وقت التسجيل', 'created_at', 'time'),
+    { h: 'قرّر', w: 16, get: (r) => U(r.decided_by) },
+    col('وقت القرار', 'decided_at', 'time'),
+    col('رقم التعديل', 'rev', 'int', 11),
+    id(),
+  ]
+
+  const sheets: Sheet[] = [
+    { name: 'القيود', rows: T(entries), cols: entryCols },
     {
       name: 'القيود المحذوفة',
       rows: (trash.data ?? []) as Row[],
@@ -337,6 +360,28 @@ export async function downloadBackup(userId: string): Promise<boolean> {
       cols: [col('السنة', 'year', 'int', 10), col('آخر رقم', 'last', 'int', 12)],
     },
   ]
+  // the entries are not counted twice: the per-project tabs below only repeat them
+  const rowsTotal = sheets.reduce((n, s) => n + s.rows.length, 0)
+
+  // one tab per project (open ones first, then the closed), with that project's entries
+  const byProject = new Map<string, Row[]>()
+  for (const e of T(entries)) {
+    const list = byProject.get(str(e.project_id))
+    if (list) list.push(e)
+    else byProject.set(str(e.project_id), [e])
+  }
+  const taken = new Set(['ملخص', ...sheets.map((s) => s.name)].map((n) => n.toLowerCase()))
+  const inProject = entryCols.filter((c) => c !== projectCol)
+  const closedLast = (p: Row) => Number(p.status === 'closed')
+  for (const p of [...T(projects)].sort(
+    (a, b) => closedLast(a) - closedLast(b) || str(a.name).localeCompare(str(b.name), 'ar'),
+  ))
+    sheets.push({
+      name: sheetName(str(p.name), taken),
+      rows: byProject.get(str(p.id)) ?? [],
+      cols: inProject,
+      tab: PROJECT_TAB,
+    })
 
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
@@ -371,7 +416,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
   for (const s of sheets) {
     const ws = wb.addWorksheet(s.name, {
       views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }],
-      properties: { tabColor: { argb: s.name === 'القيود المحذوفة' ? 'FFC74634' : 'FF312D2A' } },
+      properties: { tabColor: { argb: s.tab ?? (s.name === 'القيود المحذوفة' ? 'FFC74634' : 'FF312D2A') } },
     })
     ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
     ws.columns = s.cols.map((c) => ({
@@ -423,8 +468,6 @@ export async function downloadBackup(userId: string): Promise<boolean> {
   }
 
   await downloadWorkbook(wb, `المصباح-نسخة-احتياطية-${todayISO()}.xlsx`)
-  const { error } = await supabase
-    .from('backup_log')
-    .insert({ by: userId, note: `${sheets.reduce((n, s) => n + s.rows.length, 0)} صف` })
+  const { error } = await supabase.from('backup_log').insert({ by: userId, note: `${rowsTotal} صف` })
   return !error
 }

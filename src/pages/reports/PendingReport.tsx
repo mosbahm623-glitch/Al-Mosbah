@@ -5,6 +5,7 @@ import { toCents } from '../../lib/money'
 import { fetchEntriesByStatus } from '../../lib/entries'
 import type { Entry } from '../../lib/projects'
 import { useAsync } from '../../lib/useAsync'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
 const TITLE: Record<PendingStatus, string> = {
@@ -19,10 +20,12 @@ export default function PendingReport({
   status,
   creatorId,
   creatorName,
+  filter,
 }: {
   status: PendingStatus
   creatorId: string
   creatorName: string
+  filter: ReportFilter
 }) {
   const load = useCallback(async () => {
     const wanted = status === 'all' ? ['pending', 'approved', 'rejected'] : [status]
@@ -32,7 +35,14 @@ export default function PendingReport({
   const { data, failed } = useAsync<Entry[]>(load)
 
   const view = useMemo(() => {
-    const rows = data ?? []
+    const rows = (data ?? []).filter((e) =>
+      matches(filter, {
+        project: e.project?.name,
+        contractor: e.contractor?.name,
+        bank: e.bank?.name,
+        category: e.category,
+      }),
+    )
     const sum = (s: Entry['status']) =>
       rows.filter((e) => e.status === s).reduce((t, e) => t + toCents(e.amount), 0) / 100
     const count = (st: Entry['status']) => rows.filter((e) => e.status === st).length
@@ -44,7 +54,7 @@ export default function PendingReport({
       pendingTotal: sum('pending'),
       approvedTotal: sum('approved'),
     }
-  }, [data])
+  }, [data, filter])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل التقرير، جرّب تاني</p>
   if (!data) return <p className="muted">جارٍ التحميل...</p>
@@ -52,7 +62,7 @@ export default function PendingReport({
   return (
     <TableReport
       title={TITLE[status]}
-      meta={creatorName ? [{ label: 'سجّله', value: creatorName }] : undefined}
+      meta={[...(creatorName ? [{ label: 'سجّله', value: creatorName }] : []), ...filterMeta(filter)]}
       filename={`المصباح - ${TITLE[status]} - ${todayISO()}.xlsx`}
       kpis={[
         { label: 'معلّقة', value: String(view.pending), tone: 'warn' },

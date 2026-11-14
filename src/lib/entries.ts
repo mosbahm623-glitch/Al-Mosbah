@@ -111,14 +111,21 @@ export function fetchDecidedOn(day: string) {
   )
 }
 
-export type ExpenseRow = { id: string; category: string; amount: number; project: { type: ProjectType } | null }
+export type ExpenseRow = {
+  id: string
+  category: string
+  amount: number
+  project: { type: ProjectType; name: string } | null
+  contractor: { name: string } | null
+  bank: { name: string } | null
+}
 
 /** Approved expenses in a period (open ends allowed), with the type of their project. Null on failure. */
 export const fetchApprovedExpenses = (from: string, to: string) =>
   fetchPaged<ExpenseRow>((a, b) => {
     let q = supabase
       .from('entries')
-      .select('id,category,amount,project:projects(type)')
+      .select('id,category,amount,project:projects(type,name),contractor:contractors(name),bank:bank_accounts(name)')
       .eq('kind', 'expense')
       .eq('status', 'approved')
     if (from) q = q.gte('entry_date', from)

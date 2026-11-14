@@ -5,9 +5,10 @@ import { money, periodText, todayISO } from '../../lib/format'
 import { fetchAllContractorTxns, type SummaryTxn as Txn } from '../../lib/contractors'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
 
 /** Every contractor on one page: balance before the period, dues, payments and what is left to pay. */
-export default function ContractorsSummary({ from, to }: { from: string; to: string }) {
+export default function ContractorsSummary({ from, to, filter }: { from: string; to: string; filter: ReportFilter }) {
   const load = useCallback(async () => {
     const txns = await fetchAllContractorTxns()
     return { data: txns, error: !txns }
@@ -19,6 +20,7 @@ export default function ContractorsSummary({ from, to }: { from: string; to: str
     const by = new Map<string, { opening: number; dues: number; paid: number }>()
     for (const t of data) {
       if (to && t.txn_date > to) continue
+      if (!matches(filter, { project: t.project?.name })) continue
       const name = t.contractor?.name ?? 'بدون اسم'
       const r = by.get(name) ?? { opening: 0, dues: 0, paid: 0 }
       const c = toCents(t.amount)
@@ -39,7 +41,7 @@ export default function ContractorsSummary({ from, to }: { from: string; to: str
       .sort((a, b) => b.closing - a.closing)
     const sum = (k: 'opening' | 'dues' | 'paid' | 'closing') => rows.reduce((s, r) => s + toCents(r[k]), 0) / 100
     return { rows, opening: sum('opening'), dues: sum('dues'), paid: sum('paid'), closing: sum('closing') }
-  }, [data, from, to])
+  }, [data, from, to, filter])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الملخص، جرّب تاني</p>
   if (!view) return <p className="muted">جارٍ التحميل...</p>
@@ -48,7 +50,7 @@ export default function ContractorsSummary({ from, to }: { from: string; to: str
     <TableReport
       title="ملخص حسابات المقاولين"
       filename={`المصباح - ملخص المقاولين - ${todayISO()}.xlsx`}
-      meta={[{ label: 'الفترة', value: periodText(from, to) }]}
+      meta={[{ label: 'الفترة', value: periodText(from, to) }, ...filterMeta(filter)]}
       kpis={[
         { label: 'مستحقات الفترة', value: money(view.dues), tone: 'warn' },
         { label: 'مدفوعات الفترة', value: money(view.paid), tone: 'ok' },

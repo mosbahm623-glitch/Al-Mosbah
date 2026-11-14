@@ -11,15 +11,33 @@ import type { Section } from '../../lib/tableTypes'
 import type { ReportColumns } from '../../lib/reportColumns'
 import { usePreparedBy } from '../../auth/usePreparedBy'
 import { enteredByOf } from '../../lib/enteredBy'
+import { toCents } from '../../lib/money'
+import { NO_FILTER, filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reportFilter'
 
 type Group = { name: string; rows: Entry[]; total: number }
 
 /** `embedded`: shown inside the reports page, which owns the column choices and the back navigation. */
-export default function ProjectReport({ id, embedded }: { id: string; embedded?: ReportColumns }) {
+export default function ProjectReport({
+  id,
+  embedded,
+  filter = NO_FILTER,
+}: {
+  id: string
+  embedded?: ReportColumns
+  filter?: ReportFilter
+}) {
   const preparedBy = usePreparedBy()
   const { project, entries: allEntries, loading, failed: loadFailed } = useProjectData(id)
   // only approved entries count in the report
-  const entries = useMemo(() => allEntries?.filter((e) => e.status === 'approved'), [allEntries])
+  const entries = useMemo(
+    () =>
+      allEntries?.filter(
+        (e) =>
+          e.status === 'approved' &&
+          matches(filter, { contractor: e.contractor?.name, bank: e.bank?.name, category: e.category }),
+      ),
+    [allEntries, filter],
+  )
   const [ownContractor, setWithContractor] = useState(true)
   const [ownBank, setBankWanted] = useState(true)
   const [ownNotes, setWithNotes] = useState(true)
@@ -53,7 +71,13 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
   if (!project || !entries) return <p className="msg msg-error">المشروع مش موجود</p>
 
   const data = entries
-  const balance = project.income - project.expenses
+  // narrowed by a filter: the totals follow the rows shown, not the whole project
+  const narrowed = isFiltering(filter)
+  const sumOf = (kind: Entry['kind']) =>
+    entries.filter((e) => e.kind === kind).reduce((s, e) => s + toCents(e.amount), 0) / 100
+  const income = narrowed ? sumOf('income') : project.income
+  const expenses = narrowed ? sumOf('expense') : project.expenses
+  const balance = income - expenses
   const incomeTotal = incomes.reduce((s, e) => s + e.amount, 0)
   const hasBank = entries.some((e) => e.bank)
   const withBank = bankWanted && hasBank
@@ -186,6 +210,12 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
               <dt>الحالة</dt>
               <dd>{project.status === 'active' ? 'نشط' : 'مقفول'}</dd>
             </div>
+            {filterMeta(filter).map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
             <div>
               <dt>تاريخ التقرير</dt>
               <dd>{today}</dd>
@@ -202,8 +232,8 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
         <Kpis
           items={[
             { label: 'الميزانية', value: money(project.budget) },
-            { label: 'الوارد', value: money(project.income), tone: 'ok' },
-            { label: 'المصروف', value: money(project.expenses), tone: 'err' },
+            { label: 'الوارد', value: money(income), tone: 'ok' },
+            { label: 'المصروف', value: money(expenses), tone: 'err' },
             { label: 'الرصيد', value: money(balance), tone: 'neutral', neg: balance < 0 },
             {
               label: 'استهلاك الميزانية',
@@ -222,7 +252,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
           )}
           {expenseGroups.length > 0 && (
             <p className="grid-total">
-              إجمالي المصروفات: <b>{money(project.expenses)}</b>
+              إجمالي المصروفات: <b>{money(expenses)}</b>
             </p>
           )}
         </div>
@@ -239,7 +269,7 @@ export default function ProjectReport({ id, embedded }: { id: string; embedded?:
                 <tbody>
                   <tr>
                     <td>إجمالي المصروفات</td>
-                    <td className="num">{money(project.expenses)}</td>
+                    <td className="num">{money(expenses)}</td>
                   </tr>
                 </tbody>
               </table>

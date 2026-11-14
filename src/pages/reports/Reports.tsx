@@ -17,7 +17,10 @@ import ContractorsSummary from './ContractorsSummary'
 import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
-import { GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
+import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
+import ReportFilters from '../../components/ReportFilters'
+import { fetchCategories, type Category } from '../../lib/catalog'
+import { NO_FILTER, only, type ReportFilter } from '../../lib/reportFilter'
 import { fetchContractorNames, fetchPeople, type Named } from '../../lib/lookups'
 
 export default function Reports() {
@@ -26,6 +29,7 @@ export default function Reports() {
   const banks = useAsync<BankSummary[]>(fetchBankSummaries)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const people = useAsync<{ id: string; full_name: string | null }[]>(fetchPeople)
+  const categories = useAsync<Category[]>(fetchCategories)
 
   const [type, setType] = useState<ReportType>('journal')
   const [day, setDay] = useState(todayISO)
@@ -39,6 +43,7 @@ export default function Reports() {
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('all')
   const [pendingStatus, setPendingStatus] = useState<PendingStatus>('pending')
   const [creatorId, setCreatorId] = useState('')
+  const [filterAll, setFilterAll] = useState<ReportFilter>(NO_FILTER)
   const [withContractor, setWithContractor] = useState(true)
   const [withBank, setWithBank] = useState(true)
   const [withNotes, setWithNotes] = useState(true)
@@ -54,6 +59,15 @@ export default function Reports() {
   const pickedContractor = contractorId || contractors.data?.[0]?.id || ''
   const pickedBank = bankId || banks.data?.[0]?.id || ''
   const bank = banks.data?.find((b) => b.id === pickedBank)
+
+  // only the filters this report offers take part
+  const filter = useMemo(() => only(filterAll, FILTERS[type]), [filterAll, type])
+  const filterOptions = {
+    project: (projects.data ?? []).map((p) => p.name),
+    contractor: (contractors.data ?? []).map((c) => c.name),
+    bank: (banks.data ?? []).map((b) => b.name),
+    category: (categories.data ?? []).map((c) => c.name),
+  }
 
   const rangeOk = !hasPeriod(type) || !from || !to || from <= to
   const partsOk = type !== 'advance' || parts.given || parts.spent || parts.returned
@@ -82,6 +96,7 @@ export default function Reports() {
         type === 'pending' ? [pendingStatus, creatorId] : '',
         hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes, withEnteredBy] : '',
         type === 'advance' ? parts : '',
+        filter,
       ]),
     [
       type,
@@ -98,6 +113,7 @@ export default function Reports() {
       withNotes,
       withEnteredBy,
       parts,
+      filter,
     ],
   )
   const visible = shown?.key === key && Boolean(target) && rangeOk && partsOk
@@ -260,6 +276,8 @@ export default function Reports() {
             </label>
           )}
 
+          <ReportFilters keys={FILTERS[type]} value={filterAll} options={filterOptions} onChange={setFilterAll} />
+
           {hasPeriod(type) && (
             <div className="field-row">
               <label className="field">
@@ -351,8 +369,8 @@ export default function Reports() {
               <p>اختار نوع التقرير من الجنب واضغط «عرض التقرير».</p>
             </div>
           )}
-          {visible && type === 'journal' && <Journal key={n} day={day} {...cols} />}
-          {visible && type === 'approvals' && <ApprovalsReport key={n} day={day} />}
+          {visible && type === 'journal' && <Journal key={n} day={day} filter={filter} {...cols} />}
+          {visible && type === 'approvals' && <ApprovalsReport key={n} day={day} filter={filter} />}
           {visible && type === 'period' && (
             <PeriodReport
               key={n}
@@ -360,13 +378,20 @@ export default function Reports() {
               to={to}
               projectId={projectId}
               projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''}
+              filter={filter}
               {...cols}
             />
           )}
-          {visible && type === 'project' && <ProjectReport key={n} id={pickedProject} embedded={cols} />}
-          {visible && type === 'category' && <CategoryReport key={n} from={from} to={to} type={kindFilter} />}
-          {visible && type === 'budget' && <BudgetReport key={n} mode={budgetMode} />}
-          {visible && type === 'advance' && <AdvanceReport key={n} id={pickedAdvance} embedded={{ ...cols, parts }} />}
+          {visible && type === 'project' && (
+            <ProjectReport key={n} id={pickedProject} embedded={cols} filter={filter} />
+          )}
+          {visible && type === 'category' && (
+            <CategoryReport key={n} from={from} to={to} type={kindFilter} filter={filter} />
+          )}
+          {visible && type === 'budget' && <BudgetReport key={n} mode={budgetMode} filter={filter} />}
+          {visible && type === 'advance' && (
+            <AdvanceReport key={n} id={pickedAdvance} embedded={{ ...cols, parts }} filter={filter} />
+          )}
           {visible && type === 'contractor' && (
             <ContractorStatement
               key={n}
@@ -374,11 +399,20 @@ export default function Reports() {
               name={contractors.data?.find((c) => c.id === pickedContractor)?.name ?? ''}
               from={from}
               to={to}
+              filter={filter}
             />
           )}
-          {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} />}
+          {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} filter={filter} />}
           {visible && type === 'bank' && bank && (
-            <BankStatement key={n} id={bank.id} name={bank.name} opening={bank.opening_balance} from={from} to={to} />
+            <BankStatement
+              key={n}
+              id={bank.id}
+              name={bank.name}
+              opening={bank.opening_balance}
+              from={from}
+              to={to}
+              filter={filter}
+            />
           )}
           {visible && type === 'pending' && (
             <PendingReport
@@ -386,6 +420,7 @@ export default function Reports() {
               status={pendingStatus}
               creatorId={creatorId}
               creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''}
+              filter={filter}
             />
           )}
         </div>

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { Pencil, Plus } from 'lucide-react'
 import InvoiceLink from '../../components/InvoiceLink'
 import Pager from '../../components/Pager'
@@ -6,6 +7,7 @@ import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
+import { distinct, filterExpenses, isExpenseFiltering, NO_EXPENSE_FILTER, type ExpenseFilter } from '../../lib/advanceFilter'
 
 type Props = {
   entries: Entry[] | null | undefined
@@ -20,7 +22,14 @@ type Props = {
 
 /** What the holder spent out of the custody. */
 export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, canTouch, onSpend, onEdit }: Props) {
-  const pager = usePages(entries ?? [])
+  const [filter, setFilter] = useState<ExpenseFilter>(NO_EXPENSE_FILTER)
+  const all = useMemo(() => entries ?? [], [entries])
+  const shown = useMemo(() => filterExpenses(all, filter), [all, filter])
+  const projectNames = useMemo(() => distinct(all.map((e) => e.project?.name)), [all])
+  const categories = useMemo(() => distinct(all.map((e) => e.category)), [all])
+  const setF = (patch: Partial<ExpenseFilter>) => setFilter({ ...filter, ...patch })
+  const filtering = isExpenseFiltering(filter)
+  const pager = usePages(shown)
   return (
     <section className="panel">
       <div className="panel-head">
@@ -32,7 +41,63 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
           </button>
         )}
       </div>
-      {entries?.length ? (
+      {all.length > 1 && (
+        <div className="appr-filters adv-filters" role="search" aria-label="فلتر المصروفات">
+          <label className="field">
+            بحث
+            <input
+              type="search"
+              value={filter.text}
+              onChange={(e) => setF({ text: e.target.value })}
+              placeholder="بيان أو مبلغ أو ملاحظة"
+            />
+          </label>
+          <label className="field">
+            المشروع
+            <select value={filter.project} onChange={(e) => setF({ project: e.target.value })}>
+              <option value="">الكل</option>
+              {projectNames.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            البند
+            <select value={filter.category} onChange={(e) => setF({ category: e.target.value })}>
+              <option value="">الكل</option>
+              {categories.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field">
+            من تاريخ
+            <input type="date" value={filter.from} onChange={(e) => setF({ from: e.target.value })} />
+          </label>
+          <label className="field">
+            لحد تاريخ
+            <input type="date" value={filter.to} onChange={(e) => setF({ to: e.target.value })} />
+          </label>
+          {filtering && (
+            <button type="button" className="btn btn-ghost appr-filters-clear" onClick={() => setFilter(NO_EXPENSE_FILTER)}>
+              مسح الفلتر
+            </button>
+          )}
+        </div>
+      )}
+      {filtering && (
+        <p className="muted small" role="status">
+          {shown.length} من {all.length} · الإجمالي{' '}
+          <span className="num strong tone-text-err">{money(shown.reduce((t, e) => t + e.amount, 0))}</span>
+        </p>
+      )}
+      {all.length > 0 && shown.length === 0 ? (
+        <p className="empty muted">مفيش مصروفات بالفلتر ده.</p>
+      ) : all.length ? (
         <div className="table-wrap">
           <table className="table wrap-desc">
             <thead>

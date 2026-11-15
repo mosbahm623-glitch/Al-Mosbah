@@ -336,3 +336,11 @@
 .panel-head select {
   max-width: 260px;
 }
+
+/* custody expenses: filter row inside the panel */
+.adv-filters {
+  padding: 0 0 12px;
+}
+.adv-filters input {
+  min-height: 44px;
+}

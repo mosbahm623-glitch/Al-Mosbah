@@ -19,16 +19,17 @@ function seenToday(): boolean {
 export default function BackupReminder() {
   const { isAdmin } = useAuth()
   const [closed, setClosed] = useState(seenToday)
+  const [today] = useState(() => day(new Date()))
   const last = useAsync<{ at: string | null; stale: boolean }>(
     useCallback(async () => ({ data: isAdmin && !closed ? await lastBackup() : null, error: null }), [isAdmin, closed]),
   )
   if (!isAdmin || closed || !last.data) return null
   const { at } = last.data
-  if (at && day(new Date(at)) === day(new Date())) return null
+  if (at && day(new Date(at)) === today) return null
 
   function close(go: boolean) {
     try {
-      localStorage.setItem(KEY, day(new Date()))
+      localStorage.setItem(KEY, today)
     } catch {
       /* ignore */
     }

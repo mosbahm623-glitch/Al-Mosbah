@@ -176,7 +176,22 @@
     gap: 24px;
   }
   .login-logo {
-    justify-content: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    font-size: 1.6rem;
+  }
+  .login-mark {
+    width: 46px;
+    height: 46px;
+  }
+  .login-brand {
+    align-items: center;
+  }
+  .login-brand small {
+    text-align: center;
+    font-size: 0.78rem;
   }
 }
 

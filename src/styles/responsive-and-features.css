@@ -337,10 +337,37 @@
   max-width: 260px;
 }
 
-/* custody expenses: filter row inside the panel */
+/* custody expenses: filter inside the panel */
 .adv-filters {
+  display: grid;
+  gap: 8px;
   padding: 0 0 12px;
 }
-.adv-filters input {
-  min-height: 44px;
+.adv-filters input,
+.adv-filters select {
+  width: 100%;
+  min-height: 42px;
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.adv-filter-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.adv-filter-row label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.adv-filter-dates summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 4px 0 8px;
 }

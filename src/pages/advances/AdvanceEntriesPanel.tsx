@@ -48,52 +48,48 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
         )}
       </div>
       {all.length > 1 && (
-        <div className="appr-filters adv-filters" role="search" aria-label="فلتر المصروفات">
-          <label className="field">
-            بحث
-            <input
-              type="search"
-              value={filter.text}
-              onChange={(e) => setF({ text: e.target.value })}
-              placeholder="بيان أو مبلغ أو ملاحظة"
-            />
-          </label>
-          <label className="field">
-            المشروع
-            <select value={filter.project} onChange={(e) => setF({ project: e.target.value })}>
-              <option value="">الكل</option>
+        <div className="adv-filters" role="search" aria-label="فلتر المصروفات">
+          <input
+            type="search"
+            className="adv-filter-text"
+            value={filter.text}
+            onChange={(e) => setF({ text: e.target.value })}
+            placeholder="بحث: بيان أو مبلغ أو ملاحظة"
+            aria-label="بحث في المصروفات"
+          />
+          <div className="adv-filter-row">
+            <select aria-label="المشروع" value={filter.project} onChange={(e) => setF({ project: e.target.value })}>
+              <option value="">كل المشاريع</option>
               {projectNames.map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="field">
-            البند
-            <select value={filter.category} onChange={(e) => setF({ category: e.target.value })}>
-              <option value="">الكل</option>
+            <select aria-label="البند" value={filter.category} onChange={(e) => setF({ category: e.target.value })}>
+              <option value="">كل البنود</option>
               {categories.map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
               ))}
             </select>
-          </label>
-          <label className="field">
-            من تاريخ
-            <input type="date" value={filter.from} onChange={(e) => setF({ from: e.target.value })} />
-          </label>
-          <label className="field">
-            لحد تاريخ
-            <input type="date" value={filter.to} onChange={(e) => setF({ to: e.target.value })} />
-          </label>
+          </div>
+          <details className="adv-filter-dates" open={!!(filter.from || filter.to)}>
+            <summary>فلتر بالتاريخ</summary>
+            <div className="adv-filter-row">
+              <label>
+                من
+                <input type="date" value={filter.from} onChange={(e) => setF({ from: e.target.value })} />
+              </label>
+              <label>
+                لحد
+                <input type="date" value={filter.to} onChange={(e) => setF({ to: e.target.value })} />
+              </label>
+            </div>
+          </details>
           {filtering && (
-            <button
-              type="button"
-              className="btn btn-ghost appr-filters-clear"
-              onClick={() => setFilter(NO_EXPENSE_FILTER)}
-            >
+            <button type="button" className="btn btn-ghost" onClick={() => setFilter(NO_EXPENSE_FILTER)}>
               مسح الفلتر
             </button>
           )}

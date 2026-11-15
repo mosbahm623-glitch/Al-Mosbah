@@ -35,7 +35,7 @@ export async function exportProjectExcel({
 }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'المصباح'
+  wb.creator = 'Legacy ERP'
   wb.created = new Date()
 
   const withBank = bankWanted && entries.some((e) => e.bank)
@@ -182,7 +182,7 @@ export async function exportProjectExcel({
   sum.columns = [{ width: 28 }, { width: 20 }, { width: 14 }, { width: 14 }]
   sum.mergeCells('A1:D1')
   const title = sum.getCell('A1')
-  title.value = `المصباح — تقرير مشروع: ${project.name}`
+  title.value = `Legacy ERP — تقرير مشروع: ${project.name}`
   title.font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }
   title.fill = solid(HEAD_FILL)
   title.alignment = { horizontal: 'center', vertical: 'middle' }
@@ -260,5 +260,5 @@ export async function exportProjectExcel({
   sum.views = [{ rightToLeft: true }]
   sum.pageSetup = { orientation: 'portrait', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
 
-  await downloadWorkbook(wb, `المصباح - ${project.name} - ${todayISO()}.xlsx`)
+  await downloadWorkbook(wb, `Legacy ERP - ${project.name} - ${todayISO()}.xlsx`)
 }

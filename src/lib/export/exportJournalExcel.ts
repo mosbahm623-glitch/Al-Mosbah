@@ -22,7 +22,7 @@ export async function exportJournalExcel({
 }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'المصباح'
+  wb.creator = 'Legacy ERP'
   wb.created = new Date()
 
   const withBank = bankWanted && rows.some((m) => m.detail)
@@ -85,5 +85,5 @@ export async function exportJournalExcel({
   }
   ws.headerFooter.oddFooter = '&Cصفحة &P من &N'
 
-  await downloadWorkbook(wb, `المصباح - يومية ${day}.xlsx`)
+  await downloadWorkbook(wb, `Legacy ERP - يومية ${day}.xlsx`)
 }

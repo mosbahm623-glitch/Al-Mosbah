@@ -55,7 +55,7 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
       <article className="paper">
         <header className="paper-head">
           <div>
-            <div className="paper-brand">المصباح</div>
+            <div className="paper-brand">Legacy ERP</div>
             <h1>{title}</h1>
           </div>
           <dl className="paper-meta">
@@ -91,7 +91,7 @@ export default function TableReport({ title, filename, meta = [], kpis, sections
         {note && <p className="muted small note">{note}</p>}
         <Signatures />
         <footer className="paper-foot">
-          المصباح · {title} · {today}
+          Legacy ERP · {title} · {today}
         </footer>
       </article>
     </div>

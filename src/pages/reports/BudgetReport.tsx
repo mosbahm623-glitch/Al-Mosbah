@@ -31,7 +31,7 @@ export default function BudgetReport({ mode, filter }: { mode: BudgetMode; filte
   return (
     <TableReport
       title={TITLE[mode]}
-      filename={`المصباح - ${TITLE[mode]} - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - ${TITLE[mode]} - ${todayISO()}.xlsx`}
       meta={filterMeta(filter)}
       kpis={[
         { label: 'عدد المشاريع', value: String(rows.length), tone: 'neutral' },

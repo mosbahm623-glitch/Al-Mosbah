@@ -138,7 +138,7 @@ export default function AdvanceReport({
       <article className="paper">
         <header className="paper-head">
           <div>
-            <div className="paper-brand">المصباح</div>
+            <div className="paper-brand">Legacy ERP</div>
             <h1>كشف عهدة: {advance.holder_name}</h1>
           </div>
           <dl className="paper-meta">
@@ -199,7 +199,7 @@ export default function AdvanceReport({
         <Signatures />
 
         <footer className="paper-foot">
-          المصباح · عهدة {advance.holder_name} · {today}
+          Legacy ERP · عهدة {advance.holder_name} · {today}
         </footer>
       </article>
     </div>

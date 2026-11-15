@@ -1,4 +1,4 @@
-# المصباح (Al Mosbah)
+# Legacy ERP
 
 تطبيق محاسبة مشاريع التشطيب والفرش. React + Vite + TypeScript + Supabase، ويشتغل على الموبايل كـ PWA.
 

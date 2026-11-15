@@ -198,7 +198,7 @@ export default function ProjectReport({
       <article className="paper">
         <header className="paper-head">
           <div>
-            <div className="paper-brand">المصباح</div>
+            <div className="paper-brand">Legacy ERP</div>
             <h1>تقرير مشروع: {project.name}</h1>
           </div>
           <dl className="paper-meta">
@@ -286,7 +286,7 @@ export default function ProjectReport({
         <Signatures />
 
         <footer className="paper-foot">
-          المصباح · {project.name} · {today}
+          Legacy ERP · {project.name} · {today}
         </footer>
       </article>
     </div>

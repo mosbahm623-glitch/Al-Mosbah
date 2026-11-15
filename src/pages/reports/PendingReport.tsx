@@ -63,7 +63,7 @@ export default function PendingReport({
     <TableReport
       title={TITLE[status]}
       meta={[...(creatorName ? [{ label: 'سجّله', value: creatorName }] : []), ...filterMeta(filter)]}
-      filename={`المصباح - ${TITLE[status]} - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - ${TITLE[status]} - ${todayISO()}.xlsx`}
       kpis={[
         { label: 'معلّقة', value: String(view.pending), tone: 'warn' },
         { label: 'إجمالي المعلّق', value: money(view.pendingTotal), tone: 'warn' },

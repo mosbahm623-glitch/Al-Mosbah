@@ -66,7 +66,7 @@ export default function BankStatement({
   return (
     <TableReport
       title={`كشف حساب بنك: ${name}`}
-      filename={`المصباح - كشف بنك ${name} - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - كشف بنك ${name} - ${todayISO()}.xlsx`}
       meta={[{ label: 'البنك', value: name }, { label: 'الفترة', value: periodText(from, to) }, ...filterMeta(filter)]}
       kpis={[
         { label: 'الرصيد قبل الفترة', value: money(ledger.opening), tone: 'neutral' },

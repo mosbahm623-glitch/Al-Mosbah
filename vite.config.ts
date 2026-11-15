@@ -25,8 +25,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'المصباح',
-        short_name: 'المصباح',
+        name: 'Legacy ERP',
+        short_name: 'Legacy ERP',
         lang: 'ar',
         dir: 'rtl',
         start_url: '/Al-Mosbah/',

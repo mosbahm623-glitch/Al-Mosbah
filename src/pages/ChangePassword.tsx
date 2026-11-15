@@ -23,7 +23,7 @@ export default function ChangePassword() {
   return (
     <main className="center">
       <form className="card auth" onSubmit={(e) => void submit(e)}>
-        <h1>المصباح</h1>
+        <h1>Legacy ERP</h1>
         <p>{profile?.full_name ? `أهلاً ${profile.full_name}` : 'أهلاً بيك'}</p>
         <p className="muted">كلمة السر اللي معاك مؤقتة. اعمل كلمة سر خاصة بيك عشان تكمّل.</p>
         <label className="field">

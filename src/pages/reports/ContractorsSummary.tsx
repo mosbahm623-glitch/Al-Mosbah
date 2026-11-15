@@ -49,7 +49,7 @@ export default function ContractorsSummary({ from, to, filter }: { from: string;
   return (
     <TableReport
       title="ملخص حسابات المقاولين"
-      filename={`المصباح - ملخص المقاولين - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - ملخص المقاولين - ${todayISO()}.xlsx`}
       meta={[{ label: 'الفترة', value: periodText(from, to) }, ...filterMeta(filter)]}
       kpis={[
         { label: 'مستحقات الفترة', value: money(view.dues), tone: 'warn' },

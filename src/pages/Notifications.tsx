@@ -130,7 +130,7 @@ export default function Notifications() {
         )}
         {push === 'blocked' && (
           <p className="msg msg-error">
-            الإشعارات متقفولة لموقع المصباح. افتحها من إعدادات المتصفح للموقع وبعدين ارجع هنا.
+            الإشعارات متقفولة لموقع Legacy ERP. افتحها من إعدادات المتصفح للموقع وبعدين ارجع هنا.
           </p>
         )}
         {(push === 'on' || push === 'off') && (

@@ -48,7 +48,7 @@ export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: stri
   return (
     <TableReport
       title={title}
-      filename={`المصباح - موافقات ${day}.xlsx`}
+      filename={`Legacy ERP - موافقات ${day}.xlsx`}
       meta={[{ label: 'يوم القرار', value: dateText(day) }, ...filterMeta(filter)]}
       kpis={[
         { label: 'اتوافق عليه', value: String(view.approved), tone: 'ok' },

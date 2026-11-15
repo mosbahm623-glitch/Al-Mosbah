@@ -15,7 +15,7 @@ type Options = {
 export async function exportTableExcel({ title, sheet, filename, meta, kpis, sections }: Options) {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'المصباح'
+  wb.creator = 'Legacy ERP'
   wb.created = new Date()
   const ws = wb.addWorksheet(sheet.replace(/[\\/*?:[\]]/g, ' ').slice(0, 30), {
     properties: { tabColor: { argb: 'FFC74634' } },
@@ -35,7 +35,7 @@ export async function exportTableExcel({ title, sheet, filename, meta, kpis, sec
   }
   ws.columns = widths.map((w) => ({ width: w }))
 
-  const t = ws.addRow([`المصباح — ${title}`])
+  const t = ws.addRow([`Legacy ERP — ${title}`])
   ws.mergeCells(t.number, 1, t.number, width)
   t.height = 34
   t.getCell(1).font = { bold: true, size: 16, color: { argb: 'FFFFFFFF' } }

@@ -74,7 +74,7 @@ export default function PeriodReport({
   return (
     <TableReport
       title="تقرير فترة"
-      filename={`المصباح - تقرير فترة - ${from || 'البداية'} إلى ${to || todayISO()}.xlsx`}
+      filename={`Legacy ERP - تقرير فترة - ${from || 'البداية'} إلى ${to || todayISO()}.xlsx`}
       meta={[
         { label: 'الفترة', value: periodText(from, to) },
         { label: 'المشروع', value: projectId ? projectName : 'كل المشاريع' },

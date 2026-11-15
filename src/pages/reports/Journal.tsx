@@ -113,7 +113,7 @@ export default function Journal({
       <article className="paper">
         <header className="paper-head">
           <div>
-            <div className="paper-brand">المصباح</div>
+            <div className="paper-brand">Legacy ERP</div>
             <h1>يومية {dateText(day)}</h1>
           </div>
           <dl className="paper-meta">
@@ -163,7 +163,7 @@ export default function Journal({
         )}
 
         <Signatures />
-        <footer className="paper-foot">المصباح · يومية {dateText(day)}</footer>
+        <footer className="paper-foot">Legacy ERP · يومية {dateText(day)}</footer>
       </article>
     </div>
   )

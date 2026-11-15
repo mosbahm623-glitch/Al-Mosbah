@@ -385,12 +385,12 @@ export async function downloadBackup(userId: string): Promise<boolean> {
 
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
-  wb.creator = 'المصباح'
+  wb.creator = 'Legacy ERP'
   wb.created = new Date()
 
   const cover = wb.addWorksheet('ملخص', { views: [{ rightToLeft: true, showGridLines: false }] })
   cover.columns = [{ width: 30 }, { width: 16 }]
-  const title = cover.addRow(['المصباح — نسخة احتياطية'])
+  const title = cover.addRow(['Legacy ERP — نسخة احتياطية'])
   cover.mergeCells(1, 1, 1, 2)
   title.height = 36
   title.getCell(1).font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' } }
@@ -467,7 +467,7 @@ export async function downloadBackup(userId: string): Promise<boolean> {
     }
   }
 
-  await downloadWorkbook(wb, `المصباح-نسخة-احتياطية-${todayISO()}.xlsx`)
+  await downloadWorkbook(wb, `Legacy ERP-نسخة-احتياطية-${todayISO()}.xlsx`)
   const { error } = await supabase.from('backup_log').insert({ by: userId, note: `${rowsTotal} صف` })
   return !error
 }

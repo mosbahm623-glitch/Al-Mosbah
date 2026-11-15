@@ -82,7 +82,7 @@ export default function ContractorStatement({
   return (
     <TableReport
       title={`كشف حساب مقاول: ${name}`}
-      filename={`المصباح - كشف مقاول ${name} - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - كشف مقاول ${name} - ${todayISO()}.xlsx`}
       meta={[
         { label: 'المقاول', value: name },
         { label: 'الفترة', value: periodText(from, to) },

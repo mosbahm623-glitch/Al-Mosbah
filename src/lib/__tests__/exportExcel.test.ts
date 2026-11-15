@@ -61,7 +61,7 @@ describe('exportTableExcel', () => {
   it('starts with the title and the summary line', async () => {
     await exportTableExcel({ ...base, sections: [section] })
     const ws = sent().wb.worksheets[0]
-    expect(ws.getRow(1).getCell(1).value).toBe('المصباح — تقرير المشروع')
+    expect(ws.getRow(1).getCell(1).value).toBe('Legacy ERP — تقرير المشروع')
     expect(String(ws.getRow(2).getCell(1).value)).toContain('المشروع: فيلا 5')
     expect(String(ws.getRow(2).getCell(1).value)).toContain('تاريخ التقرير:')
   })
@@ -145,7 +145,7 @@ describe('exportJournalExcel', () => {
   it('names the file and the sheet after the day', async () => {
     await exportJournalExcel(all)
     const { wb, filename } = sent()
-    expect(filename).toBe('المصباح - يومية 2026-10-30.xlsx')
+    expect(filename).toBe('Legacy ERP - يومية 2026-10-30.xlsx')
     expect(wb.worksheets[0].name).toBe('يومية 30-10-2026')
   })
 

@@ -5,7 +5,7 @@ export default function Pending() {
   return (
     <main className="center">
       <div className="card auth">
-        <h1>المصباح</h1>
+        <h1>Legacy ERP</h1>
         <p>{profile?.full_name ? `أهلاً ${profile.full_name}` : 'أهلاً بيك'}</p>
         <p className="muted">حسابك لسه مستني تفعيل من الأدمن. أول ما يتفعّل اضغط تحديث.</p>
         <button className="btn" onClick={() => void refreshProfile()}>

@@ -51,7 +51,7 @@ export default function CategoryReport({
   return (
     <TableReport
       title="المصروفات حسب البند"
-      filename={`المصباح - مصروفات حسب البند - ${todayISO()}.xlsx`}
+      filename={`Legacy ERP - مصروفات حسب البند - ${todayISO()}.xlsx`}
       meta={[
         { label: 'الفترة', value: periodText(from, to) },
         { label: 'نوع المشاريع', value: type === 'all' ? 'كل الأنواع' : TYPE_LABEL[type] },

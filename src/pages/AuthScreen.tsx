@@ -120,11 +120,14 @@ export default function AuthScreen() {
       <section className="login-form-side">
         <div className="login-logo">
           <BulbMark />
-          المصباح
+          Legacy ERP
         </div>
         <form className="login-box" onSubmit={onSubmit}>
           <h1>تسجيل الدخول</h1>
           <p className="login-lead">ادخل بحسابك عشان توصل لمشاريعك وقيودك.</p>
+          <p className="muted small" dir="ltr">
+            Legacy Fine Touch ERP System Solution
+          </p>
 
           <div className="login-field">
             <label htmlFor="login-email">الإيميل</label>

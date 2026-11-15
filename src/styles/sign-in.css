@@ -19,6 +19,17 @@
   font-weight: 700;
   font-size: 1.25rem;
 }
+.login-brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.login-brand small {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: start;
+}
 .login-mark {
   width: 34px;
   height: 34px;
@@ -165,7 +176,7 @@
     gap: 24px;
   }
   .login-logo {
-    display: none;
+    justify-content: flex-start;
   }
 }
 

@@ -6,7 +6,7 @@ import { FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
 import { pickableProjects, type Entry, type ProjectSummary } from '../../lib/projects'
-import { fetchMyProjectIds } from '../../lib/users'
+import { fetchMyProjectAccess, type MyProjectAccess } from '../../lib/users'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
@@ -29,12 +29,17 @@ export default function AdvanceDetail({ id }: { id: string }) {
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
   const uid = profile?.id ?? ''
-  const fetchMine = useCallback(() => fetchMyProjectIds(uid), [uid])
-  const myProjects = useAsync<string[]>(fetchMine)
-  /** a plain user with a project list may record only on those projects (none = all) */
+  const fetchMine = useCallback(() => fetchMyProjectAccess(uid), [uid])
+  const myProjects = useAsync<MyProjectAccess>(fetchMine)
+  /** a plain user records only on his project types, and on the projects picked for him (none picked = all of them) */
   const allowed = (list: ProjectSummary[], keepId?: string | null) => {
-    const ids = profile?.role === 'user' ? (myProjects.data ?? []) : []
-    return pickableProjects(list, keepId).filter((p) => !ids.length || ids.includes(p.id) || p.id === keepId)
+    const mine = profile?.role === 'user' ? myProjects.data : null
+    return pickableProjects(list, keepId).filter(
+      (p) =>
+        p.id === keepId ||
+        !mine ||
+        ((!mine.types.length || mine.types.includes(p.type)) && (!mine.ids.length || mine.ids.includes(p.id))),
+    )
   }
   const [money_, setMoney] = useState<Money | null>(null)
   const [spending, setSpending] = useState(false)

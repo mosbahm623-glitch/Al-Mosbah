@@ -184,8 +184,19 @@ export async function replaceProjectAccess(userId: string, projectIds: string[])
   return { cleared, saved }
 }
 
-/** The projects the signed-in user is limited to (empty = no limit). */
-export const fetchMyProjectIds = async (userId: string) => {
-  const { data, error } = await supabase.from('user_project_access').select('project_id').eq('user_id', userId)
-  return { data: error ? null : (data ?? []).map((r) => r.project_id), error }
+export type MyProjectAccess = { ids: string[]; types: string[] }
+
+/** What the signed-in user may record on: the projects picked for him (empty = no pick) and his project types. */
+export const fetchMyProjectAccess = async (userId: string) => {
+  const [picked, me] = await Promise.all([
+    supabase.from('user_project_access').select('project_id').eq('user_id', userId),
+    supabase.from('profiles').select('project_types').eq('id', userId).maybeSingle(),
+  ])
+  const error = picked.error ?? me.error
+  return {
+    data: error
+      ? null
+      : { ids: (picked.data ?? []).map((r) => r.project_id), types: (me.data?.project_types as string[] | null) ?? [] },
+    error,
+  }
 }

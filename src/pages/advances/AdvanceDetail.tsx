@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import Segmented from '../../components/Segmented'
 import { FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances'
-import { pickableProjects, type Entry } from '../../lib/projects'
+import { pickableProjects, type Entry, type ProjectSummary } from '../../lib/projects'
+import { fetchMyProjectIds } from '../../lib/users'
 import { useAdvanceData } from '../../lib/useAdvanceData'
 import { useAsync } from '../../lib/useAsync'
 import { fetchSummaries } from '../../lib/projects'
@@ -23,10 +24,18 @@ type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn
 const TABS = ['approved', 'pending', 'removed', 'installments', 'returns'] as const
 
 export default function AdvanceDetail({ id }: { id: string }) {
-  const { can, isStaff, isAdmin, canTouch } = useAuth()
+  const { can, isStaff, isAdmin, canTouch, profile } = useAuth()
   const canEdit = can('advances', 'edit')
   const { advance, installments, returns, entries, loading, failed, reload } = useAdvanceData(id)
   const projects = useAsync(fetchSummaries)
+  const uid = profile?.id ?? ''
+  const fetchMine = useCallback(() => fetchMyProjectIds(uid), [uid])
+  const myProjects = useAsync<string[]>(fetchMine)
+  /** a plain user with a project list may record only on those projects (none = all) */
+  const allowed = (list: ProjectSummary[], keepId?: string | null) => {
+    const ids = profile?.role === 'user' ? (myProjects.data ?? []) : []
+    return pickableProjects(list, keepId).filter((p) => !ids.length || ids.includes(p.id) || p.id === keepId)
+  }
   const [money_, setMoney] = useState<Money | null>(null)
   const [spending, setSpending] = useState(false)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
@@ -192,7 +201,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
         <EntryDialog
           projectId=""
           projectName={advance.holder_name}
-          projects={pickableProjects(projects.data)}
+          projects={allowed(projects.data)}
           advanceId={id}
           onClose={() => setSpending(false)}
           onSaved={reload}
@@ -202,7 +211,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
         <EntryDialog
           projectId={editingEntry.project_id ?? ''}
           projectName={advance.holder_name}
-          projects={pickableProjects(projects.data, editingEntry.project_id)}
+          projects={allowed(projects.data, editingEntry.project_id)}
           entry={editingEntry}
           onClose={() => setEditingEntry(null)}
           onSaved={reload}

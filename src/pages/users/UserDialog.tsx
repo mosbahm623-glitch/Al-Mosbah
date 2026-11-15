@@ -8,12 +8,14 @@ import type { Named } from '../../lib/lookups'
 import {
   replaceAdvanceAccess,
   replaceBankAccess,
+  replaceProjectAccess,
   replacePermissions,
   resetUserPassword,
   setEntryRights,
   setProjectTypes,
   updateRole,
   type AdvanceOption,
+  type ProjectOption,
   type UserRow,
 } from '../../lib/users'
 
@@ -29,13 +31,14 @@ type Props = {
   user: UserRow
   advances: AdvanceOption[]
   banks: Named[]
+  projects: ProjectOption[]
   isSelf: boolean
   onClose: () => void
   onSaved: () => void
 }
 
 /** Role, status and one level (none / view / edit) per page; for an owner, the banks he may choose from. */
-export default function UserDialog({ user, advances, banks, isSelf, onClose, onSaved }: Props) {
+export default function UserDialog({ user, advances, banks, projects, isSelf, onClose, onSaved }: Props) {
   const { isAdmin } = useAuth()
   const [role, setRole] = useState<'admin' | 'owner' | 'user'>(user.role)
   const [active, setActive] = useState(user.is_active)
@@ -51,6 +54,7 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
   const [types, setTypes] = useState<ProjectType[]>(user.project_types)
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [bankIds, setBankIds] = useState<string[]>(user.bankIds)
+  const [projectIds, setProjectIds] = useState<string[]>(user.projectIds)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -106,7 +110,12 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
     const wantedBanks = role === 'owner' ? bankIds : []
     const sameBanks = [...wantedBanks].sort().join() === [...user.bankIds].sort().join()
     const bankSave = sameBanks ? null : await replaceBankAccess(user.id, wantedBanks)
+    const wantedProjects = role === 'user' ? projectIds : []
+    const sameProjects = [...wantedProjects].sort().join() === [...user.projectIds].sort().join()
+    const projectSave = sameProjects ? null : await replaceProjectAccess(user.id, wantedProjects)
     setSaving(false)
+    if (projectSave && (projectSave.cleared.error || projectSave.saved.error))
+      return setError('المشاريع المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
     if (bankSave && (bankSave.cleared.error || bankSave.saved.error))
       return setError('البنوك المسموحة ما اتحفظتش، افتح المستخدم تاني وراجعها')
     if (clearedAccess.error || savedAccess.error)
@@ -218,6 +227,26 @@ export default function UserDialog({ user, advances, banks, isSelf, onClose, onS
                 )}
               </div>
             ))}
+            <div className="perm-block">
+              <span className="strong">المشاريع اللي يسجّل عليها</span>
+              <div className="perm-sub">
+                <span className="muted small">
+                  يسجّل قيود (ومصروف العهدة) على المشاريع دي بس. لو ما اخترتش ولا مشروع يسجّل على كل المشاريع.
+                </span>
+                {projects.map((pr) => (
+                  <label className="check" key={pr.id}>
+                    <input
+                      type="checkbox"
+                      checked={projectIds.includes(pr.id)}
+                      onChange={(e) =>
+                        setProjectIds((ids) => (e.target.checked ? [...ids, pr.id] : ids.filter((x) => x !== pr.id)))
+                      }
+                    />
+                    {pr.name}
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="perm-block">
               <span className="strong">القيود اللي بيسجّلها</span>
               <div className="perm-rights">

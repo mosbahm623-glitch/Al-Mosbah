@@ -43,6 +43,7 @@ describe('fetchUsers', () => {
       },
       user_advance_access: { data: [{ user_id: 'u2', advance_id: 'a1' }], error: null },
       user_bank_access: { data: [{ user_id: 'u1', bank_id: 'b1' }], error: null },
+      user_project_access: { data: [{ user_id: 'u2', project_id: 'p1' }], error: null },
     })
     const { data, error } = await fetchUsers()
     expect(error).toBeNull()
@@ -56,6 +57,8 @@ describe('fetchUsers', () => {
     expect(data?.[1].advanceIds).toEqual(['a1'])
     expect(data?.[0].bankIds).toEqual(['b1'])
     expect(data?.[1].bankIds).toEqual([])
+    expect(data?.[0].projectIds).toEqual([])
+    expect(data?.[1].projectIds).toEqual(['p1'])
   })
 
   it('fails as a whole when any of the three reads fails, never half a list', async () => {

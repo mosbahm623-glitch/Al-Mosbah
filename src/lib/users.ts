@@ -22,9 +22,11 @@ export type UserRow = {
   advanceIds: string[]
   /** the banks an owner may choose from (the admin sets them; matters only for an owner) */
   bankIds: string[]
+  /** projects a plain user may record entries on (none picked = every project) */
+  projectIds: string[]
 }
 
-type Profile = Omit<UserRow, 'permissions' | 'advanceIds' | 'bankIds'>
+type Profile = Omit<UserRow, 'permissions' | 'advanceIds' | 'bankIds' | 'projectIds'>
 export type AdvanceOption = { id: string; holder_name: string }
 
 export const fetchAdvanceOptions = () =>
@@ -32,7 +34,7 @@ export const fetchAdvanceOptions = () =>
 
 /** Every account with its page permissions (admins only; other users cannot read this). */
 export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unknown }> {
-  const [profiles, perms, access, bankAccess] = await Promise.all([
+  const [profiles, perms, access, bankAccess, projectAccess] = await Promise.all([
     supabase
       .from('profiles')
       .select('id,full_name,email,role,is_active,can_edit_entries,can_delete_entries,can_edit_approved,project_types')
@@ -47,9 +49,16 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
       .select('user_id,advance_id')
       .returns<{ user_id: string; advance_id: string }[]>(),
     supabase.from('user_bank_access').select('user_id,bank_id').returns<{ user_id: string; bank_id: string }[]>(),
+    supabase
+      .from('user_project_access')
+      .select('user_id,project_id')
+      .returns<{ user_id: string; project_id: string }[]>(),
   ])
-  if (profiles.error || perms.error || access.error || bankAccess.error || !profiles.data)
-    return { data: null, error: profiles.error ?? perms.error ?? access.error ?? bankAccess.error }
+  if (profiles.error || perms.error || access.error || bankAccess.error || projectAccess.error || !profiles.data)
+    return {
+      data: null,
+      error: profiles.error ?? perms.error ?? access.error ?? bankAccess.error ?? projectAccess.error,
+    }
   const byUser = new Map<string, UserRow['permissions']>()
   for (const p of perms.data ?? [])
     byUser.set(p.user_id, [...(byUser.get(p.user_id) ?? []), { module: p.module, level: p.level }])
@@ -57,12 +66,16 @@ export async function fetchUsers(): Promise<{ data: UserRow[] | null; error: unk
   for (const a of access.data ?? []) advByUser.set(a.user_id, [...(advByUser.get(a.user_id) ?? []), a.advance_id])
   const bankByUser = new Map<string, string[]>()
   for (const b of bankAccess.data ?? []) bankByUser.set(b.user_id, [...(bankByUser.get(b.user_id) ?? []), b.bank_id])
+  const projByUser = new Map<string, string[]>()
+  for (const a of projectAccess.data ?? [])
+    projByUser.set(a.user_id, [...(projByUser.get(a.user_id) ?? []), a.project_id])
   return {
     data: profiles.data.map((u) => ({
       ...u,
       permissions: byUser.get(u.id) ?? [],
       advanceIds: advByUser.get(u.id) ?? [],
       bankIds: bankByUser.get(u.id) ?? [],
+      projectIds: projByUser.get(u.id) ?? [],
     })),
     error: null,
   }
@@ -153,4 +166,26 @@ export async function replaceBankAccess(userId: string, bankIds: string[]) {
     ? await supabase.from('user_bank_access').insert(bankIds.map((bank_id) => ({ user_id: userId, bank_id })))
     : { error: null }
   return { cleared, saved }
+}
+
+export type ProjectOption = { id: string; name: string }
+
+export const fetchProjectOptions = () =>
+  supabase.from('projects').select('id,name').eq('status', 'active').order('name').returns<ProjectOption[]>()
+
+/** Replaces the projects one plain user may record entries on. */
+export async function replaceProjectAccess(userId: string, projectIds: string[]) {
+  const cleared = await supabase.from('user_project_access').delete().eq('user_id', userId)
+  const saved = projectIds.length
+    ? await supabase
+        .from('user_project_access')
+        .insert(projectIds.map((project_id) => ({ user_id: userId, project_id })))
+    : { error: null }
+  return { cleared, saved }
+}
+
+/** The projects the signed-in user is limited to (empty = no limit). */
+export const fetchMyProjectIds = async (userId: string) => {
+  const { data, error } = await supabase.from('user_project_access').select('project_id').eq('user_id', userId)
+  return { data: error ? null : (data ?? []).map((r) => r.project_id), error }
 }

@@ -8,6 +8,7 @@ import { useUnread } from './useUnread'
 import { startLive } from '../lib/live'
 import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
+import BackupReminder from '../components/BackupReminder'
 import { applyTheme, currentTheme, type Theme } from './theme'
 
 const DESKTOP = '(min-width: 900px)'
@@ -201,6 +202,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       <main className="content">
         <OfflineBar />
+        <BackupReminder />
         {children}
       </main>
     </div>

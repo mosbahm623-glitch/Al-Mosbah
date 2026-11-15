@@ -168,10 +168,10 @@ export async function replaceBankAccess(userId: string, bankIds: string[]) {
   return { cleared, saved }
 }
 
-export type ProjectOption = { id: string; name: string }
+export type ProjectOption = { id: string; name: string; type: ProjectType }
 
 export const fetchProjectOptions = () =>
-  supabase.from('projects').select('id,name').eq('status', 'active').order('name').returns<ProjectOption[]>()
+  supabase.from('projects').select('id,name,type').eq('status', 'active').order('name').returns<ProjectOption[]>()
 
 /** Replaces the projects one plain user may record entries on. */
 export async function replaceProjectAccess(userId: string, projectIds: string[]) {

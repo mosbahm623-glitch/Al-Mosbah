@@ -55,6 +55,7 @@ export default function UserDialog({ user, advances, banks, projects, isSelf, on
   const [advanceIds, setAdvanceIds] = useState<string[]>(user.advanceIds)
   const [bankIds, setBankIds] = useState<string[]>(user.bankIds)
   const [projectIds, setProjectIds] = useState<string[]>(user.projectIds)
+  const typeProjects = projects.filter((pr) => types.includes(pr.type))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -110,7 +111,7 @@ export default function UserDialog({ user, advances, banks, projects, isSelf, on
     const wantedBanks = role === 'owner' ? bankIds : []
     const sameBanks = [...wantedBanks].sort().join() === [...user.bankIds].sort().join()
     const bankSave = sameBanks ? null : await replaceBankAccess(user.id, wantedBanks)
-    const wantedProjects = role === 'user' ? projectIds : []
+    const wantedProjects = role === 'user' ? projectIds.filter((id) => typeProjects.some((pr) => pr.id === id)) : []
     const sameProjects = [...wantedProjects].sort().join() === [...user.projectIds].sort().join()
     const projectSave = sameProjects ? null : await replaceProjectAccess(user.id, wantedProjects)
     setSaving(false)
@@ -158,6 +159,32 @@ export default function UserDialog({ user, advances, banks, projects, isSelf, on
                 </label>
               ))}
               <small className="muted">المستخدم بيشوف ويصرف على المشاريع من النوع المحدد بس.</small>
+            </div>
+          </div>
+        )}
+
+        {role === 'user' && types.length > 0 && (
+          <div className="perm-block">
+            <span className="strong">المشاريع المسموحة</span>
+            <div className="perm-sub">
+              <span className="muted small">
+                علّم المشاريع اللي يسجّل عليها قيود ومصروف عهدة. لو ما علّمتش ولا مشروع يسجّل على كل مشاريع النوع
+                المحدد.
+              </span>
+              {typeProjects.length === 0 && <span className="muted small">مفيش مشاريع شغّالة من النوع ده.</span>}
+              {typeProjects.map((pr) => (
+                <label className="check" key={pr.id}>
+                  <input
+                    type="checkbox"
+                    checked={projectIds.includes(pr.id)}
+                    onChange={(e) =>
+                      setProjectIds((ids) => (e.target.checked ? [...ids, pr.id] : ids.filter((x) => x !== pr.id)))
+                    }
+                  />
+                  {pr.name}
+                  <small className="muted"> · {TYPE_LABEL[pr.type]}</small>
+                </label>
+              ))}
             </div>
           </div>
         )}
@@ -227,26 +254,6 @@ export default function UserDialog({ user, advances, banks, projects, isSelf, on
                 )}
               </div>
             ))}
-            <div className="perm-block">
-              <span className="strong">المشاريع اللي يسجّل عليها</span>
-              <div className="perm-sub">
-                <span className="muted small">
-                  يسجّل قيود (ومصروف العهدة) على المشاريع دي بس. لو ما اخترتش ولا مشروع يسجّل على كل المشاريع.
-                </span>
-                {projects.map((pr) => (
-                  <label className="check" key={pr.id}>
-                    <input
-                      type="checkbox"
-                      checked={projectIds.includes(pr.id)}
-                      onChange={(e) =>
-                        setProjectIds((ids) => (e.target.checked ? [...ids, pr.id] : ids.filter((x) => x !== pr.id)))
-                      }
-                    />
-                    {pr.name}
-                  </label>
-                ))}
-              </div>
-            </div>
             <div className="perm-block">
               <span className="strong">القيود اللي بيسجّلها</span>
               <div className="perm-rights">

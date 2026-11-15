@@ -48,6 +48,26 @@
 .brandname {
   font-size: 1.1rem;
   font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .topbar {
+    gap: 0.15rem;
+    padding-inline: 0.25rem;
+  }
+  .top-btn {
+    width: 38px;
+  }
+  .brandmark {
+    gap: 0.4rem;
+    padding-inline: 0;
+  }
+  .brandname {
+    font-size: 0.9rem;
+  }
+  .top-actions {
+    gap: 0;
+  }
 }
 
 .top-actions {

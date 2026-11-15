@@ -99,7 +99,10 @@ export default function InvoiceField({
           </label>
         )}
       </span>
-      {!noInvoice && (
+      {noInvoice && total === 0 && !readOnly && (
+        <span className="muted small">مفيش فاتورة؟ ارفع سكرين شوت التحويل (اختياري).</span>
+      )}
+      {
         <div className="inv-grid">
           {saved.map((a) => (
             <div className="inv-thumb" key={a.id}>
@@ -158,7 +161,7 @@ export default function InvoiceField({
           {!readOnly &&
             total < MAX_INVOICES &&
             [
-              { icon: Camera, text: 'صورة فاتورة', accept: 'image/*' },
+              { icon: Camera, text: noInvoice ? 'صورة التحويل' : 'صورة فاتورة', accept: 'image/*' },
               { icon: FileText, text: 'ملف PDF', accept: 'application/pdf' },
             ].map(({ icon: Icon, text, accept }) => (
               <label key={accept} className={`inv-add${busy ? ' is-busy' : ''}`}>
@@ -177,7 +180,7 @@ export default function InvoiceField({
               </label>
             ))}
         </div>
-      )}
+      }
       {error && <span className="msg msg-error">{error}</span>}
     </div>
   )

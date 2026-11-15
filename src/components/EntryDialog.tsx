@@ -174,7 +174,7 @@ export default function EntryDialog({
       notes,
       targetProject,
       editReason,
-      files: noInvoice ? [] : files,
+      files,
       noInvoice,
       contractors: contractors.data ?? undefined,
       banks: (isOwner ? ownerBanks : banks.data) ?? undefined,

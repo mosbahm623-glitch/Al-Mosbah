@@ -7,7 +7,13 @@ import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import { dateShort, dateText, money } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
-import { distinct, filterExpenses, isExpenseFiltering, NO_EXPENSE_FILTER, type ExpenseFilter } from '../../lib/advanceFilter'
+import {
+  distinct,
+  filterExpenses,
+  isExpenseFiltering,
+  NO_EXPENSE_FILTER,
+  type ExpenseFilter,
+} from '../../lib/advanceFilter'
 
 type Props = {
   entries: Entry[] | null | undefined
@@ -83,7 +89,11 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
             <input type="date" value={filter.to} onChange={(e) => setF({ to: e.target.value })} />
           </label>
           {filtering && (
-            <button type="button" className="btn btn-ghost appr-filters-clear" onClick={() => setFilter(NO_EXPENSE_FILTER)}>
+            <button
+              type="button"
+              className="btn btn-ghost appr-filters-clear"
+              onClick={() => setFilter(NO_EXPENSE_FILTER)}
+            >
               مسح الفلتر
             </button>
           )}

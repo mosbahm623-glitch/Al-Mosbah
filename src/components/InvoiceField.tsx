@@ -100,7 +100,9 @@ export default function InvoiceField({
         )}
       </span>
       {noInvoice && total === 0 && !readOnly && (
-        <span className="muted small">مفيش فاتورة؟ ارفع سكرين شوت التحويل (اختياري).</span>
+        <span className="muted small">
+          حتى لو مفيش فاتورة، ارفع سكرين شوت من التحويل. على قد الإمكان عايزين كل مصروف بمرفق.
+        </span>
       )}
       {
         <div className="inv-grid">

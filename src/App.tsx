@@ -22,6 +22,7 @@ const Contractors = lazy(() => import('./pages/contractors/Contractors'))
 const ContractorDetail = lazy(() => import('./pages/contractors/ContractorDetail'))
 const Backup = lazy(() => import('./pages/Backup'))
 const Search = lazy(() => import('./pages/Search'))
+const Duplicates = lazy(() => import('./pages/reports/Duplicates'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
 import PageErrorBoundary from './components/PageErrorBoundary'
@@ -44,6 +45,7 @@ function Content() {
   if (route === 'users') return <Users />
   if (route === 'backup') return <Backup />
   if (route === 'approvals') return <Approvals />
+  if (route === 'duplicates') return isAdmin ? <Duplicates /> : <ComingSoon title="الصفحة مش موجودة" />
   if (route === 'dashboard') return <Dashboard />
   if (route === 'reports' || route === 'reports/journal') return <Reports />
   if (route === 'recent') return <Recent />

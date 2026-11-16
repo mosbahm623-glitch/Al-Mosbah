@@ -10,10 +10,12 @@ registerSW({ immediate: true })
 // after a new version goes live, a tab opened on the old one asks for page files that no longer exist (blank page):
 // clear the old cached copy and reload once so the user gets the new version without doing anything
 const KEY = 'reloaded-for-new-version'
-async function recover() {
+// false when it already reloaded a moment ago: the caller must then let the error through (not swallow it),
+// otherwise the failed page import resolves to nothing and the page stays blank
+async function recover(): Promise<boolean> {
   try {
     const last = Number(sessionStorage.getItem(KEY) ?? 0)
-    if (Date.now() - last < 30_000) return
+    if (Date.now() - last < 30_000) return false
     sessionStorage.setItem(KEY, String(Date.now()))
   } catch {
     // storage blocked: still try once below
@@ -27,8 +29,17 @@ async function recover() {
     // reload anyway
   }
   window.location.reload()
+  return true
+}
+function recentlyReloaded() {
+  try {
+    return Date.now() - Number(sessionStorage.getItem(KEY) ?? 0) < 30_000
+  } catch {
+    return false
+  }
 }
 window.addEventListener('vite:preloadError', (e) => {
+  if (recentlyReloaded()) return
   e.preventDefault()
   void recover()
 })
@@ -38,6 +49,7 @@ window.addEventListener('unhandledrejection', (e) => {
       String(e.reason?.message ?? e.reason),
     )
   ) {
+    if (recentlyReloaded()) return
     e.preventDefault()
     void recover()
   }

@@ -29,6 +29,18 @@ export type BankMovement = {
 export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses'>) =>
   b.opening_balance + b.income - b.expenses
 
+/** Banks that stay off the dashboard card (the catch-all «أخرى»). */
+const HIDDEN_ON_DASHBOARD = ['أخرى']
+
+/** The banks the dashboard shows, biggest balance first, with their total. */
+export function dashboardBanks(list: BankSummary[]) {
+  const banks = list
+    .filter((b) => !HIDDEN_ON_DASHBOARD.includes(b.name.trim()))
+    .map((b) => ({ id: b.id, name: b.name, balance: bankBalance(b) }))
+    .sort((a, b) => b.balance - a.balance || a.name.localeCompare(b.name, 'ar'))
+  return { banks, total: banks.reduce((sum, b) => sum + b.balance, 0) }
+}
+
 export const fetchBankSummaries = () => supabase.rpc('bank_summaries').returns<BankSummary[]>()
 export const fetchBankMovements = (bankId: string) =>
   supabase.rpc('bank_movements', { p_bank: bankId }).returns<BankMovement[]>()

@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { dashboardBanks, fetchBankSummaries, type BankSummary } from '../lib/banks'
 import { money, todayISO } from '../lib/format'
 import { fetchMonthly, type MonthRow } from '../lib/monthly'
 import { useAsync } from '../lib/useAsync'
@@ -85,6 +86,35 @@ export function MonthlyChart() {
           </div>
         </>
       )}
+    </section>
+  )
+}
+
+/** Current balance of each bank and their total. Nothing is shown to people who cannot see the banks page. */
+export function BankBalances() {
+  const { data } = useAsync<BankSummary[]>(fetchBankSummaries)
+  if (!data?.length) return null
+  const { banks, total } = dashboardBanks(data)
+  if (!banks.length) return null
+  return (
+    <section className="panel" aria-label="أرصدة البنوك">
+      <div className="panel-head">
+        <h2>أرصدة البنوك</h2>
+        <span className={`chip ${total < 0 ? 'chip-err' : 'chip-ok'}`}>الإجمالي {money(total)} ج.م</span>
+      </div>
+      <div className="tiles">
+        {banks.map((b) => (
+          <div className="tile" key={b.id}>
+            <div className="tile-top">
+              <span className="muted small">{b.name}</span>
+            </div>
+            <div className="tile-value">
+              <strong className={b.balance < 0 ? 'tone-text-err' : ''}>{money(b.balance)}</strong>
+              <span className="muted small">ج.م</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   )
 }

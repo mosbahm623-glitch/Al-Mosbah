@@ -24,6 +24,7 @@ const Backup = lazy(() => import('./pages/Backup'))
 const Search = lazy(() => import('./pages/Search'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
+import PageErrorBoundary from './components/PageErrorBoundary'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
@@ -69,6 +70,15 @@ function Content() {
   return <ComingSoon title={item.label} />
 }
 
+function Page() {
+  const route = useRoute()
+  return (
+    <PageErrorBoundary key={route}>
+      <Content />
+    </PageErrorBoundary>
+  )
+}
+
 function Gate() {
   const { loading, session, profile } = useAuth()
   if (loading) {
@@ -84,7 +94,7 @@ function Gate() {
   return (
     <Layout>
       <Suspense fallback={<p className="muted">جارٍ التحميل...</p>}>
-        <Content />
+        <Page />
       </Suspense>
     </Layout>
   )

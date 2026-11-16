@@ -42,8 +42,9 @@ a.btn[aria-disabled='true'] {
   overflow-x: auto;
 }
 .paper h1 {
-  font-size: 1.3rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  color: #083220;
 }
 .paper h2 {
   font-size: 1rem;
@@ -57,12 +58,15 @@ a.btn[aria-disabled='true'] {
   flex-wrap: wrap;
   padding-bottom: 0.8rem;
   margin-bottom: 1rem;
-  border-bottom: 3px solid #312d2a;
+  border-bottom: 3px solid #083220;
 }
+/* the company logo replaces the brand text (the text stays for screen readers) */
 .paper-brand {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #c74634;
+  font-size: 0;
+  width: 11rem;
+  height: 2.8rem;
+  margin-bottom: 0.5rem;
+  background: url('../assets/legacy-logo.png') no-repeat right center / contain;
 }
 .paper-meta {
   display: flex;
@@ -84,18 +88,22 @@ a.btn[aria-disabled='true'] {
 }
 .paper-table th,
 .paper-table td {
-  border: 1px solid #cfcac4;
+  border: 0;
+  border-bottom: 1px solid #e3e1db;
   padding: 0.35rem 0.55rem;
   text-align: start;
   vertical-align: top;
 }
 .paper-table thead th {
-  background: #eeebe7;
+  background: transparent;
+  color: #666;
   font-weight: 700;
+  border-bottom: 1.5px solid #083220;
 }
-.paper-table .group-title th {
-  background: #312d2a;
+.paper-table.group thead tr.group-title th {
+  background: #083220;
   color: #fff;
+  border-bottom: 0;
   font-size: 0.95rem;
 }
 .paper-table .count {
@@ -104,8 +112,10 @@ a.btn[aria-disabled='true'] {
   opacity: 0.85;
 }
 .paper-table tfoot td {
-  background: #f5f2ee;
+  background: #f7edd8;
+  color: #083220;
   font-weight: 700;
+  border-top: 1.5px solid #083220;
 }
 .paper-table .num {
   font-variant-numeric: tabular-nums;
@@ -131,11 +141,11 @@ a.btn[aria-disabled='true'] {
   text-align: center;
 }
 .paper-table.grand td {
-  background: #312d2a;
-  color: #fff;
+  background: #083220;
+  color: #ecd2a1;
   font-weight: 700;
   font-size: 1rem;
-  border-color: #312d2a;
+  border-color: #083220;
 }
 .paper-foot {
   margin-top: 1rem;
@@ -148,19 +158,24 @@ a.btn[aria-disabled='true'] {
 .kpis {
   display: grid;
   grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
-  gap: 0.6rem;
-  margin-bottom: 1rem;
+  gap: 0;
+  margin-bottom: 1.2rem;
+  border: 1px solid #cfc7b4;
 }
 @media (max-width: 640px) {
   .kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .kpi:nth-child(odd) {
+    border-inline-start: 0;
+  }
 }
 .kpi {
-  border: 1px solid #dedad6;
-  border-top: 3px solid #3d5a80;
-  border-radius: 8px;
-  padding: 0.55rem 0.8rem;
+  border-inline-start: 1px solid #cfc7b4;
+  padding: 0.6rem 0.9rem;
+}
+.kpi:first-child {
+  border-inline-start: 0;
 }
 .kpi small {
   display: block;
@@ -169,21 +184,12 @@ a.btn[aria-disabled='true'] {
 }
 .kpi b {
   display: block;
-  font-size: 1.15rem;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: right;
+  font-size: 1.3rem;
   margin-top: 2px;
   font-variant-numeric: tabular-nums;
-}
-.kpi-ok {
-  border-top-color: #2e7d57;
-}
-.kpi-err {
-  border-top-color: #a8342a;
-}
-.kpi-warn {
-  border-top-color: #a9680f;
-}
-.kpi-neutral {
-  border-top-color: #6b6560;
 }
 .kpi.neg b {
   color: #a8342a;
@@ -194,12 +200,9 @@ a.btn[aria-disabled='true'] {
   font-size: 0.8rem;
 }
 .paper-table.ledger thead th {
-  background: #312d2a;
-  color: #fff;
-  border-color: #312d2a;
-}
-.paper-table.ledger tbody tr:nth-child(even) td {
-  background: #faf9f7;
+  background: transparent;
+  color: #666;
+  border-bottom: 1.5px solid #083220;
 }
 .tag {
   display: inline-block;
@@ -299,7 +302,12 @@ a.btn[aria-disabled='true'] {
 
 @page {
   size: A4;
-  margin: 12mm;
+  margin: 12mm 12mm 16mm;
+  @bottom-left {
+    content: 'صفحة ' counter(page) ' من ' counter(pages);
+    font-size: 8pt;
+    color: #777;
+  }
 }
 @media print {
   .no-print,

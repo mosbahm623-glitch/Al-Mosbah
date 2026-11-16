@@ -385,15 +385,10 @@
   min-width: 0;
 }
 .bank-picker-list {
-  position: absolute;
-  inset-inline: 0;
-  top: calc(100% + 4px);
-  z-index: 30;
-  margin: 0;
+  /* in the page flow, not floating: shows every bank without an inner scroll or being cut by the card */
+  margin: 4px 0 0;
   padding: 0.25rem;
   list-style: none;
-  max-height: 14rem;
-  overflow-y: auto;
   background: var(--surface, #fff);
   border: 1px solid var(--line, #ddd);
   border-radius: 12px;

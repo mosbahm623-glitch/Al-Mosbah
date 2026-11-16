@@ -15,6 +15,8 @@ export type Installment = {
   id: string
   amount: number
   paid_on: string
+  /** the bank it was paid from (older payments have none) */
+  bank_id: string | null
   /** a payment recorded by the owner waits for the admin; only approved ones count in the totals */
   status: 'pending' | 'approved' | 'rejected'
   reject_reason: string | null
@@ -30,7 +32,7 @@ export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries').ret
 export const fetchInstallments = (advanceId: string) =>
   supabase
     .from('advance_installments')
-    .select('id,amount,paid_on,status,reject_reason')
+    .select('id,amount,paid_on,bank_id,status,reject_reason')
     .eq('advance_id', advanceId)
     .order('paid_on', { ascending: false })
     .returns<Installment[]>()
@@ -60,8 +62,8 @@ export const createAdvance = (row: AdvanceInput) => supabase.from('advances').in
 export const setAdvanceStatus = (id: string, status: AdvanceSummary['status']) =>
   supabase.from('advances').update({ status }).eq('id', id)
 
-export const addInstallment = (advanceId: string, amount: number, paidOn: string) =>
-  supabase.from('advance_installments').insert({ advance_id: advanceId, amount, paid_on: paidOn })
+export const addInstallment = (advanceId: string, amount: number, paidOn: string, bankId: string) =>
+  supabase.from('advance_installments').insert({ advance_id: advanceId, amount, paid_on: paidOn, bank_id: bankId })
 
 /** installments: money handed to the holder · returns: money the holder gave back */
 export type MoneyKind = 'installment' | 'return'

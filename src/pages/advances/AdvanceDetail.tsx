@@ -195,6 +195,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
                   amount: money_.row.amount,
                   date: 'paid_on' in money_.row ? money_.row.paid_on : money_.row.returned_on,
                   notes: 'notes' in money_.row ? money_.row.notes : null,
+                  bankId: 'bank_id' in money_.row ? money_.row.bank_id : null,
                 }
               : undefined
           }

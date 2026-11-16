@@ -11,14 +11,16 @@ export type BankSummary = {
 
 export type BankMovement = {
   id: string
-  seq: number
+  /** null for a custody payment (it has no entry number) */
+  seq: number | null
   kind: 'income' | 'expense'
   entry_date: string
   category: string
   item: string | null
   notes: string | null
   amount: number
-  project_id: string
+  /** null for a custody payment, shown under "عهد" */
+  project_id: string | null
   project_name: string
   contractor: string | null
 }
@@ -41,10 +43,11 @@ export const saveBank = (row: BankInput, id?: string) =>
 export function byProject(rows: BankMovement[]) {
   const map = new Map<string, { id: string; name: string; income: number; expenses: number }>()
   for (const m of rows) {
-    const p = map.get(m.project_id) ?? { id: m.project_id, name: m.project_name, income: 0, expenses: 0 }
+    const key = m.project_id ?? ''
+    const p = map.get(key) ?? { id: key, name: m.project_name, income: 0, expenses: 0 }
     if (m.kind === 'income') p.income += m.amount
     else p.expenses += m.amount
-    map.set(m.project_id, p)
+    map.set(key, p)
   }
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
 }

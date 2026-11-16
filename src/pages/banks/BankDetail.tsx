@@ -98,9 +98,13 @@ export default function BankDetail({ id }: { id: string }) {
                 {projects.map((p) => (
                   <tr key={p.id}>
                     <td className="strong">
-                      <a className="row-link" href={`#/projects/${p.id}`}>
-                        {p.name}
-                      </a>
+                      {p.id ? (
+                        <a className="row-link" href={`#/projects/${p.id}`}>
+                          {p.name}
+                        </a>
+                      ) : (
+                        p.name
+                      )}
                     </td>
                     <td className="num tone-text-ok">{money(p.income)}</td>
                     <td className="num tone-text-err">{money(p.expenses)}</td>
@@ -147,14 +151,15 @@ export default function BankDetail({ id }: { id: string }) {
                 </tr>
                 {withBalance.map(({ m, run }) => (
                   <tr key={m.id}>
-                    <td className="strong num sm-hide">#{m.seq}</td>
+                    <td className="strong num sm-hide">{m.seq ? `#${m.seq}` : ''}</td>
                     <td className="num muted sm-hide">{dateText(m.entry_date)}</td>
                     <td className="sm-hide">{m.project_name}</td>
                     <td className="sm-hide">{m.category}</td>
                     <td>
                       {m.item}
                       <span className="sub">
-                        #{m.seq} · {dateText(m.entry_date)}
+                        {m.seq ? `#${m.seq} · ` : ''}
+                        {dateText(m.entry_date)}
                       </span>
                       <span className="sub">
                         {[m.category, m.project_name, m.contractor].filter(Boolean).join(' · ')}

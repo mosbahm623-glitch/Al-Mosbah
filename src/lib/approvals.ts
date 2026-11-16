@@ -157,6 +157,7 @@ export type PendingInstallment = {
   advance_id: string
   amount: number
   paid_on: string
+  bank_id: string | null
   status: 'pending' | 'rejected'
   created_at: string
   reject_reason: string | null
@@ -165,7 +166,7 @@ export type PendingInstallment = {
 }
 
 const INSTALLMENT_COLUMNS =
-  'id,advance_id,amount,paid_on,status,created_at,reject_reason,advance:advances(holder_name),creator:profiles!advance_installments_created_by_fkey(full_name)'
+  'id,advance_id,amount,paid_on,bank_id,status,created_at,reject_reason,advance:advances(holder_name),creator:profiles!advance_installments_created_by_fkey(full_name)'
 
 export const fetchInstallmentsByStatus = (status: 'pending' | 'rejected') =>
   supabase

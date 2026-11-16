@@ -20,6 +20,7 @@ describe('dashboardBanks', () => {
     ])
     expect(r.banks.map((b) => b.name)).toEqual(['Al Ahly', 'CIB', 'Cash'])
     expect(Math.round(r.total * 100) / 100).toBe(108318.23)
+    expect(r.banks[0]).toMatchObject({ name: 'Al Ahly', logo: null })
   })
   it('is empty when there is no bank', () => {
     expect(dashboardBanks([])).toEqual({ banks: [], total: 0 })

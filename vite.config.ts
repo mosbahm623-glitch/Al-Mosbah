@@ -1,20 +1,11 @@
-import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
-/** The release name shown in the side menu, so anyone can tell which build he is on: build time (Cairo) + commit. */
+/** The release name shown in the side menu: version number (package.json, raised on every release) + build time (Cairo). */
 function releaseName() {
-  let sha = (process.env.GITHUB_SHA ?? '').slice(0, 7)
-  if (!sha) {
-    try {
-      sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
-        .toString()
-        .trim()
-    } catch {
-      sha = 'dev'
-    }
-  }
+  const version = (JSON.parse(readFileSync('package.json', 'utf8')) as { version: string }).version
   const when = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Africa/Cairo',
     day: '2-digit',
@@ -23,7 +14,7 @@ function releaseName() {
     minute: '2-digit',
     hour12: false,
   }).format(new Date())
-  return `نسخة ${when.replace(', ', ' ')} · ${sha}`
+  return `v${version} · ${when.replace(', ', ' ')}`
 }
 
 // https://vite.dev/config/

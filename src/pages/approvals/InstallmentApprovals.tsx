@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Check, X } from 'lucide-react'
+import { Check, Pencil, X } from 'lucide-react'
 import StatusChip from '../../components/StatusChip'
+import MoneyDialog from '../advances/MoneyDialog'
 import { decideInstallments, type PendingInstallment } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money } from '../../lib/format'
@@ -13,6 +14,8 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // the payment being edited before a decision
+  const [editing, setEditing] = useState<PendingInstallment | null>(null)
 
   async function act(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
     setBusy(true)
@@ -72,6 +75,15 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
                   <Check size={17} aria-hidden="true" />
                   موافقة
                 </button>
+                <button
+                  className="btn btn-ghost btn-icon"
+                  disabled={busy}
+                  onClick={() => setEditing(p)}
+                  aria-label={`تعديل دفعة ${p.advance?.holder_name ?? ''}`}
+                >
+                  <Pencil size={17} aria-hidden="true" />
+                  تعديل
+                </button>
                 {p.status === 'pending' && (
                   <button
                     className="btn btn-ghost btn-icon"
@@ -115,6 +127,19 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
           </article>
         ))}
       </div>
+      {editing && (
+        <MoneyDialog
+          advanceId={editing.advance_id}
+          holder={editing.advance?.holder_name ?? 'عهدة'}
+          kind="installment"
+          row={{ id: editing.id, amount: editing.amount, date: editing.paid_on, bankId: editing.bank_id }}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            notifyApprovalsChanged()
+            onChanged()
+          }}
+        />
+      )}
     </section>
   )
 }

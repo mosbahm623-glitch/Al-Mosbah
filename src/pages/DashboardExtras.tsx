@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import BankLogo from '../components/BankLogo'
 import { dashboardBanks, fetchBankSummaries, type BankSummary } from '../lib/banks'
 import { money, todayISO } from '../lib/format'
 import { fetchMonthly, type MonthRow } from '../lib/monthly'
@@ -107,6 +108,7 @@ export function BankBalances() {
           <div className="tile" key={b.id}>
             <div className="tile-top">
               <span className="muted small">{b.name}</span>
+              <BankLogo logo={b.logo} name={b.name} />
             </div>
             <div className="tile-value">
               <strong className={b.balance < 0 ? 'tone-text-err' : ''}>{money(b.balance)}</strong>

@@ -36,7 +36,7 @@ const HIDDEN_ON_DASHBOARD = ['أخرى']
 export function dashboardBanks(list: BankSummary[]) {
   const banks = list
     .filter((b) => !HIDDEN_ON_DASHBOARD.includes(b.name.trim()))
-    .map((b) => ({ id: b.id, name: b.name, balance: bankBalance(b) }))
+    .map((b) => ({ id: b.id, name: b.name, logo: b.logo, balance: bankBalance(b) }))
     .sort((a, b) => b.balance - a.balance || a.name.localeCompare(b.name, 'ar'))
   return { banks, total: banks.reduce((sum, b) => sum + b.balance, 0) }
 }

@@ -10,6 +10,7 @@ import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
 import BackupReminder from '../components/BackupReminder'
 import { applyTheme, currentTheme, type Theme } from './theme'
+import { APP_VERSION } from '../lib/version'
 
 const DESKTOP = '(min-width: 900px)'
 const KEY = 'mosbah-sidebar'
@@ -198,6 +199,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             )
           })}
         </nav>
+        <p className="app-version">{APP_VERSION}</p>
       </aside>
 
       <main className="content">

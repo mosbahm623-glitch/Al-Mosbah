@@ -3,6 +3,7 @@ import InstallmentBankField, { useInstallmentBanks } from './InstallmentBankFiel
 import { addInstallment, fetchAdvanceSummaries, type AdvanceSummary } from '../lib/advances'
 import { money, todayISO } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
+import { useSubmitGuard } from '../lib/useSubmitGuard'
 
 const fetchOpenAdvances = async () => {
   const { data, error } = await fetchAdvanceSummaries()
@@ -18,11 +19,16 @@ export default function AdvancePaymentForm() {
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO)
   const [saving, setSaving] = useState(false)
+  const guard = useSubmitGuard()
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<string | null>(null)
 
-  async function submit(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault()
+    void guard(send)
+  }
+
+  async function send() {
     const value = Number(amount)
     if (!advanceId) return setError('اختار العهدة')
     const bankId = banks.idOf(bankName)

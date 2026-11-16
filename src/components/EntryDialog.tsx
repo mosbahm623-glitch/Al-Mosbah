@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../auth/AuthProvider'
 import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
@@ -11,6 +11,7 @@ import InvoiceField from './InvoiceField'
 import BankPicker from './BankPicker'
 import { saveEntry, type SaveError } from '../lib/entrySave'
 import { useAsync } from '../lib/useAsync'
+import { useSubmitGuard } from '../lib/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/lookups'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
@@ -99,6 +100,9 @@ export default function EntryDialog({
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const guard = useSubmitGuard()
+  // one id per try: sending the same try again (a lost answer, a second tap) can never make a second entry
+  const attemptId = useRef<string | null>(null)
   const [targetProject, setTargetProject] = useState(projectId)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [reason, setReason] = useState('')
@@ -122,7 +126,11 @@ export default function EntryDialog({
     return name
   }
 
-  async function remove() {
+  function remove() {
+    void guard(removeNow)
+  }
+
+  async function removeNow() {
     if (!entry) return
     if (!confirmDelete) return setConfirmDelete(true)
     if (reason.trim().length < 2) return setError('اكتب سبب الحذف')
@@ -151,8 +159,12 @@ export default function EntryDialog({
     setNotes('')
   }
 
-  async function submit(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault()
+    void guard(send)
+  }
+
+  async function send() {
     setSaving(true)
     setError(null)
     setDone(null)
@@ -179,10 +191,11 @@ export default function EntryDialog({
       contractors: contractors.data ?? undefined,
       banks: (isOwner ? ownerBanks : banks.data) ?? undefined,
       banksOnly: isOwner,
-      newId: crypto.randomUUID(),
+      newId: (attemptId.current ??= crypto.randomUUID()),
     })
     setSaving(false)
     if (r.status === 'error') return setError(r.error === 'changed' ? CHANGED : SAVE_ERRORS[r.error])
+    attemptId.current = null // saved or kept on the device: the next entry is a new try
     onSaved()
     if (r.status === 'queued') {
       if (!inline) return onClose()

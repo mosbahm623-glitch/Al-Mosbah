@@ -152,6 +152,10 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   const res = entry
     ? await updateEntry(entry.id, entry.rev, row, input.editReason)
     : await insertEntry(row, advanceId ?? null, newId)
+  // the same try arriving twice (a lost answer, a second tap): the first one already saved it
+  if (!entry && (res.error as { code?: string } | null)?.code === '23505') {
+    return { status: 'saved', id: newId, failedPhotos: 0 }
+  }
   if (res.error) {
     // the network dropped while saving: keep the new entry on the device (same id, so it can never be doubled)
     if (!entry && isNetworkError(res.error)) return keepOnDevice(row, { contractor: '', bank: '' })

@@ -4,6 +4,7 @@ import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances'
 import InstallmentBankField, { useInstallmentBanks } from '../../components/InstallmentBankField'
+import { useSubmitGuard } from '../../lib/useSubmitGuard'
 
 type Row = { id: string; amount: number; date: string; notes?: string | null; bankId?: string | null }
 
@@ -38,16 +39,21 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
   const bankName = pickedBank ?? banks.list.find((b) => b.id === row?.bankId)?.name ?? ''
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const guard = useSubmitGuard()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  async function submit(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault()
+    void guard(send)
+  }
+
+  async function send() {
     const value = Number(amount)
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
-    setSaving(true)
-    setError(null)
     const bankId = banks.idOf(bankName)
     if (kind === 'installment' && !bankId && !(row && !row.bankId)) return setError('اختار البنك')
+    setSaving(true)
+    setError(null)
     const values = {
       amount: value,
       [cfg.dateColumn]: date,
@@ -61,7 +67,11 @@ export default function MoneyDialog({ advanceId, holder, kind, row, onClose, onS
     onClose()
   }
 
-  async function remove() {
+  function remove() {
+    void guard(removeNow)
+  }
+
+  async function removeNow() {
     if (!row) return
     if (!confirmDelete) return setConfirmDelete(true)
     setSaving(true)

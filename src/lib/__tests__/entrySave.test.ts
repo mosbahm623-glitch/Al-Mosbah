@@ -139,6 +139,17 @@ describe('saveEntry: every entry needs a bank', () => {
   })
 })
 
+describe('saveEntry: the same try sent twice', () => {
+  it('counts a duplicate id as already saved, not as a failure and not as a second entry', async () => {
+    m.insertEntry.mockResolvedValue({
+      data: null,
+      error: { message: 'duplicate key value violates unique constraint "entries_pkey"', code: '23505' },
+    })
+    expect(await saveEntry(base({ newId: 'same-try' }))).toEqual({ status: 'saved', id: 'same-try', failedPhotos: 0 })
+    expect(m.uploadInvoices).not.toHaveBeenCalled()
+  })
+})
+
 describe('saveEntry: saving', () => {
   it('inserts a new entry with its own id and reports the number it got', async () => {
     const r = await saveEntry(base({ advanceId: 'a1' }))

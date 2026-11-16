@@ -127,6 +127,7 @@ export type Database = {
       bank_movements: { Args: { p_bank: string }; Returns: Json[] }
       bank_summaries: { Args: never; Returns: Json[] }
       dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }
+      duplicate_entry_groups: { Args: never; Returns: Json[] }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }

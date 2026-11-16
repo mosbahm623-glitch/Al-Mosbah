@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import BankLogo from '../components/BankLogo'
-import { dashboardBanks, fetchBankSummaries, type BankSummary } from '../lib/banks'
+import { dashboardBanks, fetchBankSummaries, fetchBankToday, type BankSummary, type BankToday } from '../lib/banks'
 import { money, todayISO } from '../lib/format'
 import { fetchMonthly, type MonthRow } from '../lib/monthly'
 import { useAsync } from '../lib/useAsync'
@@ -91,12 +91,14 @@ export function MonthlyChart() {
   )
 }
 
-/** Current balance of each bank and their total. Nothing is shown to people who cannot see the banks page. */
-export function BankBalances() {
+/** Current balance of each bank with today's movement, their total and how far it is from the dashboard's net cash. */
+export function BankBalances({ netCash }: { netCash: number }) {
   const { data } = useAsync<BankSummary[]>(fetchBankSummaries)
+  const today = useAsync<BankToday>(useCallback(() => fetchBankToday(todayISO()), []))
   if (!data?.length) return null
   const { banks, total } = dashboardBanks(data)
   if (!banks.length) return null
+  const gap = Math.round((total - netCash) * 100) / 100
   return (
     <section className="panel" aria-label="أرصدة البنوك">
       <div className="panel-head">
@@ -104,19 +106,30 @@ export function BankBalances() {
         <span className={`chip ${total < 0 ? 'chip-err' : 'chip-ok'}`}>الإجمالي {money(total)} ج.م</span>
       </div>
       <div className="tiles">
-        {banks.map((b) => (
-          <div className="tile" key={b.id}>
-            <div className="tile-top">
-              <span className="muted small">{b.name}</span>
-              <BankLogo logo={b.logo} name={b.name} />
+        {banks.map((b) => {
+          const t = today.data?.[b.id]
+          return (
+            <div className="tile" key={b.id}>
+              <div className="tile-top">
+                <span className="muted small">{b.name}</span>
+                <BankLogo logo={b.logo} name={b.name} />
+              </div>
+              <div className="tile-value">
+                <strong className={b.balance < 0 ? 'tone-text-err' : ''}>{money(b.balance)}</strong>
+                <span className="muted small">ج.م</span>
+              </div>
+              {today.data && (
+                <div className="muted small">
+                  النهارده: وارد {money(t?.income ?? 0)} · مصروف {money(t?.expenses ?? 0)}
+                </div>
+              )}
             </div>
-            <div className="tile-value">
-              <strong className={b.balance < 0 ? 'tone-text-err' : ''}>{money(b.balance)}</strong>
-              <span className="muted small">ج.م</span>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
+      <p className="muted small" style={{ margin: '0.75rem 1rem' }}>
+        الفرق عن صافي النقدية: {money(gap)} ج.م (صافي النقدية بيستبعد المشاريع المقفولة، والبنوك بتحسب كل القيود)
+      </p>
     </section>
   )
 }

@@ -63,3 +63,34 @@ export function byProject(rows: BankMovement[]) {
   }
   return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
 }
+
+export type BankToday = Record<string, { income: number; expenses: number }>
+
+/** Approved money in and out today, per bank (entries and custody payments). */
+export async function fetchBankToday(day: string) {
+  const [entries, payments] = await Promise.all([
+    supabase
+      .from('entries')
+      .select('bank_id,kind,amount')
+      .eq('entry_date', day)
+      .eq('status', 'approved')
+      .is('deleted_at', null)
+      .returns<{ bank_id: string | null; kind: 'income' | 'expense'; amount: number }[]>(),
+    supabase
+      .from('advance_installments')
+      .select('bank_id,amount')
+      .eq('paid_on', day)
+      .eq('status', 'approved')
+      .returns<{ bank_id: string | null; amount: number }[]>(),
+  ])
+  if (entries.error || payments.error) return { data: null, error: entries.error ?? payments.error }
+  const out: BankToday = {}
+  const add = (id: string | null, key: 'income' | 'expenses', amount: number) => {
+    if (!id) return
+    out[id] ??= { income: 0, expenses: 0 }
+    out[id][key] += Number(amount)
+  }
+  for (const e of entries.data ?? []) add(e.bank_id, e.kind === 'income' ? 'income' : 'expenses', e.amount)
+  for (const p of payments.data ?? []) add(p.bank_id, 'expenses', p.amount)
+  return { data: out, error: null }
+}

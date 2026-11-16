@@ -151,6 +151,28 @@ export async function countPending() {
   return (entries.count ?? 0) + (payments.count ?? 0)
 }
 
+/** What is waiting for the admin: how many and how much, entries and custody payments apart. */
+export async function fetchPendingSummary() {
+  const [entries, payments] = await Promise.all([
+    supabase
+      .from('entries')
+      .select('amount')
+      .eq('status', 'pending')
+      .is('deleted_at', null)
+      .returns<{ amount: number }[]>(),
+    supabase.from('advance_installments').select('amount').eq('status', 'pending').returns<{ amount: number }[]>(),
+  ])
+  if (entries.error || payments.error) return { data: null, error: entries.error ?? payments.error }
+  const total = (rows: { amount: number }[] | null) => (rows ?? []).reduce((s, r) => s + Number(r.amount), 0)
+  return {
+    data: {
+      entries: { count: entries.data?.length ?? 0, total: total(entries.data) },
+      payments: { count: payments.data?.length ?? 0, total: total(payments.data) },
+    },
+    error: null,
+  }
+}
+
 /** A custody payment (دفعة عهدة) recorded by the owner, waiting for the admin or sent back with a reason. */
 export type PendingInstallment = {
   id: string

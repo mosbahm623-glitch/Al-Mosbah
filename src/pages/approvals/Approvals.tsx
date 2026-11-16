@@ -23,6 +23,7 @@ import ApprovalsReport from './ApprovalsReport'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
 import { useAsync } from '../../lib/useAsync'
+import { useSubmitGuard } from '../../lib/useSubmitGuard'
 import EntryDialog from '../../components/EntryDialog'
 import { enteredByOf } from '../../lib/enteredBy'
 
@@ -59,6 +60,7 @@ export default function Approvals() {
   const paymentRows = payments.data ?? []
   const [day, setDay] = useState(todayISO)
   const [busy, setBusy] = useState(false)
+  const guard = useSubmitGuard()
   // the entry being rejected (its reason is typed first; the user sees the reason next to the entry)
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
@@ -85,7 +87,11 @@ export default function Approvals() {
       return next
     })
 
-  async function act(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
+  function act(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
+    return guard(() => actNow(items, status, why))
+  }
+
+  async function actNow(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
     setBusy(true)
     setError(null)
     const r = await decide(

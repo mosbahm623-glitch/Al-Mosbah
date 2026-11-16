@@ -5,19 +5,25 @@ import MoneyDialog from '../advances/MoneyDialog'
 import { decideInstallments, type PendingInstallment } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money } from '../../lib/format'
+import { useSubmitGuard } from '../../lib/useSubmitGuard'
 
 type Props = { rows: PendingInstallment[]; onChanged: () => void }
 
 /** Custody payments the owner handed out, waiting for the admin (approve, or reject with a reason). */
 export default function InstallmentApprovals({ rows, onChanged }: Props) {
   const [busy, setBusy] = useState(false)
+  const guard = useSubmitGuard()
   const [rejecting, setRejecting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
   // the payment being edited before a decision
   const [editing, setEditing] = useState<PendingInstallment | null>(null)
 
-  async function act(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
+  function act(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
+    return guard(() => actNow(item, status, why))
+  }
+
+  async function actNow(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
     setBusy(true)
     setError(null)
     const r = await decideInstallments([{ id: item.id, status: item.status }], status, why)

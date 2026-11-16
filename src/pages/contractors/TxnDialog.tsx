@@ -4,6 +4,7 @@ import FormActions from '../../components/FormActions'
 import { deleteContractorTxn, saveContractorTxn, type LedgerTxn } from '../../lib/contractors'
 import { todayISO } from '../../lib/format'
 import type { Named } from '../../lib/lookups'
+import { useSubmitGuard } from '../../lib/useSubmitGuard'
 
 type Props = {
   contractorId: string
@@ -29,10 +30,15 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
   const [notes, setNotes] = useState(row?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const guard = useSubmitGuard()
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  async function submit(e: FormEvent) {
+  function submit(e: FormEvent) {
     e.preventDefault()
+    void guard(send)
+  }
+
+  async function send() {
     const value = Number(amount)
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     setSaving(true)
@@ -54,7 +60,11 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
     onClose()
   }
 
-  async function remove() {
+  function remove() {
+    void guard(removeNow)
+  }
+
+  async function removeNow() {
     if (!row) return
     if (!confirmDelete) return setConfirmDelete(true)
     setSaving(true)

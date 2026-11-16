@@ -164,8 +164,6 @@ export default function Approvals() {
         <div className="card empty">{tab === 'pending' ? 'مفيش حاجة مستنية موافقة.' : 'مفيش قيود مرفوضة.'}</div>
       )}
 
-      {!other && <InstallmentApprovals rows={paymentRows} onChanged={payments.reload} />}
-
       {tab === 'pending' && all.length > 0 && (
         <section className="appr-stats" aria-label="ملخص الموافقات">
           <div className="appr-stat is-main">
@@ -233,6 +231,8 @@ export default function Approvals() {
           ))}
         </div>
       )}
+
+      {!other && <InstallmentApprovals rows={paymentRows} onChanged={payments.reload} />}
 
       {editing && (
         <EntryDialog

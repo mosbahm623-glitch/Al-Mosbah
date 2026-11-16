@@ -30,9 +30,9 @@ export type Database = {
         { at?: string; by?: string | null; id?: never; note?: string | null }
       >
       advance_installments: T<
-        { advance_id: string; amount: number; created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null; id: string; paid_on: string; reject_reason: string | null; status: string },
-        { advance_id: string; amount: number; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string },
-        { advance_id?: string; amount?: number; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string }
+        { advance_id: string; amount: number; bank_id: string | null; created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null; id: string; paid_on: string; reject_reason: string | null; status: string },
+        { advance_id: string; amount: number; bank_id?: string | null; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string },
+        { advance_id?: string; amount?: number; bank_id?: string | null; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string }
       >
       advance_returns: T<
         { advance_id: string; amount: number; created_at: string; id: string; notes: string | null; returned_on: string },

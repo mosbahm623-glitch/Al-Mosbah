@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import InstallmentBankField, { useInstallmentBanks } from './InstallmentBankField'
 import { addInstallment, fetchAdvanceSummaries, type AdvanceSummary } from '../lib/advances'
 import { money, todayISO } from '../lib/format'
 import { useAsync } from '../lib/useAsync'
@@ -12,6 +13,8 @@ const fetchOpenAdvances = async () => {
 export default function AdvancePaymentForm() {
   const advances = useAsync<AdvanceSummary[]>(fetchOpenAdvances)
   const [advanceId, setAdvanceId] = useState('')
+  const banks = useInstallmentBanks()
+  const [bankName, setBankName] = useState('')
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(todayISO)
   const [saving, setSaving] = useState(false)
@@ -22,16 +25,19 @@ export default function AdvancePaymentForm() {
     e.preventDefault()
     const value = Number(amount)
     if (!advanceId) return setError('اختار العهدة')
+    const bankId = banks.idOf(bankName)
+    if (!bankId) return setError('اختار البنك')
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     setSaving(true)
     setError(null)
     setDone(null)
-    const { error: err } = await addInstallment(advanceId, value, date)
+    const { error: err } = await addInstallment(advanceId, value, date, bankId)
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')
     const holder = advances.data?.find((a) => a.id === advanceId)?.holder_name ?? ''
     setDone(`اتسجلت دفعة ${money(value)} لـ ${holder} — مستنّية موافقة الأدمن`)
     setAmount('')
+    setBankName('')
     advances.reload()
   }
 
@@ -49,6 +55,9 @@ export default function AdvancePaymentForm() {
             ))}
           </select>
         </label>
+        <div className="span-2">
+          <InstallmentBankField value={bankName} onChange={setBankName} banks={banks.list} />
+        </div>
         <label className="field">
           المبلغ (ج.م)
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" required />
@@ -57,7 +66,9 @@ export default function AdvancePaymentForm() {
           التاريخ
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
         </label>
-        {advances.failed && <p className="msg msg-error span-2">مقدرناش نحمّل العهد، جرّب تاني</p>}
+        {(advances.failed || banks.failed) && (
+          <p className="msg msg-error span-2">مقدرناش نحمّل العهد أو البنوك، جرّب تاني</p>
+        )}
         {error && <p className="msg msg-error span-2">{error}</p>}
         {done && <p className="msg msg-ok span-2">{done}</p>}
         <div className="dialog-actions span-2">

@@ -3,6 +3,7 @@ import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances'
+import InstallmentBankField, { useInstallmentBanks } from '../../components/InstallmentBankField'
 
 type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
 
@@ -11,6 +12,8 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
   const [holder, setHolder] = useState(advance?.holder_name ?? '')
   const [notes, setNotes] = useState(advance?.notes ?? '')
   const [first, setFirst] = useState('')
+  const banks = useInstallmentBanks()
+  const [bankName, setBankName] = useState('')
   const [date, setDate] = useState(() => todayISO())
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -20,6 +23,8 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
     const amount = Number(first || 0)
     if (!holder.trim()) return setError('اكتب اسم المستلم')
     if (!Number.isFinite(amount) || amount < 0) return setError('المبلغ لازم يكون رقم صحيح')
+    const bankId = banks.idOf(bankName)
+    if (!advance && amount > 0 && !bankId) return setError('اختار البنك')
     setSaving(true)
     setError(null)
     const row = { holder_name: holder.trim(), notes: notes.trim() || null }
@@ -33,8 +38,8 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
         setSaving(false)
         return setError('العهدة ما اتحفظتش، جرّب تاني')
       }
-      if (amount > 0) {
-        const { error: instErr } = await addInstallment(data.id, amount, date)
+      if (amount > 0 && bankId) {
+        const { error: instErr } = await addInstallment(data.id, amount, date, bankId)
         if (instErr) {
           setSaving(false)
           onSaved()
@@ -71,6 +76,7 @@ export default function AdvanceDialog({ advance, onClose, onSaved }: Props) {
             </label>
           </div>
         )}
+        {!advance && <InstallmentBankField value={bankName} onChange={setBankName} banks={banks.list} />}
         <label className="field">
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />

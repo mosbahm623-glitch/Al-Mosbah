@@ -236,9 +236,9 @@ describe('custody writes', () => {
   })
   it('adds the first installment', async () => {
     plan({})
-    await addInstallment('a1', 500, '2026-10-30')
+    await addInstallment('a1', 500, '2026-10-30', 'b1')
     expect(used[0].table).toBe('advance_installments')
-    expect(callsOn()[0]).toEqual(['insert', [{ advance_id: 'a1', amount: 500, paid_on: '2026-10-30' }]])
+    expect(callsOn()[0]).toEqual(['insert', [{ advance_id: 'a1', amount: 500, paid_on: '2026-10-30', bank_id: 'b1' }]])
   })
   it('writes installments and returns to their own tables', async () => {
     plan({})

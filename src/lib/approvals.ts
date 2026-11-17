@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { enteredByOf } from './enteredBy'
+import { STATUS, type OpenStatus, type DecisionStatus } from './status'
 
 export type PendingEntry = {
   id: string
@@ -13,7 +14,7 @@ export type PendingEntry = {
   entry_date: string
   notes: string | null
   advance_id: string | null
-  status: 'pending' | 'rejected'
+  status: OpenStatus
   created_at: string
   reject_reason: string | null
   edit_reason: string | null
@@ -28,7 +29,7 @@ export type PendingEntry = {
 const COLUMNS =
   'id,project_id,seq,rev,kind,category,item,amount,entry_date,notes,advance_id,status,created_at,reject_reason,edit_reason,invoices:entry_attachments(count),project:projects(name),contractor:contractors(name),bank:bank_accounts(name),entered_by_name,creator:profiles!entries_created_by_profile_fkey(full_name)'
 
-export const fetchByStatus = (status: 'pending' | 'rejected') =>
+export const fetchByStatus = (status: OpenStatus) =>
   supabase
     .from('entries')
     .select(COLUMNS)
@@ -40,8 +41,8 @@ export const fetchByStatus = (status: 'pending' | 'rejected') =>
  * Approve or reject entries as they were shown (same rev). Returns how many went through and how many were
  * skipped because someone changed them in the meantime; those need a fresh look. A rejection carries its reason.
  */
-export async function decide(items: { id: string; rev: number }[], status: 'approved' | 'rejected', reason?: string) {
-  const patch = status === 'rejected' ? { status, reject_reason: reason?.trim() ?? '' } : { status }
+export async function decide(items: { id: string; rev: number }[], status: DecisionStatus, reason?: string) {
+  const patch = status === STATUS.rejected ? { status, reject_reason: reason?.trim() ?? '' } : { status }
   const results = await Promise.all(
     items.map((it) => supabase.from('entries').update(patch).eq('id', it.id).eq('rev', it.rev).select('id')),
   )
@@ -57,7 +58,7 @@ export async function decide(items: { id: string; rev: number }[], status: 'appr
 export async function reopenEntry(id: string, rev: number) {
   const { data, error } = await supabase
     .from('entries')
-    .update({ status: 'pending' })
+    .update({ status: STATUS.pending })
     .eq('id', id)
     .eq('rev', rev)
     .select('id')
@@ -145,8 +146,8 @@ export function summarize(rows: PendingEntry[]) {
 /** Everything waiting for the admin: entries and custody payments (this is the number on the red badge). */
 export async function countPending() {
   const [entries, payments] = await Promise.all([
-    supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('advance_installments').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('entries').select('id', { count: 'exact', head: true }).eq('status', STATUS.pending),
+    supabase.from('advance_installments').select('id', { count: 'exact', head: true }).eq('status', STATUS.pending),
   ])
   return (entries.count ?? 0) + (payments.count ?? 0)
 }
@@ -157,10 +158,10 @@ export async function fetchPendingSummary() {
     supabase
       .from('entries')
       .select('amount')
-      .eq('status', 'pending')
+      .eq('status', STATUS.pending)
       .is('deleted_at', null)
       .returns<{ amount: number }[]>(),
-    supabase.from('advance_installments').select('amount').eq('status', 'pending').returns<{ amount: number }[]>(),
+    supabase.from('advance_installments').select('amount').eq('status', STATUS.pending).returns<{ amount: number }[]>(),
   ])
   if (entries.error || payments.error) return { data: null, error: entries.error ?? payments.error }
   const total = (rows: { amount: number }[] | null) => (rows ?? []).reduce((s, r) => s + Number(r.amount), 0)
@@ -180,7 +181,7 @@ export type PendingInstallment = {
   amount: number
   paid_on: string
   bank_id: string | null
-  status: 'pending' | 'rejected'
+  status: OpenStatus
   created_at: string
   reject_reason: string | null
   advance: { holder_name: string } | null
@@ -190,7 +191,7 @@ export type PendingInstallment = {
 const INSTALLMENT_COLUMNS =
   'id,advance_id,amount,paid_on,bank_id,status,created_at,reject_reason,advance:advances(holder_name),creator:profiles!advance_installments_created_by_fkey(full_name)'
 
-export const fetchInstallmentsByStatus = (status: 'pending' | 'rejected') =>
+export const fetchInstallmentsByStatus = (status: OpenStatus) =>
   supabase
     .from('advance_installments')
     .select(INSTALLMENT_COLUMNS)
@@ -200,11 +201,11 @@ export const fetchInstallmentsByStatus = (status: 'pending' | 'rejected') =>
 
 /** Approve or reject custody payments as they were shown (still in the same status). A rejection carries its reason. */
 export async function decideInstallments(
-  items: { id: string; status: 'pending' | 'rejected' }[],
-  status: 'approved' | 'rejected',
+  items: { id: string; status: OpenStatus }[],
+  status: DecisionStatus,
   reason?: string,
 ) {
-  const patch = status === 'rejected' ? { status, reject_reason: reason?.trim() ?? '' } : { status }
+  const patch = status === STATUS.rejected ? { status, reject_reason: reason?.trim() ?? '' } : { status }
   const results = await Promise.all(
     items.map((it) =>
       supabase.from('advance_installments').update(patch).eq('id', it.id).eq('status', it.status).select('id'),

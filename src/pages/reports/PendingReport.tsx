@@ -7,8 +7,9 @@ import { fetchEntriesByStatus } from '../../lib/entries'
 import type { Entry } from '../../lib/projects'
 import { useAsync } from '../../lib/useAsync'
 import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import { STATUS, type DecisionStatus } from '../../lib/status'
 
-export type PendingStatus = 'pending' | 'approved' | 'rejected' | 'all'
+export type PendingStatus = 'pending' | DecisionStatus | 'all'
 const TITLE: Record<PendingStatus, string> = {
   pending: 'القيود المعلّقة',
   approved: 'القيود المقبولة',
@@ -93,7 +94,7 @@ export default function PendingReport({
             e.category,
             e.item,
             e.creator?.full_name ?? null,
-            e.status === 'pending' ? 'معلّق' : e.status === 'approved' ? 'مقبول' : 'مرفوض',
+            e.status === STATUS.pending ? 'معلّق' : e.status === STATUS.approved ? 'مقبول' : 'مرفوض',
             e.amount,
           ]),
           footer: [`عدد القيود: ${view.rows.length}`, ...Array(8).fill(null)],

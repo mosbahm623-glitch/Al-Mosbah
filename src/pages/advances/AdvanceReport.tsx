@@ -11,6 +11,7 @@ import { usePreparedBy } from '../../auth/usePreparedBy'
 import { enteredByOf } from '../../lib/enteredBy'
 import { toCents } from '../../lib/money'
 import { NO_FILTER, filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reportFilter'
+import { STATUS } from '../../lib/status'
 
 const spentSum = (rows: { amount: number }[]) => rows.reduce((t, e) => t + toCents(e.amount), 0) / 100
 
@@ -44,7 +45,7 @@ export default function AdvanceReport({
   const spent = [...(entries ?? [])]
     .filter(
       (e) =>
-        e.status === 'approved' &&
+        e.status === STATUS.approved &&
         matches(filter, {
           project: e.project?.name,
           contractor: e.contractor?.name,
@@ -54,7 +55,7 @@ export default function AdvanceReport({
     )
     .sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.seq - b.seq)
   const given = [...(installments ?? [])]
-    .filter((i) => i.status === 'approved')
+    .filter((i) => i.status === STATUS.approved)
     .sort((a, b) => a.paid_on.localeCompare(b.paid_on))
   const spentTotal = narrowed ? spentSum(spent) : advance.spent
   const back = [...(returns ?? [])].sort((a, b) => a.returned_on.localeCompare(b.returned_on))

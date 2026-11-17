@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { STATUS } from './status'
 
 export type BankSummary = {
   id: string
@@ -97,14 +98,14 @@ export async function fetchBankToday(day: string) {
       .from('entries')
       .select('bank_id,kind,amount')
       .eq('entry_date', day)
-      .eq('status', 'approved')
+      .eq('status', STATUS.approved)
       .is('deleted_at', null)
       .returns<{ bank_id: string | null; kind: 'income' | 'expense'; amount: number }[]>(),
     supabase
       .from('advance_installments')
       .select('bank_id,amount')
       .eq('paid_on', day)
-      .eq('status', 'approved')
+      .eq('status', STATUS.approved)
       .returns<{ bank_id: string | null; amount: number }[]>(),
   ])
   if (entries.error || payments.error) return { data: null, error: entries.error ?? payments.error }

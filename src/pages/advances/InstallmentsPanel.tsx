@@ -2,6 +2,7 @@ import { Pencil, Plus } from 'lucide-react'
 import StatusChip, { RejectReason } from '../../components/StatusChip'
 import type { Installment } from '../../lib/advances'
 import { dateText, money, timeText } from '../../lib/format'
+import { STATUS } from '../../lib/status'
 
 type Props = {
   installments: Installment[] | null | undefined
@@ -51,11 +52,11 @@ export default function InstallmentsPanel({ installments, isStaff, isAdmin, onAd
                   <td className="num strong">{money(i.amount)}</td>
                   <td>
                     <StatusChip status={i.status} kind="payment" />
-                    {i.status === 'rejected' && <RejectReason reason={i.reject_reason} prefix="السبب" />}
+                    {i.status === STATUS.rejected && <RejectReason reason={i.reject_reason} prefix="السبب" />}
                   </td>
                   {isStaff && (
                     <td>
-                      {(isAdmin || i.status !== 'approved') && (
+                      {(isAdmin || i.status !== STATUS.approved) && (
                         <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => onEdit(i)}>
                           <Pencil size={16} aria-hidden="true" />
                         </button>

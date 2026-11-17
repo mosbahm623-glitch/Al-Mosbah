@@ -7,6 +7,7 @@ import { readStoredSession } from '../lib/offline/auth'
 import { clearReadCache } from '../lib/offline/fetch'
 import { syncPush } from '../lib/push'
 import { allows, type Level, type Module, type Permissions } from './permissions'
+import { STATUS } from '../lib/status'
 
 export type Profile = {
   id: string
@@ -227,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile?.role === 'admin' || profile?.role === 'owner') return true
         const edit = profile?.can_edit_entries !== false
         const del = profile?.can_delete_entries !== false
-        return status === 'approved' ? edit && profile?.can_edit_approved === true : edit || del
+        return status === STATUS.approved ? edit && profile?.can_edit_approved === true : edit || del
       },
       can: (module, level = 'view') =>
         allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),

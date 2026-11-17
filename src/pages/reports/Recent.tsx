@@ -5,6 +5,7 @@ import StatusChip from '../../components/StatusChip'
 import { dateText, money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
 import { KIND_LABEL, direction, fetchMovements, type Movement, type MovementKind } from '../../lib/movements'
+import { STATUS } from '../../lib/status'
 
 const LIMIT = 50
 const GROUPS = [
@@ -90,7 +91,9 @@ export default function Recent() {
                       <td>
                         <span className="chip chip-neutral">{KIND_LABEL[m.kind]}</span>
                         {m.fromAdvance && <span className="muted small"> من عهدة</span>}
-                        {(m.status === 'pending' || m.status === 'rejected') && <StatusChip status={m.status} />}
+                        {(m.status === STATUS.pending || m.status === STATUS.rejected) && (
+                          <StatusChip status={m.status} />
+                        )}
                       </td>
                       <td className="sm-hide">{m.category}</td>
                       <td className="strong">

@@ -13,6 +13,7 @@ import { usePreparedBy } from '../../auth/usePreparedBy'
 import { enteredByOf } from '../../lib/enteredBy'
 import { toCents } from '../../lib/money'
 import { NO_FILTER, filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reportFilter'
+import { STATUS } from '../../lib/status'
 
 type Group = { name: string; rows: Entry[]; total: number }
 
@@ -33,7 +34,7 @@ export default function ProjectReport({
     () =>
       allEntries?.filter(
         (e) =>
-          e.status === 'approved' &&
+          e.status === STATUS.approved &&
           matches(filter, { contractor: e.contractor?.name, bank: e.bank?.name, category: e.category }),
       ),
     [allEntries, filter],

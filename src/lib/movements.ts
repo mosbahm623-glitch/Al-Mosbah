@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import { fetchPaged } from './paged'
 import { toCents } from './money'
 import { enteredByOf } from './enteredBy'
+import { STATUS, type LiveStatus } from './status'
 
 export type MovementKind = 'income' | 'expense' | 'installment' | 'return' | 'due' | 'payment'
 
@@ -35,7 +36,7 @@ export type Movement = {
   seq: number | null
   /** expense paid out of a custody: shown, but not counted again (the installments are) */
   fromAdvance: boolean
-  status: 'pending' | 'approved' | 'rejected'
+  status: LiveStatus
 }
 
 type EntryRow = {
@@ -49,7 +50,7 @@ type EntryRow = {
   created_at: string
   notes: string | null
   advance_id: string | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: LiveStatus
   project: { name: string } | null
   contractor: { name: string } | null
   bank: { name: string } | null
@@ -180,7 +181,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
       supabase
         .from('advance_installments')
         .select(INSTALLMENT_SELECT)
-        .eq('status', 'approved')
+        .eq('status', STATUS.approved)
         .order('created_at', { ascending: false })
         .limit(n)
         .returns<InstallmentRow[]>(),
@@ -213,7 +214,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
       let q = supabase
         .from('entries')
         .select(ENTRY_SELECT)
-        .eq('status', 'approved')
+        .eq('status', STATUS.approved)
         .gte('entry_date', from)
         .lte('entry_date', to)
       if (project) q = q.eq('project_id', project)
@@ -225,7 +226,7 @@ export async function fetchMovements(scope: Scope): Promise<Movement[] | null> {
           supabase
             .from('advance_installments')
             .select(INSTALLMENT_SELECT)
-            .eq('status', 'approved')
+            .eq('status', STATUS.approved)
             .gte('paid_on', from)
             .lte('paid_on', to)
             .order('id')

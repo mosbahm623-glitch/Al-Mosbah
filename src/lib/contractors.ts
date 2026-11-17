@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { fetchPaged } from './paged'
 import { toCents } from './money'
+import { STATUS } from './status'
 
 export type LedgerTxn = {
   id: string
@@ -39,7 +40,7 @@ export async function fetchContractorLedger(contractorId: string) {
         .from('entries')
         .select('id,seq,category,item,amount,entry_date,project:projects(name,status)')
         .eq('contractor_id', contractorId)
-        .eq('status', 'approved')
+        .eq('status', STATUS.approved)
         .order('entry_date')
         .order('id')
         .range(a, b)
@@ -82,7 +83,7 @@ export async function fetchContractorSummaries(): Promise<{ data: ContractorRow[
         .from('entries')
         .select('contractor_id,amount')
         .not('contractor_id', 'is', null)
-        .eq('status', 'approved')
+        .eq('status', STATUS.approved)
         .order('id')
         .range(a, b)
         .returns<{ contractor_id: string; amount: number }[]>(),

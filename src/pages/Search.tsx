@@ -8,13 +8,14 @@ import { dateText, money, timeText } from '../lib/format'
 import { kindLabel } from '../lib/entryKind'
 import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/search'
 import { useAsync } from '../lib/useAsync'
+import { STATUS } from '../lib/status'
 
 const subscribe = (cb: () => void) => {
   window.addEventListener('hashchange', cb)
   return () => window.removeEventListener('hashchange', cb)
 }
 const readQuery = () => new URLSearchParams(window.location.hash.split('?')[1] ?? '').get('q')?.trim() ?? ''
-const STATUS = { pending: 'معلّق', approved: 'مقبول', rejected: 'مرفوض', deleted: 'محذوف' } as const
+const STATUS_LABEL = { pending: 'معلّق', approved: 'مقبول', rejected: 'مرفوض', deleted: 'محذوف' } as const
 
 export default function Search() {
   const q = useSyncExternalStore(subscribe, readQuery, () => '')
@@ -115,15 +116,15 @@ function SearchView({ q }: { q: string }) {
                       </span>
                       <span className="sub">
                         {kindLabel(e)}
-                        {e.advance_id ? ' من عهدة' : ''} · {STATUS[e.status]}
+                        {e.advance_id ? ' من عهدة' : ''} · {STATUS_LABEL[e.status]}
                       </span>
                     </td>
                     <td className="sm-hide">{e.contractor?.name}</td>
                     <td className="sm-hide">
                       <span
-                        className={`chip ${e.status === 'approved' ? 'chip-neutral' : e.status === 'pending' ? 'chip-warn' : 'chip-err'}`}
+                        className={`chip ${e.status === STATUS.approved ? 'chip-neutral' : e.status === STATUS.pending ? 'chip-warn' : 'chip-err'}`}
                       >
-                        {STATUS[e.status]}
+                        {STATUS_LABEL[e.status]}
                       </span>
                     </td>
                     <td className="num strong">{money(e.amount)}</td>

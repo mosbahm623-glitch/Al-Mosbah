@@ -8,6 +8,7 @@ import { fetchDecidedOn, type DecidedEntry as Decided } from '../../lib/entries'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
 import { NO_FILTER, filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import { STATUS } from '../../lib/status'
 
 const timeText = (iso: string) => {
   const d = new Date(iso)
@@ -32,7 +33,7 @@ export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: stri
       }),
     )
     const sum = (f: (e: Decided) => boolean) => rows.filter(f).reduce((t, e) => t + toCents(e.amount), 0) / 100
-    const ok = (e: Decided) => e.status === 'approved'
+    const ok = (e: Decided) => e.status === STATUS.approved
     return {
       rows,
       approved: rows.filter(ok).length,
@@ -81,7 +82,7 @@ export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: stri
             e.category,
             e.item,
             enteredByOf(e),
-            e.status === 'approved' ? 'موافقة' : 'رفض',
+            e.status === STATUS.approved ? 'موافقة' : 'رفض',
             e.decider?.full_name ?? null,
             e.amount,
           ]),

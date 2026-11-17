@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowLeft, ArrowRight, Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import { NAV } from './nav'
 import { useRoute } from './route'
@@ -84,12 +84,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           aria-controls="sidebar"
         >
           <Menu size={22} />
-        </button>
-        <button className="top-btn" onClick={() => window.history.back()} aria-label="رجوع للصفحة اللي قبلها">
-          <ArrowRight size={22} />
-        </button>
-        <button className="top-btn" onClick={() => window.history.forward()} aria-label="تقدّم للصفحة اللي بعدها">
-          <ArrowLeft size={22} />
         </button>
         <a className="brandmark" href="#/dashboard">
           <span className="logo" aria-hidden="true">

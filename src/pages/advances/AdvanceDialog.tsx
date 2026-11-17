@@ -3,7 +3,8 @@ import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances'
-import InstallmentBankField, { useInstallmentBanks } from '../../components/InstallmentBankField'
+import InstallmentBankField from '../../components/InstallmentBankField'
+import { useInstallmentBanks } from '../../components/useInstallmentBanks'
 
 type Props = { advance?: AdvanceSummary; onClose: () => void; onSaved: () => void }
 

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import InstallmentBankField, { useInstallmentBanks } from './InstallmentBankField'
+import InstallmentBankField from './InstallmentBankField'
+import { useInstallmentBanks } from './useInstallmentBanks'
 import { addInstallment, fetchAdvanceSummaries, type AdvanceSummary } from '../lib/advances'
 import { money, todayISO } from '../lib/format'
 import { useAsync } from '../lib/useAsync'

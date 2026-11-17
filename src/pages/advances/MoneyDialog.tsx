@@ -3,7 +3,8 @@ import { todayISO } from '../../lib/format'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances'
-import InstallmentBankField, { useInstallmentBanks } from '../../components/InstallmentBankField'
+import InstallmentBankField from '../../components/InstallmentBankField'
+import { useInstallmentBanks } from '../../components/useInstallmentBanks'
 import { useSubmitGuard } from '../../lib/useSubmitGuard'
 
 type Row = { id: string; amount: number; date: string; notes?: string | null; bankId?: string | null }

@@ -9,6 +9,7 @@ const TABLES = [
   'projects',
   'advances',
   'bank_accounts',
+  'bank_transfers',
   'contractors',
   'data_pings',
   'notifications',

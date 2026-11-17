@@ -31,7 +31,9 @@ describe('advanceBalance', () => {
 
 describe('bank balance and per-project totals', () => {
   it('adds the opening balance to income and subtracts expenses', () => {
-    expect(bankBalance({ opening_balance: 100000, income: 80000, expenses: 30000 })).toBe(150000)
+    expect(
+      bankBalance({ opening_balance: 100000, income: 80000, expenses: 30000, transfers_in: 0, transfers_out: 0 }),
+    ).toBe(150000)
   })
   it('groups movements by project and sorts by name', () => {
     const rows = [

@@ -2,18 +2,20 @@ import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import BankLogo from '../../components/BankLogo'
-import { Plus } from 'lucide-react'
+import { ArrowLeftRight, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import { bankBalance, fetchBankSummaries, type BankSummary } from '../../lib/banks'
 import { money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
 import BankDialog from './BankDialog'
+import TransferDialog from './TransferDialog'
 
 export default function Banks() {
   const { can } = useAuth()
   const canEdit = can('banks', 'edit')
   const banks = useAsync<BankSummary[]>(fetchBankSummaries)
   const [adding, setAdding] = useState(false)
+  const [transferring, setTransferring] = useState(false)
   const rows = banks.data ?? []
   const total = (f: (b: BankSummary) => number) => rows.reduce((s, b) => s + f(b), 0)
 
@@ -23,10 +25,18 @@ export default function Banks() {
         title="البنوك"
         actions={
           canEdit && (
-            <button className="btn btn-icon" onClick={() => setAdding(true)}>
-              <Plus size={18} aria-hidden="true" />
-              بنك جديد
-            </button>
+            <>
+              {rows.length > 1 && (
+                <button className="btn btn-ghost btn-icon" onClick={() => setTransferring(true)}>
+                  <ArrowLeftRight size={18} aria-hidden="true" />
+                  تحويل بين بنكين
+                </button>
+              )}
+              <button className="btn btn-icon" onClick={() => setAdding(true)}>
+                <Plus size={18} aria-hidden="true" />
+                بنك جديد
+              </button>
+            </>
           )
         }
       />
@@ -56,6 +66,7 @@ export default function Banks() {
                   <th className="sm-hide">رصيد افتتاحي</th>
                   <th>وارد</th>
                   <th>مصروف</th>
+                  <th className="sm-hide">تحويلات</th>
                   <th>الرصيد الحالي</th>
                 </tr>
               </thead>
@@ -74,6 +85,7 @@ export default function Banks() {
                       <td className="num sm-hide">{money(b.opening_balance)}</td>
                       <td className="num tone-text-ok">{money(b.income)}</td>
                       <td className="num tone-text-err">{money(b.expenses)}</td>
+                      <td className="num sm-hide">{money(b.transfers_in - b.transfers_out)}</td>
                       <td className={`num strong ${bal < 0 ? 'tone-text-err' : ''}`}>{money(bal)}</td>
                     </tr>
                   )
@@ -85,6 +97,7 @@ export default function Banks() {
       )}
 
       {adding && <BankDialog onClose={() => setAdding(false)} onSaved={banks.reload} />}
+      {transferring && <TransferDialog banks={rows} onClose={() => setTransferring(false)} onSaved={banks.reload} />}
     </div>
   )
 }

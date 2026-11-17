@@ -18,6 +18,7 @@ import ContractorStatement from './ContractorStatement'
 import BankStatement from './BankStatement'
 import PendingReport, { type PendingStatus } from './PendingReport'
 import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
+import ReportOptions from './ReportOptions'
 import SearchSelect from '../../components/SearchSelect'
 import ReportFilters from '../../components/ReportFilters'
 import { fetchCategories, type Category } from '../../lib/catalog'
@@ -326,60 +327,20 @@ export default function Reports() {
             </label>
           )}
 
-          {type === 'advance' && (
-            <fieldset className="cols">
-              <legend>اعرض في الكشف</legend>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={parts.given}
-                  onChange={(e) => setParts({ ...parts, given: e.target.checked })}
-                />
-                الوارد (الدفعات المستلمة)
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={parts.spent}
-                  onChange={(e) => setParts({ ...parts, spent: e.target.checked })}
-                />
-                المصروفات
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={parts.returned}
-                  onChange={(e) => setParts({ ...parts, returned: e.target.checked })}
-                />
-                المرتجع
-              </label>
-              {!partsOk && <p className="msg msg-error">اختار قسم واحد على الأقل.</p>}
-            </fieldset>
-          )}
-
-          {hasColumns(type) && (
-            <fieldset className="cols cols-inline">
-              <legend>أعمدة التقرير</legend>
-              <label className="check">
-                <input type="checkbox" checked={withContractor} onChange={(e) => setWithContractor(e.target.checked)} />
-                المقاول
-              </label>
-              {type !== 'advance' && (
-                <label className="check">
-                  <input type="checkbox" checked={withBank} onChange={(e) => setWithBank(e.target.checked)} />
-                  البنك
-                </label>
-              )}
-              <label className="check">
-                <input type="checkbox" checked={withEnteredBy} onChange={(e) => setWithEnteredBy(e.target.checked)} />
-                المدخل
-              </label>
-              <label className="check">
-                <input type="checkbox" checked={withNotes} onChange={(e) => setWithNotes(e.target.checked)} />
-                الملاحظات
-              </label>
-            </fieldset>
-          )}
+          <ReportOptions
+            type={type}
+            parts={parts}
+            setParts={setParts}
+            partsOk={partsOk}
+            withContractor={withContractor}
+            setWithContractor={setWithContractor}
+            withBank={withBank}
+            setWithBank={setWithBank}
+            withEnteredBy={withEnteredBy}
+            setWithEnteredBy={setWithEnteredBy}
+            withNotes={withNotes}
+            setWithNotes={setWithNotes}
+          />
 
           <button
             className="btn btn-primary"

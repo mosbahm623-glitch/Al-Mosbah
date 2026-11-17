@@ -24,6 +24,8 @@ type AuthState = {
   loading: boolean
   session: Session | null
   profile: Profile | null
+  /** loading the account data failed (network, server): not the same as "account not activated" */
+  loadFailed: boolean
   /** only the admin approves entries (and restores deleted ones) */
   isAdmin: boolean
   /** the owner only: has the quick entry page */
@@ -71,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [permissions, setPermissions] = useState<Permissions>({})
 
   // the user whose profile is loaded (or loading): stops the double fetch at start-up and on token refreshes
@@ -87,16 +90,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       writeCache(null)
       return false
     }
-    const [p, r] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select(
-          'id, full_name, role, is_active, can_edit_entries, can_delete_entries, can_edit_approved, must_change_password',
-        )
-        .eq('id', userId)
-        .maybeSingle(),
-      supabase.from('user_permissions').select('module,level').eq('user_id', userId),
-    ])
+    const fetchBoth = () =>
+      Promise.all([
+        supabase
+          .from('profiles')
+          .select(
+            'id, full_name, role, is_active, can_edit_entries, can_delete_entries, can_edit_approved, must_change_password',
+          )
+          .eq('id', userId)
+          .maybeSingle(),
+        supabase.from('user_permissions').select('module,level').eq('user_id', userId),
+      ])
+    let [p, r] = await fetchBoth()
+    if (p.error || r.error) {
+      // a failed request is not "account not activated": try once more, then keep what we already have
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      ;[p, r] = await fetchBoth()
+    }
+    if (p.error || r.error) {
+      setLoadFailed(true)
+      loadedFor.current = null
+      return false
+    }
+    setLoadFailed(false)
     const prof = (p.data as Profile | null) ?? null
     const perms = Object.fromEntries((r.data ?? []).map((x) => [x.module, x.level])) as Permissions
     const signature = JSON.stringify([prof, perms])
@@ -201,6 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       session,
       profile,
+      loadFailed,
       isAdmin: profile?.role === 'admin',
       isOwner: profile?.role === 'owner',
       isStaff: profile?.role === 'admin' || profile?.role === 'owner',
@@ -232,7 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       refreshProfile: async () => void (await loadProfile(session?.user.id ?? null)),
     }),
-    [loading, session, profile, permissions, loadProfile],
+    [loading, session, profile, loadFailed, permissions, loadProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

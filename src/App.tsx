@@ -82,7 +82,7 @@ function Page() {
 }
 
 function Gate() {
-  const { loading, session, profile } = useAuth()
+  const { loading, session, profile, loadFailed, refreshProfile } = useAuth()
   if (loading) {
     return (
       <main className="center">
@@ -91,6 +91,19 @@ function Gate() {
     )
   }
   if (!session) return <AuthScreen />
+  if (!profile && loadFailed) {
+    return (
+      <main className="center">
+        <div className="card auth">
+          <h1>Legacy ERP</h1>
+          <p className="muted">مقدرتش أحمّل بيانات حسابك. اتأكد من النت وجرّب تاني.</p>
+          <button className="btn" onClick={() => void refreshProfile()}>
+            حاول تاني
+          </button>
+        </div>
+      </main>
+    )
+  }
   if (!profile?.is_active) return <Pending />
   if (profile.must_change_password) return <ChangePassword />
   return (

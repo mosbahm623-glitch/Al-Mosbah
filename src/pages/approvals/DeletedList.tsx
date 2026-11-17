@@ -3,6 +3,7 @@ import { RotateCcw } from 'lucide-react'
 import { fetchDeleted, restoreEntry, type DeletedEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money } from '../../lib/format'
+import { entryTitle, isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
 import { useAsync } from '../../lib/useAsync'
 
 const STATUS: Record<string, string> = { approved: 'معتمد', pending: 'مستنّي', rejected: 'مرفوض' }
@@ -37,15 +38,15 @@ export default function DeletedList() {
             <article className="appr-card" key={e.id}>
               <div className="appr-main">
                 <div className="appr-tags">
-                  <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
+                  <span className={`chip ${isMoneyIn(e) ? 'chip-ok' : 'chip-err'}`}>
                     <span className="dot" />
-                    {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                    {kindLabel(e)}
                   </span>
                   <span className="muted small">
                     قيد #{e.seq} · {dateText(e.entry_date)}
                   </span>
                 </div>
-                <h2 className="appr-title">{e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}</h2>
+                <h2 className="appr-title">{entryTitle(e)}</h2>
                 <p className="appr-project">{e.project}</p>
                 <dl className="appr-meta">
                   {e.contractor && (
@@ -83,9 +84,9 @@ export default function DeletedList() {
                 </dl>
               </div>
               <div className="appr-side">
-                <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-                  {e.kind === 'income' ? '+' : '−'}
-                  {money(e.amount)}
+                <div className={`appr-amount ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
+                  {signedAmount(e).sign}
+                  {money(signedAmount(e).value)}
                   <small>ج.م</small>
                 </div>
                 <div className="appr-actions">

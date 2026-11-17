@@ -12,7 +12,8 @@ export type SaveInput = {
   entry?: Entry
   advanceId?: string
   fromAdvance: boolean
-  kind: 'income' | 'expense'
+  /** «refund» is saved as an expense with a negative amount */
+  kind: 'income' | 'expense' | 'refund'
   category?: Category
   itemName: string
   incomeLabel: string
@@ -74,7 +75,7 @@ const findOrCreate = async (list: Named[] | undefined, name: string, create: (n:
  */
 export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   const { entry, advanceId, kind, category, newId } = input
-  const isExpense = kind === 'expense'
+  const isExpense = kind !== 'income'
   const value = Number(input.amount)
   if (isExpense && !category) return fail('category')
   if (isExpense && !input.itemName.trim()) return fail('item')
@@ -92,12 +93,12 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   if (!input.fromAdvance && !typedBank) return fail('bank-required')
   const baseRow: EntryInput = {
     project_id: input.targetProject,
-    kind,
+    kind: isExpense ? 'expense' : 'income',
     category: isExpense ? category!.name : input.incomeLabel.trim(),
     item: isExpense ? input.itemName.trim() : null,
     contractor_id: null,
     bank_id: null,
-    amount: value,
+    amount: kind === 'refund' ? -value : value,
     entry_date: input.date,
     notes: input.notes.trim() || null,
   }

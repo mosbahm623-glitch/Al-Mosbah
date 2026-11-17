@@ -5,6 +5,7 @@ import InvoiceLink from '../../components/InvoiceLink'
 import { invoiceCount } from '../../lib/attachments'
 import type { PendingEntry } from '../../lib/approvals'
 import { dateText, money, timeText } from '../../lib/format'
+import { entryTitle, isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
 import { enteredByOf } from '../../lib/enteredBy'
 
 type Props = {
@@ -47,9 +48,9 @@ export default function EntryApprovalCard({
       </label>
       <div className="appr-main">
         <div className="appr-tags">
-          <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>
+          <span className={`chip ${isMoneyIn(e) ? 'chip-ok' : 'chip-err'}`}>
             <span className="dot" />
-            {e.kind === 'income' ? 'وارد' : 'مصروف'}
+            {kindLabel(e)}
           </span>
           {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
           <InvoiceLink entry={e} />
@@ -58,7 +59,7 @@ export default function EntryApprovalCard({
           </span>
         </div>
         <h2 className="appr-title">
-          {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
+          {entryTitle(e)}
           <span className="appr-project">{e.project?.name}</span>
         </h2>
         <div className="appr-line">
@@ -105,9 +106,9 @@ export default function EntryApprovalCard({
         )}
       </div>
       <div className="appr-side">
-        <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-          {e.kind === 'income' ? '+' : '−'}
-          {money(e.amount)}
+        <div className={`appr-amount ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
+          {signedAmount(e).sign}
+          {money(signedAmount(e).value)}
           <small>ج.م</small>
         </div>
         <div className="appr-actions">

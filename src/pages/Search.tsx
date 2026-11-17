@@ -5,6 +5,7 @@ import InvoiceLink from '../components/InvoiceLink'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
 import { dateText, money, timeText } from '../lib/format'
+import { kindLabel } from '../lib/entryKind'
 import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/search'
 import { useAsync } from '../lib/useAsync'
 
@@ -101,7 +102,7 @@ function SearchView({ q }: { q: string }) {
                       <a href={`#/projects/${e.project_id}`}>{e.project?.name}</a>
                     </td>
                     <td className="sm-hide">
-                      {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                      {kindLabel(e)}
                       {e.advance_id && <span className="muted small"> من عهدة</span>}
                     </td>
                     <td className="sm-hide">{e.category}</td>
@@ -113,7 +114,7 @@ function SearchView({ q }: { q: string }) {
                         {[e.category, e.project?.name, e.contractor?.name].filter(Boolean).join(' · ')}
                       </span>
                       <span className="sub">
-                        {e.kind === 'income' ? 'وارد' : 'مصروف'}
+                        {kindLabel(e)}
                         {e.advance_id ? ' من عهدة' : ''} · {STATUS[e.status]}
                       </span>
                     </td>

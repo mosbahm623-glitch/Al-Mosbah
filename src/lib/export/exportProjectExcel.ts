@@ -1,5 +1,6 @@
 import type { Entry, ProjectSummary } from '../projects'
 import { TYPE_LABEL, todayISO, todayText } from '../format'
+import { isMoneyIn, kindLabel } from '../entryKind'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 import { enteredByOf } from '../enteredBy'
 
@@ -83,7 +84,7 @@ export async function exportProjectExcel({
     const r = all.addRow([
       e.seq,
       toDate(e.entry_date),
-      e.kind === 'income' ? 'وارد' : 'مصروف',
+      kindLabel(e),
       e.category,
       e.item ?? '',
       ...(withContractor ? [e.contractor?.name ?? ''] : []),
@@ -94,7 +95,7 @@ export async function exportProjectExcel({
     ])
     r.getCell(2).numFmt = 'dd-mm-yyyy'
     r.getCell(amountCol).numFmt = MONEY
-    r.getCell(amountCol).font = { color: { argb: e.kind === 'income' ? 'FF2E7D57' : 'FFA8342A' }, bold: true }
+    r.getCell(amountCol).font = { color: { argb: isMoneyIn(e) ? 'FF2E7D57' : 'FFA8342A' }, bold: true }
     r.eachCell((c) => {
       c.border = border
       c.alignment = { vertical: 'middle', wrapText: true, horizontal: Number(c.col) === amountCol ? 'left' : undefined }

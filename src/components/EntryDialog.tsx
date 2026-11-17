@@ -13,10 +13,12 @@ import { saveEntry, type SaveError } from '../lib/entrySave'
 import { useAsync } from '../lib/useAsync'
 import { useSubmitGuard } from '../lib/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/lookups'
+import { isRefund } from '../lib/entryKind'
 import type { Entry, ProjectSummary } from '../lib/projects'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },
+  { value: 'refund', label: 'مرتجع' },
   { value: 'income', label: 'وارد' },
 ] as const
 
@@ -87,15 +89,17 @@ export default function EntryDialog({
   const [editReason, setEditReason] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [savedId, setSavedId] = useState<string | null>(null)
-  const [kind, setKind] = useState<'income' | 'expense'>(entry?.kind ?? 'expense')
-  const [categoryName, setCategoryName] = useState(entry?.kind === 'expense' ? entry.category : '')
+  const [kind, setKind] = useState<'income' | 'expense' | 'refund'>(
+    entry ? (isRefund(entry) ? 'refund' : entry.kind) : 'expense',
+  )
+  const [categoryName, setCategoryName] = useState(entry && entry.kind === 'expense' ? entry.category : '')
   const [itemName, setItemName] = useState(entry?.item ?? '')
   const [contractorName, setContractorName] = useState(entry?.contractor?.name ?? '')
   const [noContractor, setNoContractor] = useState(false)
   const [noInvoice, setNoInvoice] = useState(false)
   const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
   const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
-  const [amount, setAmount] = useState(entry ? String(entry.amount) : '')
+  const [amount, setAmount] = useState(entry ? String(Math.abs(entry.amount)) : '')
   const [date, setDate] = useState(() => entry?.entry_date ?? todayISO())
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [error, setError] = useState<string | null>(null)
@@ -237,7 +241,7 @@ export default function EntryDialog({
           </div>
         )}
 
-        {kind === 'expense' ? (
+        {kind !== 'income' ? (
           <>
             <SearchSelect
               label="البند"
@@ -306,7 +310,13 @@ export default function EntryDialog({
               onChange={setBankName}
               banks={isOwner ? ownerBanks : (banks.data ?? [])}
               allowNew={!isOwner}
-              placeholder={isOwner ? 'اختار البنك' : kind === 'income' ? 'اتودّع في أنهي بنك' : 'مدفوع من أنهي بنك'}
+              placeholder={
+                isOwner
+                  ? 'اختار البنك'
+                  : kind === 'income' || kind === 'refund'
+                    ? 'اتودّع في أنهي بنك'
+                    : 'مدفوع من أنهي بنك'
+              }
             />
           </div>
         )}

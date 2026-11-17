@@ -26,6 +26,7 @@ import { useAsync } from '../../lib/useAsync'
 import { useSubmitGuard } from '../../lib/useSubmitGuard'
 import EntryDialog from '../../components/EntryDialog'
 import { enteredByOf } from '../../lib/enteredBy'
+import { type DecisionStatus } from '../../lib/status'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },
@@ -87,11 +88,11 @@ export default function Approvals() {
       return next
     })
 
-  function act(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
+  function act(items: PendingEntry[], status: DecisionStatus, why?: string) {
     return guard(() => actNow(items, status, why))
   }
 
-  async function actNow(items: PendingEntry[], status: 'approved' | 'rejected', why?: string) {
+  async function actNow(items: PendingEntry[], status: DecisionStatus, why?: string) {
     setBusy(true)
     setError(null)
     const r = await decide(

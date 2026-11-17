@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { sumMoney } from './money'
+import { STATUS } from './status'
 
 export type MonthRow = { month: string; income: number; expenses: number }
 type Line = { kind: 'income' | 'expense'; amount: number; entry_date: string }
@@ -31,7 +32,7 @@ export async function fetchMonthly(today: string, count = 6): Promise<{ data: Mo
   const { data, error } = await supabase
     .from('entries')
     .select('kind,amount,entry_date')
-    .eq('status', 'approved')
+    .eq('status', STATUS.approved)
     .gte('entry_date', `${months[0]}-01`)
     .limit(10000)
     .returns<Line[]>()

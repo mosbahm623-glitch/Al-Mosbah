@@ -14,6 +14,7 @@ import {
   NO_EXPENSE_FILTER,
   type ExpenseFilter,
 } from '../../lib/advanceFilter'
+import { STATUS } from '../../lib/status'
 
 type Props = {
   entries: Entry[] | null | undefined
@@ -151,7 +152,7 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
                   <td className="muted sm-hide">{e.notes}</td>
                   <td className="muted sm-hide">{enteredByOf(e)}</td>
                   <td className="num strong tone-text-err">−{money(e.amount)}</td>
-                  <td className="sm-only">{e.status !== 'deleted' && <StatusChip status={e.status} />}</td>
+                  <td className="sm-only">{e.status !== STATUS.deleted && <StatusChip status={e.status} />}</td>
                   {canEdit && (
                     <td>
                       {canTouch(e.status) && (

@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import { fetchPaged } from './paged'
 import type { ProjectType } from './format'
+import { type EntryStatus } from './status'
 
 type BudgetRow = { id: string; name: string; budget: number; spent: number; over: boolean }
 
@@ -54,7 +55,7 @@ export type Entry = {
   /** المدخل as typed in for entries copied from the old system (no profile) */
   entered_by_name?: string | null
   /** pending entries (made by non-admins) are listed but not counted until an admin approves them */
-  status: 'pending' | 'approved' | 'rejected' | 'deleted'
+  status: EntryStatus
   /** how many invoice photos are attached (embedded count) */
   invoices?: { count: number }[]
   /** why the entry was last edited (kept for good in the entry history) */

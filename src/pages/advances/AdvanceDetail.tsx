@@ -17,6 +17,7 @@ import ReturnsPanel from './ReturnsPanel'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
 import MoneyDialog from './MoneyDialog'
+import { STATUS } from '../../lib/status'
 
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
 
@@ -62,9 +63,9 @@ export default function AdvanceDetail({ id }: { id: string }) {
 
   const balance = advanceBalance(advance)
   // a rejected expense goes back to its holder, so it waits with the pending ones until he fixes or deletes it
-  const approved = (entries ?? []).filter((e) => e.status === 'approved')
-  const waiting = (entries ?? []).filter((e) => e.status === 'pending' || e.status === 'rejected')
-  const removed = (entries ?? []).filter((e) => e.status === 'deleted')
+  const approved = (entries ?? []).filter((e) => e.status === STATUS.approved)
+  const waiting = (entries ?? []).filter((e) => e.status === STATUS.pending || e.status === STATUS.rejected)
+  const removed = (entries ?? []).filter((e) => e.status === STATUS.deleted)
   const current = tab === 'removed' && removed.length === 0 ? 'approved' : tab
 
   async function toggleStatus() {

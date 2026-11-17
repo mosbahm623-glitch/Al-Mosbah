@@ -15,6 +15,7 @@ import { useSubmitGuard } from '../lib/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/lookups'
 import { isRefund } from '../lib/entryKind'
 import type { Entry, ProjectSummary } from '../lib/projects'
+import { STATUS } from '../lib/status'
 
 const KINDS = [
   { value: 'expense', label: 'مصروف' },
@@ -69,7 +70,7 @@ export default function EntryDialog({
   const { isAdmin, isStaff, isOwner, profile, canEditOwn, canDeleteOwn } = useAuth()
   // an existing entry: the admin may have switched editing and/or deleting off for this user
   const locked = Boolean(entry) && !canEditOwn
-  const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== 'approved'))
+  const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== STATUS.approved))
   const categories = useAsync<Category[]>(fetchCategories)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<BankChoice[]>(fetchBankNames)
@@ -350,7 +351,7 @@ export default function EntryDialog({
           entryId={entry?.id ?? savedId ?? undefined}
           files={files}
           onFiles={setFiles}
-          canRemove={isStaff || entry?.status !== 'approved'}
+          canRemove={isStaff || entry?.status !== STATUS.approved}
           readOnly={locked}
           required={strict && !noInvoice}
           noInvoice={strict ? noInvoice : undefined}
@@ -365,7 +366,7 @@ export default function EntryDialog({
         />
       </fieldset>
       {locked && <p className="msg span-2 muted">مفيش عندك صلاحية تعدّل القيود.</p>}
-      {entry?.status === 'rejected' && entry.reject_reason && (
+      {entry?.status === STATUS.rejected && entry.reject_reason && (
         <p className="msg msg-error span-2">اترفض القيد ده. السبب: {entry.reject_reason}</p>
       )}
       {isStaff && entry && <EntryHistory entryId={entry.id} />}
@@ -394,7 +395,7 @@ export default function EntryDialog({
             {saving
               ? 'جارٍ الحفظ...'
               : entry
-                ? isAdmin || entry.status === 'approved'
+                ? isAdmin || entry.status === STATUS.approved
                   ? 'حفظ التعديل'
                   : 'حفظ وإعادة إرسال'
                 : 'حفظ القيد'}

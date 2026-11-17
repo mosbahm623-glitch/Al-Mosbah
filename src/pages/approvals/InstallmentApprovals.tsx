@@ -6,6 +6,7 @@ import { decideInstallments, type PendingInstallment } from '../../lib/approvals
 import { notifyApprovalsChanged } from '../../lib/events'
 import { dateText, money, timeText } from '../../lib/format'
 import { useSubmitGuard } from '../../lib/useSubmitGuard'
+import { STATUS, type DecisionStatus } from '../../lib/status'
 
 type Props = { rows: PendingInstallment[]; onChanged: () => void }
 
@@ -19,11 +20,11 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
   // the payment being edited before a decision
   const [editing, setEditing] = useState<PendingInstallment | null>(null)
 
-  function act(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
+  function act(item: PendingInstallment, status: DecisionStatus, why?: string) {
     return guard(() => actNow(item, status, why))
   }
 
-  async function actNow(item: PendingInstallment, status: 'approved' | 'rejected', why?: string) {
+  async function actNow(item: PendingInstallment, status: DecisionStatus, why?: string) {
     setBusy(true)
     setError(null)
     const r = await decideInstallments([{ id: item.id, status: item.status }], status, why)
@@ -47,7 +48,7 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
             <div className="appr-main">
               <div className="appr-tags">
                 <span className="chip chip-neutral">دفعة عهدة</span>
-                {p.status === 'rejected' && <StatusChip status="rejected" kind="payment" />}
+                {p.status === STATUS.rejected && <StatusChip status="rejected" kind="payment" />}
                 <span className="muted small">
                   {dateText(p.paid_on)} · {timeText(p.created_at)}
                 </span>
@@ -92,7 +93,7 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
                   <Pencil size={17} aria-hidden="true" />
                   تعديل
                 </button>
-                {p.status === 'pending' && (
+                {p.status === STATUS.pending && (
                   <button
                     className="btn btn-ghost btn-icon"
                     disabled={busy}

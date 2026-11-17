@@ -9,8 +9,9 @@ import { entryTitle, isMoneyIn, signedAmount } from '../lib/entryKind'
 import { fetchSummaries, pickableProjects, type ProjectSummary } from '../lib/projects'
 import { fetchMyEntries, type MyEntry } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
+import { STATUS } from '../lib/status'
 
-const STATUS: Record<string, string> = {
+const STATUS_LABEL: Record<string, string> = {
   pending: 'مستنّي موافقة',
   approved: 'معتمد',
   rejected: 'مرفوض',
@@ -107,16 +108,16 @@ export default function QuickEntry() {
                       {entryTitle(e)}
                       {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
-                        {[e.project?.name, STATUS[e.status] ?? e.status].filter(Boolean).join(' · ')}
+                        {[e.project?.name, STATUS_LABEL[e.status] ?? e.status].filter(Boolean).join(' · ')}
                       </span>
                     </td>
                     <td className={`num strong ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
                       {signedAmount(e).sign}
                       {money(signedAmount(e).value)}
                     </td>
-                    <td className="muted sm-hide">{STATUS[e.status] ?? e.status}</td>
+                    <td className="muted sm-hide">{STATUS_LABEL[e.status] ?? e.status}</td>
                     <td>
-                      {e.status === 'pending' && (
+                      {e.status === STATUS.pending && (
                         <button
                           type="button"
                           className="icon-btn"

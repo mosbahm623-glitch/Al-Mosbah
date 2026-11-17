@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { ENTRY_COLUMNS, type Entry } from './projects'
+import { type LiveStatus } from './status'
 
 export type AdvanceSummary = {
   id: string
@@ -20,7 +21,7 @@ export type Installment = {
   /** the bank it was paid from (older payments have none) */
   bank_id: string | null
   /** a payment recorded by the owner waits for the admin; only approved ones count in the totals */
-  status: 'pending' | 'approved' | 'rejected'
+  status: LiveStatus
   reject_reason: string | null
 }
 export type AdvanceReturn = { id: string; amount: number; returned_on: string; notes: string | null }

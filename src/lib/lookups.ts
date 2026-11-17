@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { fetchPaged } from './paged'
+import { STATUS } from './status'
 
 export type Named = { id: string; name: string }
 
@@ -39,7 +40,7 @@ export async function fetchProjectContractors(): Promise<Map<string, Set<string>
         .from('entries')
         .select('contractor:contractors(name),project:projects(name)')
         .not('contractor_id', 'is', null)
-        .eq('status', 'approved')
+        .eq('status', STATUS.approved)
         .order('id')
         .range(a, b)
         .returns<Pair[]>(),

@@ -12,6 +12,7 @@ import { isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
 import { usePages } from '../../lib/usePages'
+import { STATUS } from '../../lib/status'
 
 const KINDS = [
   { value: 'all', label: 'الكل' },
@@ -40,7 +41,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   const chips = useMemo(() => {
     const totals = new Map<string, number>()
     for (const e of entries)
-      if (e.kind === 'expense' && e.status === 'approved')
+      if (e.kind === 'expense' && e.status === STATUS.approved)
         totals.set(e.category, (totals.get(e.category) ?? 0) + e.amount)
     return [...totals.entries()].sort((a, b) => b[1] - a[1])
   }, [entries])
@@ -129,7 +130,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
               </thead>
               <tbody>
                 {pager.items.map((e) => (
-                  <tr key={e.id} className={e.status === 'deleted' ? 'row-deleted' : undefined}>
+                  <tr key={e.id} className={e.status === STATUS.deleted ? 'row-deleted' : undefined}>
                     <td className="strong num">#{e.seq}</td>
                     <td className="num muted">
                       <span className="sm-hide">{dateText(e.entry_date)}</span>
@@ -153,7 +154,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                         </>
                       )}
                       <EntryFlag status={e.status} reason={e.reject_reason} />
-                      {e.status === 'deleted' && (
+                      {e.status === STATUS.deleted && (
                         <>
                           {' '}
                           <StatusChip status="deleted" />
@@ -174,10 +175,10 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       {signedAmount(e).sign}
                       {money(signedAmount(e).value)}
                     </td>
-                    <td className="sm-only">{e.status !== 'deleted' && <StatusChip status={e.status} />}</td>
+                    <td className="sm-only">{e.status !== STATUS.deleted && <StatusChip status={e.status} />}</td>
                     {canEdit && (
                       <td>
-                        {e.status === 'deleted' ? (
+                        {e.status === STATUS.deleted ? (
                           isAdmin && (
                             <button
                               type="button"
@@ -201,7 +202,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                                 <Pencil size={17} />
                               </button>
                             )}
-                            {isAdmin && e.status === 'approved' && (
+                            {isAdmin && e.status === STATUS.approved && (
                               <button
                                 type="button"
                                 className="icon-btn"

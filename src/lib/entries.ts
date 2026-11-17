@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { ProjectType } from './format'
 import { fetchPaged } from './paged'
 import { ENTRY_COLUMNS, type Entry } from './projects'
+import { STATUS, type DecisionStatus } from './status'
 
 /** What an entry form saves, for a new entry and for an edit alike. */
 type Snapshot = Record<string, unknown> | null
@@ -81,7 +82,7 @@ export type DecidedEntry = {
   item: string | null
   amount: number
   entry_date: string
-  status: 'approved' | 'rejected'
+  status: DecisionStatus
   decided_at: string
   project: { name: string } | null
   contractor: { name: string } | null
@@ -102,7 +103,7 @@ export function fetchDecidedOn(day: string) {
     supabase
       .from('entries')
       .select(DECIDED_COLUMNS)
-      .in('status', ['approved', 'rejected'])
+      .in('status', [STATUS.approved, STATUS.rejected])
       .gte('decided_at', from.toISOString())
       .lt('decided_at', to.toISOString())
       .order('decided_at')
@@ -128,7 +129,7 @@ export const fetchApprovedExpenses = (from: string, to: string) =>
       .from('entries')
       .select('id,category,amount,project:projects(type,name),contractor:contractors(name),bank:bank_accounts(name)')
       .eq('kind', 'expense')
-      .eq('status', 'approved')
+      .eq('status', STATUS.approved)
     if (from) q = q.gte('entry_date', from)
     if (to) q = q.lte('entry_date', to)
     return q.order('id').range(a, b).returns<ExpenseRow[]>()

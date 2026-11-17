@@ -1,4 +1,5 @@
-type Status = 'pending' | 'approved' | 'rejected' | 'deleted'
+import { STATUS, type EntryStatus } from '../lib/status'
+type Status = EntryStatus
 
 // the same status reads the same everywhere; a custody payment is feminine in Arabic (دفعة)
 const LABELS = {
@@ -16,7 +17,7 @@ type Props = {
 }
 
 export default function StatusChip({ status, kind = 'entry', long = false, className = '' }: Props) {
-  const label = long && status === 'pending' ? 'قيد الموافقة' : LABELS[kind][status]
+  const label = long && status === STATUS.pending ? 'قيد الموافقة' : LABELS[kind][status]
   return <span className={`chip chip-${TONE[status]}${className ? ` ${className}` : ''}`}>{label}</span>
 }
 
@@ -31,14 +32,14 @@ export function RejectReason({ reason, prefix = 'سبب الرفض' }: { reason:
 
 /** The waiting / rejected mark beside an entry's name on wide screens (phones get the status column instead). */
 export function EntryFlag({ status, reason }: { status: string; reason?: string | null }) {
-  if (status === 'pending')
+  if (status === STATUS.pending)
     return (
       <>
         {' '}
         <StatusChip status="pending" long className="sm-hide" />
       </>
     )
-  if (status === 'rejected')
+  if (status === STATUS.rejected)
     return (
       <>
         {' '}

@@ -3,25 +3,20 @@ import { useAuth } from '../auth/AuthProvider'
 import { todayISO } from '../lib/format'
 import Dialog from './Dialog'
 import Segmented from './Segmented'
-import SearchSelect from './SearchSelect'
+import EntryExpenseFields from './EntryExpenseFields'
 import EntryHistory from './EntryHistory'
 import { createCategory as saveCategory, fetchCategories, type Category } from '../lib/catalog'
 import { deleteEntry } from '../lib/entries'
 import InvoiceField from './InvoiceField'
 import BankPicker from './BankPicker'
-import { saveEntry, type SaveError } from '../lib/entrySave'
+import { saveEntry } from '../lib/entrySave'
+import { CHANGED, KINDS, SAVE_ERRORS } from './entryDialogText'
 import { useAsync } from '../lib/useAsync'
 import { useSubmitGuard } from '../lib/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/lookups'
 import { isRefund } from '../lib/entryKind'
 import type { Entry, ProjectSummary } from '../lib/projects'
 import { STATUS } from '../lib/status'
-
-const KINDS = [
-  { value: 'expense', label: 'مصروف' },
-  { value: 'refund', label: 'مرتجع' },
-  { value: 'income', label: 'وارد' },
-] as const
 
 type Props = {
   projectId: string
@@ -35,27 +30,6 @@ type Props = {
   onClose: () => void
   onSaved: () => void
 }
-
-const SAVE_ERRORS: Record<Exclude<SaveError, 'changed'>, string> = {
-  category: 'اختار البند',
-  item: 'اكتب البيان',
-  income: 'اكتب بيان الوارد',
-  amount: 'المبلغ لازم يكون أكبر من صفر',
-  project: 'اختار المشروع',
-  contractor: 'ما قدرناش نحفظ اسم المقاول، جرّب تاني',
-  'contractor-choice': 'اختار المقاول، أو علّم على «بدون مقاول»',
-  photo: 'ضيف صورة الفاتورة (أو سكرين شوت التحويل)، أو علّم على «بدون فاتورة»',
-  bank: 'ما قدرناش نحفظ اسم البنك، جرّب تاني',
-  'bank-required': 'اختار البنك',
-  'bank-denied': 'البنك ده مش من البنوك المسموحة ليك. اختار من القايمة أو كلّم الأدمن',
-  reason: 'اكتب سبب التعديل',
-  'offline-edit': 'مفيش نت دلوقتي. التعديل محتاج اتصال، جرّب لما النت يرجع',
-  failed: 'القيد ما اتحفظش، جرّب تاني',
-  device: 'ما قدرناش نحفظ القيد على الجهاز',
-}
-
-const CHANGED =
-  'القيد ده اتغيّر (أو اتمسح) من حد تاني من وقت ما فتحته. اقفل النافذة وافتحه تاني عشان تشوف آخر نسخة وبعدين عدّل.'
 
 export default function EntryDialog({
   projectId,
@@ -243,55 +217,24 @@ export default function EntryDialog({
         )}
 
         {kind !== 'income' ? (
-          <>
-            <SearchSelect
-              label="البند"
-              value={categoryName}
-              options={categoryOptions}
-              placeholder="دوّر أو اختار البند"
-              onChange={(v) => {
-                setCategoryName(v)
-                setItemName('')
-              }}
-              onCreate={createCategory}
-            />
-            <SearchSelect
-              label="اسم المقاول"
-              value={noContractor ? '' : contractorName}
-              options={contractorOptions}
-              placeholder={strict ? 'دوّر أو اختار المقاول' : 'دوّر أو اكتب اسم المقاول (اختياري)'}
-              freeText
-              disabled={noContractor}
-              onChange={setContractorName}
-              labelExtra={
-                strict && (
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={noContractor}
-                      onChange={(e) => {
-                        setNoContractor(e.target.checked)
-                        if (e.target.checked) setContractorName('')
-                      }}
-                    />
-                    بدون مقاول
-                  </label>
-                )
-              }
-            />
-            <div className="span-2">
-              <SearchSelect
-                label="البيان"
-                value={itemName}
-                options={category?.expense_items.map((i) => i.name) ?? []}
-                placeholder={categoryName ? 'اكتب البيان' : 'اختار البند الأول'}
-                disabled={!categoryName}
-                freeText
-                multiline
-                onChange={setItemName}
-              />
-            </div>
-          </>
+          <EntryExpenseFields
+            category={category}
+            categoryName={categoryName}
+            categoryOptions={categoryOptions}
+            onCategory={(v) => {
+              setCategoryName(v)
+              setItemName('')
+            }}
+            onCreateCategory={createCategory}
+            contractorName={contractorName}
+            contractorOptions={contractorOptions}
+            noContractor={noContractor}
+            onContractor={setContractorName}
+            onNoContractor={setNoContractor}
+            itemName={itemName}
+            onItem={setItemName}
+            strict={strict}
+          />
         ) : (
           <label className="field span-2">
             بيان الوارد

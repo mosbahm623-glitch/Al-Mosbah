@@ -48,6 +48,12 @@ jobs:
       - name: Typecheck and build
         run: npm run build
 
+      - name: Install the test browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Screen tests
+        run: npm run test:e2e
+
   deploy:
     # ينشر الموقع تلقائيًا على gh-pages بعد كل دمج في main، وبس لو كل الفحوصات نجحت
     needs: check

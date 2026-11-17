@@ -93,4 +93,4 @@ if (route === 'suppliers') return <Suppliers />
 npm run quality
 ```
 
-لازم يخضر. بعد الدمج: طبّق الـ migration على Supabase بالترتيب، وانشر الموقع (`gh-pages`) لما تراجع الشاشة.
+لازم يخضر. بعد الدمج: طبّق الـ migration على Supabase بالترتيب، والموقع بيتنشر لوحده على `gh-pages` بعد نجاح الـ CI.

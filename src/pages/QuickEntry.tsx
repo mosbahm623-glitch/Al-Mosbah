@@ -4,8 +4,9 @@ import AdvancePaymentForm from '../components/AdvancePaymentForm'
 import EntryDialog from '../components/EntryDialog'
 import { Pencil } from 'lucide-react'
 import PageHead from '../components/PageHead'
-import { dateText, money } from '../lib/format'
-import { entryTitle, isMoneyIn, signedAmount } from '../lib/entryKind'
+import { dateText } from '../lib/format'
+import { amountTone, entryTitle } from '../lib/entryKind'
+import { AmountText } from '../components/EntryParts'
 import { fetchSummaries, pickableProjects, type ProjectSummary } from '../lib/projects'
 import { fetchMyEntries, type MyEntry } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
@@ -111,9 +112,8 @@ export default function QuickEntry() {
                         {[e.project?.name, STATUS_LABEL[e.status] ?? e.status].filter(Boolean).join(' · ')}
                       </span>
                     </td>
-                    <td className={`num strong ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
-                      {signedAmount(e).sign}
-                      {money(signedAmount(e).value)}
+                    <td className={`num strong ${amountTone(e)}`}>
+                      <AmountText entry={e} />
                     </td>
                     <td className="muted sm-hide">{STATUS_LABEL[e.status] ?? e.status}</td>
                     <td>

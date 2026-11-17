@@ -4,8 +4,9 @@ import InvoiceField from '../../components/InvoiceField'
 import InvoiceLink from '../../components/InvoiceLink'
 import { invoiceCount } from '../../lib/attachments'
 import type { PendingEntry } from '../../lib/approvals'
-import { dateText, money, timeText } from '../../lib/format'
-import { entryTitle, isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
+import { dateText, timeText } from '../../lib/format'
+import { amountTone, entryTitle } from '../../lib/entryKind'
+import { AmountText, KindChip } from '../../components/EntryParts'
 import { enteredByOf } from '../../lib/enteredBy'
 
 type Props = {
@@ -48,10 +49,7 @@ export default function EntryApprovalCard({
       </label>
       <div className="appr-main">
         <div className="appr-tags">
-          <span className={`chip ${isMoneyIn(e) ? 'chip-ok' : 'chip-err'}`}>
-            <span className="dot" />
-            {kindLabel(e)}
-          </span>
+          <KindChip entry={e} />
           {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
           <InvoiceLink entry={e} />
           <span className="muted small">
@@ -106,9 +104,8 @@ export default function EntryApprovalCard({
         )}
       </div>
       <div className="appr-side">
-        <div className={`appr-amount ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
-          {signedAmount(e).sign}
-          {money(signedAmount(e).value)}
+        <div className={`appr-amount ${amountTone(e)}`}>
+          <AmountText entry={e} />
           <small>ج.م</small>
         </div>
         <div className="appr-actions">

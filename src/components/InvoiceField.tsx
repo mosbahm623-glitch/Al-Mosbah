@@ -10,6 +10,7 @@ import {
   type Attachment,
 } from '../lib/attachments'
 import { useAsync } from '../lib/useAsync'
+import Dialog from './Dialog'
 
 type Props = {
   /** the saved entry; without it the photos are only kept in `files` until the entry is saved */
@@ -46,6 +47,7 @@ export default function InvoiceField({
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [zoom, setZoom] = useState<{ url: string; name: string } | null>(null)
 
   const paths = saved.map((a) => a.path).join('|')
   useEffect(() => {
@@ -109,21 +111,23 @@ export default function InvoiceField({
           {saved.map((a) => (
             <div className="inv-thumb" key={a.id}>
               {urls[a.path] ? (
-                <a
-                  href={urls[a.path]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={isPdf(a) ? 'فتح الملف' : 'فتح الصورة'}
-                >
-                  {isPdf(a) ? (
+                isPdf(a) ? (
+                  <a href={urls[a.path]} target="_blank" rel="noopener noreferrer" aria-label="فتح الملف">
                     <span className="inv-file">
                       <FileText size={26} aria-hidden="true" />
                       <span>PDF</span>
                     </span>
-                  ) : (
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className="inv-zoom"
+                    aria-label="تكبير الصورة"
+                    onClick={() => setZoom({ url: urls[a.path], name: a.file_name ?? 'فاتورة' })}
+                  >
                     <img src={urls[a.path]} alt={a.file_name ?? 'فاتورة'} loading="lazy" />
-                  )}
-                </a>
+                  </button>
+                )
               ) : (
                 <span className="muted small">...</span>
               )}
@@ -184,6 +188,14 @@ export default function InvoiceField({
         </div>
       }
       {error && <span className="msg msg-error">{error}</span>}
+      {zoom && (
+        <Dialog title="الفاتورة" wide onClose={() => setZoom(null)}>
+          <img className="inv-big" src={zoom.url} alt={zoom.name} />
+          <a className="small" href={zoom.url} target="_blank" rel="noopener noreferrer">
+            فتح في تبويب جديد
+          </a>
+        </Dialog>
+      )}
     </div>
   )
 }

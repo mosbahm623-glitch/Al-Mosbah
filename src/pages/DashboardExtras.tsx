@@ -128,7 +128,7 @@ export function BankBalances({ netCash }: { netCash: number }) {
         })}
       </div>
       <p className="muted small" style={{ margin: '0.75rem 1rem' }}>
-        الفرق عن صافي النقدية: {money(gap)} ج.م (صافي النقدية بيستبعد المشاريع المقفولة، والبنوك بتحسب كل القيود)
+        الفرق عن صافي النقدية: {money(gap)} ج.م
       </p>
     </section>
   )

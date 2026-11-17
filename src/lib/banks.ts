@@ -7,13 +7,17 @@ export type BankSummary = {
   opening_balance: number
   income: number
   expenses: number
+  /** money moved into this bank from another one */
+  transfers_in: number
+  /** money moved out of this bank to another one */
+  transfers_out: number
 }
 
 export type BankMovement = {
   id: string
   /** null for a custody payment (it has no entry number) */
   seq: number | null
-  kind: 'income' | 'expense'
+  kind: 'income' | 'expense' | 'transfer_in' | 'transfer_out'
   entry_date: string
   category: string
   item: string | null
@@ -25,9 +29,14 @@ export type BankMovement = {
   contractor: string | null
 }
 
-/** Current balance = opening + money in − money out. */
-export const bankBalance = (b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses'>) =>
-  b.opening_balance + b.income - b.expenses
+/** Current balance = opening + money in + transfers in − money out − transfers out. */
+export const bankBalance = (
+  b: Pick<BankSummary, 'opening_balance' | 'income' | 'expenses' | 'transfers_in' | 'transfers_out'>,
+) => b.opening_balance + b.income + b.transfers_in - b.expenses - b.transfers_out
+
+/** +amount when the movement adds money to the bank, −amount when it takes money out. */
+export const movementSign = (m: Pick<BankMovement, 'kind'>) =>
+  m.kind === 'income' || m.kind === 'transfer_in' ? 1 : -1
 
 /** Banks that stay off the dashboard card (the catch-all «أخرى»). */
 const HIDDEN_ON_DASHBOARD = ['أخرى']
@@ -45,6 +54,20 @@ export const fetchBankSummaries = () => supabase.rpc('bank_summaries').returns<B
 export const fetchBankMovements = (bankId: string) =>
   supabase.rpc('bank_movements', { p_bank: bankId }).returns<BankMovement[]>()
 
+export type BankTransferInput = {
+  from_bank: string
+  to_bank: string
+  amount: number
+  transfer_date: string
+  notes: string | null
+}
+
+/** Moves money from one bank to another (the first goes down, the second goes up by the same amount). */
+export const saveBankTransfer = (row: BankTransferInput) => supabase.from('bank_transfers').insert(row)
+
+/** Removes a transfer (a wrong one); both balances go back. */
+export const deleteBankTransfer = (id: string) => supabase.from('bank_transfers').delete().eq('id', id)
+
 export type BankInput = { name: string; opening_balance: number }
 
 /** A new bank account, or (with an id) an edit of an existing one. */
@@ -55,6 +78,7 @@ export const saveBank = (row: BankInput, id?: string) =>
 export function byProject(rows: BankMovement[]) {
   const map = new Map<string, { id: string; name: string; income: number; expenses: number }>()
   for (const m of rows) {
+    if (m.kind === 'transfer_in' || m.kind === 'transfer_out') continue
     const key = m.project_id ?? ''
     const p = map.get(key) ?? { id: key, name: m.project_name, income: 0, expenses: 0 }
     if (m.kind === 'income') p.income += m.amount

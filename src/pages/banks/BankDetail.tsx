@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
-import { Pencil } from 'lucide-react'
+import { ArrowLeftRight, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import {
   bankBalance,
   byProject,
+  deleteBankTransfer,
+  movementSign,
   fetchBankMovements,
   fetchBankSummaries,
   type BankMovement,
@@ -14,6 +16,7 @@ import {
 import { dateText, money } from '../../lib/format'
 import { useAsync } from '../../lib/useAsync'
 import BankDialog from './BankDialog'
+import TransferDialog from './TransferDialog'
 
 export default function BankDetail({ id }: { id: string }) {
   const { can } = useAuth()
@@ -21,6 +24,7 @@ export default function BankDetail({ id }: { id: string }) {
   const summaries = useAsync<BankSummary[]>(fetchBankSummaries)
   const movements = useAsync<BankMovement[]>(useCallback(() => fetchBankMovements(id), [id]))
   const [editing, setEditing] = useState(false)
+  const [transferring, setTransferring] = useState(false)
   const bank = summaries.data?.find((b) => b.id === id)
   const rows = movements.data
 
@@ -29,7 +33,7 @@ export default function BankDetail({ id }: { id: string }) {
     const out: { m: BankMovement; run: number }[] = []
     for (const m of rows ?? []) {
       const prev = out.length ? out[out.length - 1].run : (bank?.opening_balance ?? 0)
-      out.push({ m, run: prev + (m.kind === 'income' ? m.amount : -m.amount) })
+      out.push({ m, run: prev + movementSign(m) * m.amount })
     }
     return out
   }, [rows, bank?.opening_balance])
@@ -54,6 +58,12 @@ export default function BankDetail({ id }: { id: string }) {
     summaries.reload()
     movements.reload()
   }
+  const removeTransfer = async (m: BankMovement) => {
+    if (!window.confirm(`تمسح التحويل ده (${money(m.amount)})؟ رصيد البنكين هيرجع زي ما كان.`)) return
+    const { error } = await deleteBankTransfer(m.id)
+    if (error) return window.alert('ما اتمسحش، جرّب تاني')
+    reload()
+  }
 
   return (
     <div className="page-stack">
@@ -62,10 +72,18 @@ export default function BankDetail({ id }: { id: string }) {
         parent={{ label: 'البنوك', href: '#/banks' }}
         actions={
           canEdit && (
-            <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
-              <Pencil size={18} aria-hidden="true" />
-              تعديل
-            </button>
+            <>
+              {(summaries.data?.length ?? 0) > 1 && (
+                <button className="btn btn-ghost btn-icon" onClick={() => setTransferring(true)}>
+                  <ArrowLeftRight size={18} aria-hidden="true" />
+                  تحويل
+                </button>
+              )}
+              <button className="btn btn-ghost btn-icon" onClick={() => setEditing(true)}>
+                <Pencil size={18} aria-hidden="true" />
+                تعديل
+              </button>
+            </>
           )
         }
       />
@@ -73,8 +91,8 @@ export default function BankDetail({ id }: { id: string }) {
       <Stats
         items={[
           { label: 'الرصيد الافتتاحي', value: bank.opening_balance },
-          { label: 'الوارد', value: bank.income, tone: 'ok' },
-          { label: 'المصروف', value: bank.expenses, tone: 'err' },
+          { label: 'الوارد', value: bank.income + bank.transfers_in, tone: 'ok' },
+          { label: 'المصروف', value: bank.expenses + bank.transfers_out, tone: 'err' },
           { label: 'الرصيد الحالي', value: balance, tone: balance >= 0 ? 'ok' : 'err' },
         ]}
       />
@@ -166,9 +184,20 @@ export default function BankDetail({ id }: { id: string }) {
                       </span>
                     </td>
                     <td className="muted sm-hide">{m.contractor}</td>
-                    <td className="num tone-text-ok">{m.kind === 'income' ? money(m.amount) : ''}</td>
-                    <td className="num tone-text-err">{m.kind === 'expense' ? money(m.amount) : ''}</td>
-                    <td className="num strong">{money(run)}</td>
+                    <td className="num tone-text-ok">{movementSign(m) > 0 ? money(m.amount) : ''}</td>
+                    <td className="num tone-text-err">{movementSign(m) < 0 ? money(m.amount) : ''}</td>
+                    <td className="num strong">
+                      {money(run)}
+                      {canEdit && (m.kind === 'transfer_in' || m.kind === 'transfer_out') && (
+                        <button
+                          className="btn btn-ghost btn-icon"
+                          aria-label="مسح التحويل"
+                          onClick={() => void removeTransfer(m)}
+                        >
+                          <Trash2 size={16} aria-hidden="true" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -179,6 +208,14 @@ export default function BankDetail({ id }: { id: string }) {
         )}
       </section>
 
+      {transferring && (
+        <TransferDialog
+          banks={summaries.data ?? []}
+          fromId={id}
+          onClose={() => setTransferring(false)}
+          onSaved={reload}
+        />
+      )}
       {editing && <BankDialog bank={bank} onClose={() => setEditing(false)} onSaved={reload} />}
     </div>
   )

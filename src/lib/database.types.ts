@@ -49,6 +49,11 @@ export type Database = {
         { created_at?: string; id?: string; logo?: string | null; name: string; opening_balance?: number },
         { created_at?: string; id?: string; logo?: string | null; name?: string; opening_balance?: number }
       >
+      bank_transfers: T<
+        { amount: number; created_at: string; created_by: string | null; from_bank: string; id: string; notes: string | null; to_bank: string; transfer_date: string },
+        { amount: number; created_at?: string; created_by?: string | null; from_bank: string; id?: string; notes?: string | null; to_bank: string; transfer_date?: string },
+        { amount?: number; created_at?: string; created_by?: string | null; from_bank?: string; id?: string; notes?: string | null; to_bank?: string; transfer_date?: string }
+      >
       contractor_transactions: T<
         { amount: number; contractor_id: string; created_at: string; id: string; kind: string; notes: string | null; project_id: string | null; txn_date: string },
         { amount: number; contractor_id: string; created_at?: string; id?: string; kind: string; notes?: string | null; project_id?: string | null; txn_date?: string },

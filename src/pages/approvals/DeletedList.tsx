@@ -2,8 +2,9 @@ import { useCallback, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { fetchDeleted, restoreEntry, type DeletedEntry } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText, money } from '../../lib/format'
-import { entryTitle, isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
+import { dateText } from '../../lib/format'
+import { amountTone, entryTitle } from '../../lib/entryKind'
+import { AmountText, KindChip } from '../../components/EntryParts'
 import { useAsync } from '../../lib/useAsync'
 
 const STATUS: Record<string, string> = { approved: 'معتمد', pending: 'مستنّي', rejected: 'مرفوض' }
@@ -38,10 +39,7 @@ export default function DeletedList() {
             <article className="appr-card" key={e.id}>
               <div className="appr-main">
                 <div className="appr-tags">
-                  <span className={`chip ${isMoneyIn(e) ? 'chip-ok' : 'chip-err'}`}>
-                    <span className="dot" />
-                    {kindLabel(e)}
-                  </span>
+                  <KindChip entry={e} />
                   <span className="muted small">
                     قيد #{e.seq} · {dateText(e.entry_date)}
                   </span>
@@ -84,9 +82,8 @@ export default function DeletedList() {
                 </dl>
               </div>
               <div className="appr-side">
-                <div className={`appr-amount ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
-                  {signedAmount(e).sign}
-                  {money(signedAmount(e).value)}
+                <div className={`appr-amount ${amountTone(e)}`}>
+                  <AmountText entry={e} />
                   <small>ج.م</small>
                 </div>
                 <div className="appr-actions">

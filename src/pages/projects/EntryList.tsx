@@ -8,7 +8,8 @@ import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import Pager from '../../components/Pager'
 import Segmented from '../../components/Segmented'
 import { dateShort, dateText, money, timeText } from '../../lib/format'
-import { isMoneyIn, kindLabel, signedAmount } from '../../lib/entryKind'
+import { amountTone } from '../../lib/entryKind'
+import { AmountText, KindChip } from '../../components/EntryParts'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
 import { usePages } from '../../lib/usePages'
@@ -138,10 +139,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                       <span className="sub">{timeText(e.created_at)}</span>
                     </td>
                     <td className="sm-hide">
-                      <span className={`chip ${isMoneyIn(e) ? 'chip-ok' : 'chip-err'}`}>
-                        <span className="dot" />
-                        {kindLabel(e)}
-                      </span>
+                      <KindChip entry={e} />
                     </td>
                     <td className="sm-hide">{e.category}</td>
                     <td className="strong">
@@ -171,9 +169,8 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     <td className="muted sm-hide">{e.bank?.name}</td>
                     <td className="muted sm-hide">{enteredByOf(e)}</td>
                     <td className="muted sm-hide">{e.notes}</td>
-                    <td className={`num strong ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
-                      {signedAmount(e).sign}
-                      {money(signedAmount(e).value)}
+                    <td className={`num strong ${amountTone(e)}`}>
+                      <AmountText entry={e} />
                     </td>
                     <td className="sm-only">{e.status !== STATUS.deleted && <StatusChip status={e.status} />}</td>
                     {canEdit && (

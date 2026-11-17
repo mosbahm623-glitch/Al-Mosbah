@@ -17,3 +17,6 @@ export const signedAmount = (e: KindAmount) => ({ sign: isMoneyIn(e) ? '+' : 'âˆ
 /** Title line of an entry: an income has only its label, an expense (or refund) has the category and the item. */
 export const entryTitle = (e: KindAmount & { category: string; item: string | null }) =>
   e.kind === 'income' ? e.category : `${e.category} Â· ${e.item ?? ''}`
+
+/** The colour class for an amount: green for money in, red for money out. */
+export const amountTone = (e: KindAmount) => (isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err')

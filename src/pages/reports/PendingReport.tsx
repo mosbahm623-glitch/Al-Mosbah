@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import { money, todayISO } from '../../lib/format'
+import { kindLabel } from '../../lib/entryKind'
 import { toCents } from '../../lib/money'
 import { fetchEntriesByStatus } from '../../lib/entries'
 import type { Entry } from '../../lib/projects'
@@ -88,7 +89,7 @@ export default function PendingReport({
             e.seq,
             e.entry_date,
             e.project?.name ?? null,
-            e.kind === 'income' ? 'وارد' : 'مصروف',
+            kindLabel(e),
             e.category,
             e.item,
             e.creator?.full_name ?? null,

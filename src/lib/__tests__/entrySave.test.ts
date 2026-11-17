@@ -150,6 +150,25 @@ describe('saveEntry: the same try sent twice', () => {
   })
 })
 
+describe('saveEntry: refund (مرتجع)', () => {
+  it('is saved as an expense with a negative amount, with the same fields as an expense', async () => {
+    m.insertEntry.mockResolvedValue({ data: [{ id: 'new-id', seq: 9 }], error: null })
+    const r = await saveEntry(base({ kind: 'refund', amount: '500' }))
+    expect(r.status).toBe('saved')
+    const row = m.insertEntry.mock.calls.at(-1)?.[0]
+    expect(row).toMatchObject({ kind: 'expense', amount: -500, category: 'كهرباء', item: 'أسلاك' })
+  })
+
+  it('still needs a category, an item and an amount above zero', async () => {
+    expect(await saveEntry(base({ kind: 'refund', category: undefined }))).toEqual({
+      status: 'error',
+      error: 'category',
+    })
+    expect(await saveEntry(base({ kind: 'refund', itemName: ' ' }))).toEqual({ status: 'error', error: 'item' })
+    expect(await saveEntry(base({ kind: 'refund', amount: '-5' }))).toEqual({ status: 'error', error: 'amount' })
+  })
+})
+
 describe('saveEntry: saving', () => {
   it('inserts a new entry with its own id and reports the number it got', async () => {
     const r = await saveEntry(base({ advanceId: 'a1' }))

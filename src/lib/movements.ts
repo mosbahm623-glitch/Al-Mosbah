@@ -294,7 +294,7 @@ export function totalsOfDay(rows: Movement[]): DayTotals {
 /** Money coming in (+) or going out (−) of the company for the sign next to an amount. */
 export const direction = (m: Movement): 'in' | 'out' | 'neutral' => {
   if (m.kind === 'income' || m.kind === 'return') return 'in'
-  if (m.kind === 'expense') return m.fromAdvance ? 'neutral' : 'out'
+  if (m.kind === 'expense') return m.fromAdvance ? 'neutral' : m.amount < 0 ? 'in' : 'out'
   if (m.kind === 'installment' || m.kind === 'payment') return 'out'
   return 'neutral'
 }

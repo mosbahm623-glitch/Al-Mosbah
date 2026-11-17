@@ -5,6 +5,7 @@ import EntryDialog from '../components/EntryDialog'
 import { Pencil } from 'lucide-react'
 import PageHead from '../components/PageHead'
 import { dateText, money } from '../lib/format'
+import { entryTitle, isMoneyIn, signedAmount } from '../lib/entryKind'
 import { fetchSummaries, pickableProjects, type ProjectSummary } from '../lib/projects'
 import { fetchMyEntries, type MyEntry } from '../lib/entries'
 import { useAsync } from '../lib/useAsync'
@@ -103,15 +104,15 @@ export default function QuickEntry() {
                     <td className="num muted sm-hide">{dateText(e.entry_date)}</td>
                     <td className="sm-hide">{e.project?.name}</td>
                     <td>
-                      {e.kind === 'income' ? e.category : `${e.category} · ${e.item ?? ''}`}
+                      {entryTitle(e)}
                       {e.project?.name && <span className="sub-line">{e.project?.name}</span>}
                       <span className="sub">
                         {[e.project?.name, STATUS[e.status] ?? e.status].filter(Boolean).join(' · ')}
                       </span>
                     </td>
-                    <td className={`num strong ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>
-                      {e.kind === 'income' ? '+' : '−'}
-                      {money(e.amount)}
+                    <td className={`num strong ${isMoneyIn(e) ? 'tone-text-ok' : 'tone-text-err'}`}>
+                      {signedAmount(e).sign}
+                      {money(signedAmount(e).value)}
                     </td>
                     <td className="muted sm-hide">{STATUS[e.status] ?? e.status}</td>
                     <td>

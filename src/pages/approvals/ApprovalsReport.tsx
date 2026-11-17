@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell } from '../../lib/tableTypes'
 import { dateText, money } from '../../lib/format'
+import { kindLabel } from '../../lib/entryKind'
 import { fetchDecidedOn, type DecidedEntry as Decided } from '../../lib/entries'
 import { useAsync } from '../../lib/useAsync'
 import { toCents } from '../../lib/money'
@@ -76,7 +77,7 @@ export default function ApprovalsReport({ day, filter = NO_FILTER }: { day: stri
             e.seq,
             e.entry_date,
             e.project?.name ?? null,
-            e.kind === 'income' ? 'وارد' : 'مصروف',
+            kindLabel(e),
             e.category,
             e.item,
             enteredByOf(e),

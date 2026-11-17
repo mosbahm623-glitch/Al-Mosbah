@@ -79,6 +79,11 @@
   padding: 0;
   height: 100%;
 }
+.search-field input:focus-visible {
+  /* the box already shows the ring: no second one on the input inside it */
+  border: 0;
+  box-shadow: none;
+}
 .search-field:focus-within {
   outline: 2px solid var(--accent-text);
   outline-offset: 1px;

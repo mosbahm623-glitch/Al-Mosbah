@@ -5,6 +5,16 @@ export const TYPE_LABEL = { finishing: 'تشطيب', furnishing: 'فرش' } as c
 export type ProjectType = keyof typeof TYPE_LABEL
 
 export const dateText = (iso: string) => iso.split('-').reverse().join('-')
+/** The time an entry was recorded, as Cairo clock time: "3:05 م". Empty when there is no time. */
+export const timeText = (iso?: string | null) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d
+    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Africa/Cairo' })
+    .replace(/\s?AM$/, ' ص')
+    .replace(/\s?PM$/, ' م')
+}
 /** DD-MM-YY, short enough for a phone table column. */
 export const dateShort = (iso: string) => {
   const [y = '', m = '', d = ''] = iso.split('-')

@@ -4,7 +4,7 @@ import InvoiceLink from '../../components/InvoiceLink'
 import Pager from '../../components/Pager'
 import { usePages } from '../../lib/usePages'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
-import { dateShort, dateText, money } from '../../lib/format'
+import { dateShort, dateText, money, timeText } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
 import {
@@ -132,6 +132,7 @@ export default function AdvanceEntriesPanel({ entries, title, empty, canEdit, ca
                   <td className="num muted">
                     <span className="sm-hide">{dateText(e.entry_date)}</span>
                     <span className="sm-only">{dateShort(e.entry_date)}</span>
+                    <span className="sub">{timeText(e.created_at)}</span>
                   </td>
                   <td className="sm-hide">{e.project?.name}</td>
                   <td className="sm-hide">{e.category}</td>

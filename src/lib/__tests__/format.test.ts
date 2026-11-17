@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TYPE_LABEL, dateText, money, periodText, todayISO, todayText } from '../format'
+import { TYPE_LABEL, dateText, money, periodText, timeText, todayISO, todayText } from '../format'
 
 describe('money', () => {
   it('uses latin digits with at most two decimals', () => {
@@ -15,6 +15,17 @@ describe('money', () => {
 describe('dateText', () => {
   it('flips ISO to day-month-year', () => {
     expect(dateText('2026-10-30')).toBe('30-10-2026')
+  })
+})
+
+describe('timeText', () => {
+  it('shows Cairo time with ص / م', () => {
+    expect(timeText('2026-11-17T13:05:00Z')).toBe('3:05 م')
+    expect(timeText('2026-11-17T06:30:00Z')).toBe('8:30 ص')
+  })
+  it('is empty without a time', () => {
+    expect(timeText(undefined)).toBe('')
+    expect(timeText('nonsense')).toBe('')
   })
 })
 

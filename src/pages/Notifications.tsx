@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BellOff, BellRing, CheckCheck, FlaskConical, TriangleAlert, Trash2, type LucideIcon } from 'lucide-react'
+import {
+  BellOff,
+  BellRing,
+  CheckCheck,
+  CheckSquare,
+  FlaskConical,
+  TriangleAlert,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
 import LowBalanceReminderDialog from '../components/LowBalanceReminderDialog'
 import TestNoticeDialog from '../components/TestNoticeDialog'
@@ -46,6 +55,7 @@ function InstallHint() {
 const KIND: Record<Notice['kind'], { icon: LucideIcon; label: string }> = {
   low_balance: { icon: TriangleAlert, label: 'تنبيه رصيد' },
   test: { icon: FlaskConical, label: 'تجريبي' },
+  pending_entry: { icon: CheckSquare, label: 'قيد مستني موافقة' },
 }
 function KindIcon({ kind }: { kind: Notice['kind'] }) {
   const { icon: Icon, label } = KIND[kind]

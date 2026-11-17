@@ -45,6 +45,11 @@
   background: rgb(255 255 255 / 0.2);
   outline: 2px solid var(--accent-text);
 }
+.top-search input:focus-visible {
+  /* the box already shows the ring: no second one on the input inside it */
+  border: 0;
+  box-shadow: none;
+}
 .top-search input {
   border: 0;
   outline: 0;

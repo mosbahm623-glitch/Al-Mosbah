@@ -341,6 +341,9 @@
 .notice-low_balance {
   color: var(--err, #b91c1c);
 }
+.notice-pending_entry {
+  color: var(--warn, #b45309);
+}
 .notice-test {
   color: var(--accent, #2563eb);
 }

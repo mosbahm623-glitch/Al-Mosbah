@@ -4,7 +4,7 @@ import InvoiceField from '../../components/InvoiceField'
 import InvoiceLink from '../../components/InvoiceLink'
 import { invoiceCount } from '../../lib/attachments'
 import type { PendingEntry } from '../../lib/approvals'
-import { dateText, money } from '../../lib/format'
+import { dateText, money, timeText } from '../../lib/format'
 import { enteredByOf } from '../../lib/enteredBy'
 
 type Props = {
@@ -54,7 +54,7 @@ export default function EntryApprovalCard({
           {e.advance_id && <span className="chip chip-neutral">من عهدة</span>}
           <InvoiceLink entry={e} />
           <span className="muted small">
-            قيد #{e.seq} · {dateText(e.entry_date)}
+            قيد #{e.seq} · {dateText(e.entry_date)} · {timeText(e.created_at)}
           </span>
         </div>
         <h2 className="appr-title">

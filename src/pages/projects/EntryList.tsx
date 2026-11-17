@@ -7,7 +7,7 @@ import InvoiceLink from '../../components/InvoiceLink'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
 import Pager from '../../components/Pager'
 import Segmented from '../../components/Segmented'
-import { dateShort, dateText, money } from '../../lib/format'
+import { dateShort, dateText, money, timeText } from '../../lib/format'
 import type { Entry } from '../../lib/projects'
 import { enteredByOf } from '../../lib/enteredBy'
 import { usePages } from '../../lib/usePages'
@@ -133,6 +133,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     <td className="num muted">
                       <span className="sm-hide">{dateText(e.entry_date)}</span>
                       <span className="sm-only">{dateShort(e.entry_date)}</span>
+                      <span className="sub">{timeText(e.created_at)}</span>
                     </td>
                     <td className="sm-hide">
                       <span className={`chip ${e.kind === 'income' ? 'chip-ok' : 'chip-err'}`}>

@@ -4,7 +4,7 @@ import { useAuth } from '../auth/AuthProvider'
 import InvoiceLink from '../components/InvoiceLink'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
-import { dateText, money } from '../lib/format'
+import { dateText, money, timeText } from '../lib/format'
 import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/search'
 import { useAsync } from '../lib/useAsync'
 
@@ -93,7 +93,10 @@ function SearchView({ q }: { q: string }) {
                       <a href={`#/projects/${e.project_id}`}>{e.seq}</a>
                       <span className="sub">{dateText(e.entry_date)}</span>
                     </td>
-                    <td className="num sm-hide">{dateText(e.entry_date)}</td>
+                    <td className="num sm-hide">
+                      {dateText(e.entry_date)}
+                      <span className="sub">{timeText(e.created_at)}</span>
+                    </td>
                     <td className="sm-hide">
                       <a href={`#/projects/${e.project_id}`}>{e.project?.name}</a>
                     </td>

@@ -62,9 +62,8 @@ export default function Dashboard() {
               icon={FolderKanban}
               tone="neutral"
             />
+            <AttentionCards />
           </section>
-
-          <AttentionCards />
 
           <BankBalances netCash={data.net_cash} />
 

@@ -6,15 +6,11 @@ import { useAsync } from '../lib/useAsync'
 
 const link = { color: 'inherit', textDecoration: 'none', display: 'block' } as const
 
-/** Admin only: a card that points at the work waiting for his approval. */
+/** Admin only: a tile (placed inside the dashboard tiles grid) that points at the work waiting for his approval. */
 export function AttentionCards() {
   const { isAdmin } = useAuth()
   if (!isAdmin) return null
-  return (
-    <section className="tiles" aria-label="محتاجة مراجعة">
-      <PendingCard />
-    </section>
-  )
+  return <PendingCard />
 }
 
 function PendingCard() {

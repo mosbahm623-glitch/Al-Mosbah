@@ -171,6 +171,10 @@
   min-width: 0;
   width: 100%;
 }
+.grid-filter input:focus-visible {
+  border: 0;
+  box-shadow: none;
+}
 .grid-filter:focus-within {
   border-color: var(--accent);
 }

@@ -47,3 +47,51 @@ jobs:
 
       - name: Typecheck and build
         run: npm run build
+
+  deploy:
+    # ينشر الموقع تلقائيًا على gh-pages بعد كل دمج في main، وبس لو كل الفحوصات نجحت
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    env:
+      # القيمتين دول عامين (بيظهروا في الموقع نفسه) وثابتين هنا عشان مفيش غلط يدوي في المفتاح
+      VITE_SUPABASE_URL: https://kytaxbhajnmdstyiorus.supabase.co
+      VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_Er_ibOL4aGGNBKCicok17Q_MhCGB7TV
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # رقم النسخة بيتحسب من عدد الـ commits
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify the real key was built in
+        run: |
+          grep -rq "kytaxbhajnmdstyiorus" dist/assets || { echo "::error::Supabase URL missing from the build"; exit 1; }
+          grep -rq "sb_publishable_Er_ibOL4aGGNBKCicok17Q_MhCGB7TV" dist/assets || { echo "::error::Supabase key missing from the build"; exit 1; }
+          ! grep -rq "ci-placeholder-key\|example.supabase.co" dist/assets || { echo "::error::placeholder values found in the build"; exit 1; }
+
+      - name: Publish to gh-pages
+        run: |
+          touch dist/.nojekyll
+          cd dist
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages

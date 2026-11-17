@@ -4,7 +4,7 @@ import StatusChip from '../../components/StatusChip'
 import MoneyDialog from '../advances/MoneyDialog'
 import { decideInstallments, type PendingInstallment } from '../../lib/approvals'
 import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText, money } from '../../lib/format'
+import { dateText, money, timeText } from '../../lib/format'
 import { useSubmitGuard } from '../../lib/useSubmitGuard'
 
 type Props = { rows: PendingInstallment[]; onChanged: () => void }
@@ -48,7 +48,9 @@ export default function InstallmentApprovals({ rows, onChanged }: Props) {
               <div className="appr-tags">
                 <span className="chip chip-neutral">دفعة عهدة</span>
                 {p.status === 'rejected' && <StatusChip status="rejected" kind="payment" />}
-                <span className="muted small">{dateText(p.paid_on)}</span>
+                <span className="muted small">
+                  {dateText(p.paid_on)} · {timeText(p.created_at)}
+                </span>
               </div>
               <h2 className="appr-title">
                 <a href={`#/advances/${p.advance_id}`}>{p.advance?.holder_name ?? 'عهدة'}</a>

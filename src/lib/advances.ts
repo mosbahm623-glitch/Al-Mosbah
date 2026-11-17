@@ -15,6 +15,8 @@ export type Installment = {
   id: string
   amount: number
   paid_on: string
+  /** when the payment was recorded (never changes, even if it is sent back to approvals) */
+  created_at?: string
   /** the bank it was paid from (older payments have none) */
   bank_id: string | null
   /** a payment recorded by the owner waits for the admin; only approved ones count in the totals */
@@ -32,7 +34,7 @@ export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries').ret
 export const fetchInstallments = (advanceId: string) =>
   supabase
     .from('advance_installments')
-    .select('id,amount,paid_on,bank_id,status,reject_reason')
+    .select('id,amount,paid_on,created_at,bank_id,status,reject_reason')
     .eq('advance_id', advanceId)
     .order('paid_on', { ascending: false })
     .returns<Installment[]>()

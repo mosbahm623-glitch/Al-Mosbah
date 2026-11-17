@@ -1,7 +1,7 @@
 import { Pencil, Plus } from 'lucide-react'
 import StatusChip, { RejectReason } from '../../components/StatusChip'
 import type { Installment } from '../../lib/advances'
-import { dateText, money } from '../../lib/format'
+import { dateText, money, timeText } from '../../lib/format'
 
 type Props = {
   installments: Installment[] | null | undefined
@@ -44,7 +44,10 @@ export default function InstallmentsPanel({ installments, isStaff, isAdmin, onAd
             <tbody>
               {installments.map((i) => (
                 <tr key={i.id}>
-                  <td className="num muted">{dateText(i.paid_on)}</td>
+                  <td className="num muted">
+                    {dateText(i.paid_on)}
+                    <span className="sub">{timeText(i.created_at)}</span>
+                  </td>
                   <td className="num strong">{money(i.amount)}</td>
                   <td>
                     <StatusChip status={i.status} kind="payment" />

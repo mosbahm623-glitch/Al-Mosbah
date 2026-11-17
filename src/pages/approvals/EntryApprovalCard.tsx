@@ -1,6 +1,8 @@
 import { Check, Pencil, X } from 'lucide-react'
 import EntryHistory from '../../components/EntryHistory'
+import InvoiceField from '../../components/InvoiceField'
 import InvoiceLink from '../../components/InvoiceLink'
+import { invoiceCount } from '../../lib/attachments'
 import type { PendingEntry } from '../../lib/approvals'
 import { dateText, money } from '../../lib/format'
 import { enteredByOf } from '../../lib/enteredBy'
@@ -98,6 +100,9 @@ export default function EntryApprovalCard({
           </dl>
           {e.edit_reason && <EntryHistory entryId={e.id} />}
         </div>
+        {invoiceCount(e) > 0 && (
+          <InvoiceField entryId={e.id} files={[]} onFiles={() => undefined} canRemove={false} readOnly />
+        )}
       </div>
       <div className="appr-side">
         <div className={`appr-amount ${e.kind === 'income' ? 'tone-text-ok' : 'tone-text-err'}`}>

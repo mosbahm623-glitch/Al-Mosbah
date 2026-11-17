@@ -213,25 +213,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [uid, loadProfile])
 
-  const value = useMemo<AuthState>(
-    () => ({
+  const value = useMemo<AuthState>(() => {
+    const staff = profile?.role === 'admin' || profile?.role === 'owner'
+    return {
       loading,
       session,
       profile,
       loadFailed,
       isAdmin: profile?.role === 'admin',
       isOwner: profile?.role === 'owner',
-      isStaff: profile?.role === 'admin' || profile?.role === 'owner',
-      canEditOwn: profile?.role === 'admin' || profile?.role === 'owner' || profile?.can_edit_entries !== false,
-      canDeleteOwn: profile?.role === 'admin' || profile?.role === 'owner' || profile?.can_delete_entries !== false,
+      isStaff: staff,
+      canEditOwn: staff || profile?.can_edit_entries !== false,
+      canDeleteOwn: staff || profile?.can_delete_entries !== false,
       canTouch: (status) => {
-        if (profile?.role === 'admin' || profile?.role === 'owner') return true
+        if (staff) return true
         const edit = profile?.can_edit_entries !== false
         const del = profile?.can_delete_entries !== false
         return status === STATUS.approved ? edit && profile?.can_edit_approved === true : edit || del
       },
-      can: (module, level = 'view') =>
-        allows(profile?.role === 'admin' || profile?.role === 'owner', permissions, module, level),
+      can: (module, level = 'view') => allows(staff, permissions, module, level),
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return error ? translateAuthError(error.message) : null
@@ -249,9 +249,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null
       },
       refreshProfile: async () => void (await loadProfile(session?.user.id ?? null)),
-    }),
-    [loading, session, profile, loadFailed, permissions, loadProfile],
-  )
+    }
+  }, [loading, session, profile, loadFailed, permissions, loadProfile])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -88,7 +88,7 @@ select pg_temp.chk('admin_income_without_bank_refused',
   pg_temp.try(format($q$insert into public.entries(project_id,kind,category,amount) values (%L,'income','دفعة',74)$q$, (select pid from ids))), 'P0001');
 
 -- ===== admin: wiping the banks takes the lists with it =====
-select public.reset_data(array['entries', 'contractor_dues', 'banks']);
+select public.reset_data(array['entries', 'contractor_dues', 'advances', 'banks']);
 select pg_temp.chk('reset_banks_clears_lists', (select count(*) from public.user_bank_access), 0::bigint);
 
 select k, got, expected, case when got = expected then 'ok' else 'FAIL' end as result from res;

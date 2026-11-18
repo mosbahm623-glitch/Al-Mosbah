@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NO_FILTER, filterMeta, matches, only } from '../reportFilter'
+import { NO_FILTER, filterMeta, matches, only } from '../reports/reportFilter'
 
 describe('report filters', () => {
   const f = { ...NO_FILTER, project: 'أ', category: 'سباكة' }

@@ -1,9 +1,15 @@
 import { useCallback } from 'react'
 import BankLogo from '../components/BankLogo'
-import { dashboardBanks, fetchBankSummaries, fetchBankToday, type BankSummary, type BankToday } from '../lib/banks'
-import { money, todayISO } from '../lib/format'
-import { fetchMonthly, type MonthRow } from '../lib/monthly'
-import { useAsync } from '../lib/useAsync'
+import {
+  dashboardBanks,
+  fetchBankSummaries,
+  fetchBankToday,
+  type BankSummary,
+  type BankToday,
+} from '../lib/banks/banks'
+import { money, todayISO } from '../lib/core/format'
+import { fetchMonthly, type MonthRow } from '../lib/entries/monthly'
+import { useAsync } from '../lib/core/useAsync'
 
 const MONTH_NAMES = [
   'يناير',

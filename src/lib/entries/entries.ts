@@ -1,8 +1,8 @@
-import { supabase } from './supabase'
-import type { ProjectType } from './format'
-import { fetchPaged } from './paged'
-import { ENTRY_COLUMNS, type Entry } from './projects'
-import { STATUS, type DecisionStatus } from './status'
+import { supabase } from '../supabase'
+import type { ProjectType } from '../core/format'
+import { fetchPaged } from '../core/paged'
+import { ENTRY_COLUMNS, type Entry } from './entryTypes'
+import { STATUS, type DecisionStatus } from '../core/status'
 
 /** What an entry form saves, for a new entry and for an edit alike. */
 type Snapshot = Record<string, unknown> | null

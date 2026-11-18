@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, ChevronsUpDown, Search } from 'lucide-react'
-import { toCents } from '../lib/money'
-import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/tableFormat'
-import type { Section } from '../lib/tableTypes'
+import { toCents } from '../lib/core/money'
+import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/core/tableFormat'
+import type { Section } from '../lib/core/tableTypes'
 
 const MIN_ROWS_FOR_TOOLS = 6
 

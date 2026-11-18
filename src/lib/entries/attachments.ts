@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 const BUCKET = 'invoices'
 const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf']

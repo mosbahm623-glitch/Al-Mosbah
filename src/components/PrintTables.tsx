@@ -1,5 +1,5 @@
-import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/tableFormat'
-import type { Section } from '../lib/tableTypes'
+import { footerSpan, isNumericCol, pillOf, showCell } from '../lib/core/tableFormat'
+import type { Section } from '../lib/core/tableTypes'
 
 const widthClass = (kind: string | undefined, i: number, last: boolean) =>
   kind === 'int' && i === 0 ? 'w-seq' : kind === 'date' ? 'w-date' : kind === 'money' && last ? 'w-amount' : undefined

@@ -8,8 +8,8 @@ import {
   signedUrls,
   uploadInvoices,
   type Attachment,
-} from '../lib/attachments'
-import { useAsync } from '../lib/useAsync'
+} from '../lib/entries/attachments'
+import { useAsync } from '../lib/core/useAsync'
 import Dialog from './Dialog'
 
 type Props = {

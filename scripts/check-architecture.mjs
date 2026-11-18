@@ -1,13 +1,35 @@
 // Keeps the layers apart:
 //   pages / components / layout  ->  talk to the data only through src/lib (never to Supabase directly)
 //   src/lib                      ->  never imports from pages / components / layout
+//   src/lib/<feature>/           ->  may only import the features listed in LIB_DEPENDENCIES (one direction, no cycles)
 // (src/auth is the one place besides lib that may use the Supabase client: it is the sign-in layer.)
 import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
+import { dirname, join, normalize, relative, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const UI_DIRS = ['src/pages', 'src/components', 'src/layout']
 const UI_FILES = ['src/App.tsx', 'src/main.tsx']
+
+/**
+ * Which folders of src/lib may use which. Read it as "left needs right". The files directly in src/lib
+ * (the Supabase client) may be used by everyone and may only use net. Add a line here when a new folder is born,
+ * and keep the arrows pointing the same way: a lower layer never imports a higher one.
+ */
+export const LIB_DEPENDENCIES = {
+  net: [],
+  core: [],
+  notifications: [],
+  banks: ['core'],
+  contractors: ['core'],
+  users: ['core'],
+  entries: ['core'],
+  approvals: ['core', 'entries'],
+  advances: ['core', 'entries'],
+  projects: ['core', 'entries', 'approvals'],
+  reports: ['core', 'projects'],
+  export: ['core', 'entries', 'projects'],
+  offline: ['core', 'entries', 'net'],
+}
 
 export function listSourceFiles(dir) {
   let entries
@@ -60,6 +82,35 @@ export function findViolations(root = '.') {
           file: relative(root, file),
           spec,
           message: 'src/lib must not depend on pages, components or layout',
+        })
+      }
+    }
+  }
+  const libRoot = join(root, 'src/lib')
+  const folderOf = (path) => {
+    const parts = relative(libRoot, path).split(sep)
+    return parts.length > 1 ? parts[0] : '.'
+  }
+  for (const file of listSourceFiles(libRoot)) {
+    const from = folderOf(file)
+    for (const spec of importsOf(readFileSync(file, 'utf8'))) {
+      if (!spec.startsWith('.')) continue
+      const target = normalize(join(dirname(file), spec))
+      if (relative(libRoot, target).startsWith('..')) continue
+      const to = folderOf(target)
+      if (to === from || (to === '.' && from !== '.')) continue
+      const allowed = from === '.' ? ['net'] : LIB_DEPENDENCIES[from]
+      if (!allowed) {
+        violations.push({
+          file: relative(root, file),
+          spec,
+          message: `folder "${from}" is not listed in LIB_DEPENDENCIES`,
+        })
+      } else if (!allowed.includes(to)) {
+        violations.push({
+          file: relative(root, file),
+          spec,
+          message: `"${from}" may not depend on "${to}" (see LIB_DEPENDENCIES)`,
         })
       }
     }

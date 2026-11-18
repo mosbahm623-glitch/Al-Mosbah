@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../supabase', () => ({ supabase: { rpc: vi.fn() } }))
 
 import { supabase } from '../supabase'
-import { fetchLowBalanceOverview, fetchPushDevices, sendLowBalanceReminder, sendTestNotification } from '../testNotice'
+import {
+  fetchLowBalanceOverview,
+  fetchPushDevices,
+  sendLowBalanceReminder,
+  sendTestNotification,
+} from '../notifications/testNotice'
 
 const rpc = vi.mocked(supabase.rpc)
 

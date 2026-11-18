@@ -1,6 +1,6 @@
-import { supabase } from './supabase'
-import { ENTRY_COLUMNS, type Entry } from './projects'
-import { type LiveStatus } from './status'
+import { supabase } from '../supabase'
+import { ENTRY_COLUMNS, type Entry } from '../entries/entryTypes'
+import { type LiveStatus } from '../core/status'
 
 export type AdvanceSummary = {
   id: string

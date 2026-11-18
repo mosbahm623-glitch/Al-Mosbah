@@ -1,5 +1,5 @@
 import SearchSelect from './SearchSelect'
-import type { Category } from '../lib/catalog'
+import type { Category } from '../lib/entries/catalog'
 
 type Props = {
   category: Category | undefined

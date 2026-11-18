@@ -1,5 +1,5 @@
-import { isMoneyIn, kindLabel, signedAmount } from '../lib/entryKind'
-import { money } from '../lib/format'
+import { isMoneyIn, kindLabel, signedAmount } from '../lib/entries/entryKind'
+import { money } from '../lib/core/format'
 
 type Props = { entry: { kind: 'income' | 'expense'; amount: number } }
 

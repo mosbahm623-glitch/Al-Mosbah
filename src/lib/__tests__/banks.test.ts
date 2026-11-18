@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { bankBalance, byProject, dashboardBanks, movementSign, type BankMovement, type BankSummary } from '../banks'
+import {
+  bankBalance,
+  byProject,
+  dashboardBanks,
+  movementSign,
+  type BankMovement,
+  type BankSummary,
+} from '../banks/banks'
 
 const bank = (name: string, opening: number, income: number, expenses: number): BankSummary => ({
   id: name,

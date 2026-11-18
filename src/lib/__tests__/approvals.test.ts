@@ -16,7 +16,7 @@ import {
   reopenEntry,
   restoreEntry,
   type PendingEntry,
-} from '../approvals'
+} from '../approvals/approvals'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)

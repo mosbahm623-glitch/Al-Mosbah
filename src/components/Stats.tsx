@@ -1,4 +1,4 @@
-import { money } from '../lib/format'
+import { money } from '../lib/core/format'
 
 type Stat = { label: string; value: number; tone?: 'ok' | 'err' }
 

@@ -46,6 +46,27 @@ describe('findViolations', () => {
     const [v] = findViolations(root)
     expect(v.file).toBe('src/lib/x.ts')
   })
+  it('lets a lib folder use the folders it is allowed to', () => {
+    put(
+      'src/lib/approvals/a.ts',
+      `import { x } from '../entries/e'\nimport { y } from '../core/c'\nimport { supabase } from '../supabase'`,
+    )
+    put('src/lib/supabase.ts', `import { f } from './net/fetch'`)
+    expect(findViolations(root)).toEqual([])
+  })
+  it('flags a lib folder that reaches into one it may not use', () => {
+    put('src/lib/entries/e.ts', `import { p } from '../projects/p'`)
+    const [v] = findViolations(root)
+    expect(v.message).toMatch(/"entries" may not depend on "projects"/)
+  })
+  it('flags a lib folder that is not listed', () => {
+    put('src/lib/newthing/n.ts', `import { c } from '../core/c'`)
+    expect(findViolations(root)[0].message).toMatch(/not listed/)
+  })
+  it('flags the Supabase client file using a feature folder', () => {
+    put('src/lib/supabase.ts', `import { e } from './entries/e'`)
+    expect(findViolations(root)[0].message).toMatch(/may not depend on "entries"/)
+  })
   it('ignores test files', () => {
     put('src/pages/__tests__/p.ts', `import { supabase } from '../../lib/supabase'`)
     put('src/pages/p.test.tsx', `import { supabase } from '../lib/supabase'`)

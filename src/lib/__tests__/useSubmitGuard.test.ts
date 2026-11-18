@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createSubmitGuard } from '../useSubmitGuard'
+import { createSubmitGuard } from '../core/useSubmitGuard'
 
 describe('createSubmitGuard', () => {
   it('runs a second call only after the first one has finished', async () => {

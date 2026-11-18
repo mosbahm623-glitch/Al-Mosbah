@@ -10,9 +10,9 @@ import {
   type AdvanceOption,
   type ProjectOption,
   type UserRow,
-} from '../../lib/users'
-import { fetchBankNames, type Named } from '../../lib/lookups'
-import { useAsync } from '../../lib/useAsync'
+} from '../../lib/users/users'
+import { fetchBankNames, type Named } from '../../lib/core/lookups'
+import { useAsync } from '../../lib/core/useAsync'
 import NewUserDialog from './NewUserDialog'
 import UserDialog from './UserDialog'
 

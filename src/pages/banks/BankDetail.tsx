@@ -12,9 +12,9 @@ import {
   fetchBankSummaries,
   type BankMovement,
   type BankSummary,
-} from '../../lib/banks'
-import { dateText, money } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
+} from '../../lib/banks/banks'
+import { dateText, money } from '../../lib/core/format'
+import { useAsync } from '../../lib/core/useAsync'
 import BankDialog from './BankDialog'
 import TransferDialog from './TransferDialog'
 

@@ -1,6 +1,6 @@
 import { Pencil, Undo2 } from 'lucide-react'
-import type { AdvanceReturn } from '../../lib/advances'
-import { dateText, money } from '../../lib/format'
+import type { AdvanceReturn } from '../../lib/advances/advances'
+import { dateText, money } from '../../lib/core/format'
 
 type Props = {
   returns: AdvanceReturn[] | null | undefined

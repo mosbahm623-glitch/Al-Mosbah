@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react'
-import { todayISO } from '../../lib/format'
+import { todayISO } from '../../lib/core/format'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
-import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances'
+import { deleteAdvanceMoney, saveAdvanceMoney, type MoneyKind } from '../../lib/advances/advances'
 import InstallmentBankField from '../../components/InstallmentBankField'
 import { useInstallmentBanks } from '../../components/useInstallmentBanks'
-import { useSubmitGuard } from '../../lib/useSubmitGuard'
+import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
 
 type Row = { id: string; amount: number; date: string; notes?: string | null; bankId?: string | null }
 

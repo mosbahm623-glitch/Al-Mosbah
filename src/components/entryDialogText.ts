@@ -1,4 +1,4 @@
-import type { SaveError } from '../lib/entrySave'
+import type { SaveError } from '../lib/offline/entrySave'
 
 /** The kinds the form offers. A refund is saved as an expense with a negative amount. */
 export const KINDS = [

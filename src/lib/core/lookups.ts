@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 import { fetchPaged } from './paged'
 import { STATUS } from './status'
 

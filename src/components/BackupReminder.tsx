@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import Dialog from './Dialog'
 import { useAuth } from '../auth/AuthProvider'
 import { lastBackup } from '../lib/export/backup'
-import { useAsync } from '../lib/useAsync'
+import { useAsync } from '../lib/core/useAsync'
 
 const KEY = 'mosbah-backup-reminder'
 const day = (d: Date) => d.toLocaleDateString('en-CA')

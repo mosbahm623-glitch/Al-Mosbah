@@ -9,8 +9,8 @@ vi.mock('../export/excelCommon', async (original) => ({
 import { MONEY, downloadWorkbook, toDate } from '../export/excelCommon'
 import { exportJournalExcel } from '../export/exportJournalExcel'
 import { exportTableExcel } from '../export/exportTableExcel'
-import type { Movement } from '../movements'
-import type { Section } from '../tableTypes'
+import type { Movement } from '../entries/movements'
+import type { Section } from '../core/tableTypes'
 
 const download = vi.mocked(downloadWorkbook)
 beforeEach(() => download.mockClear())

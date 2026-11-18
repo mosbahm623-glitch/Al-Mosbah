@@ -1,6 +1,6 @@
-import { supabase } from './supabase'
-import type { Level, Module } from '../auth/permissions'
-import type { ProjectType } from './format'
+import { supabase } from '../supabase'
+import type { Level, Module } from '../../auth/permissions'
+import type { ProjectType } from '../core/format'
 
 export type UserRow = {
   id: string

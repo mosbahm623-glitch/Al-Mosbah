@@ -1,8 +1,8 @@
 import { Pencil, Plus } from 'lucide-react'
 import StatusChip, { RejectReason } from '../../components/StatusChip'
-import type { Installment } from '../../lib/advances'
-import { dateText, money, timeText } from '../../lib/format'
-import { STATUS } from '../../lib/status'
+import type { Installment } from '../../lib/advances/advances'
+import { dateText, money, timeText } from '../../lib/core/format'
+import { STATUS } from '../../lib/core/status'
 
 type Props = {
   installments: Installment[] | null | undefined

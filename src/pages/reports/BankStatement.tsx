@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import type { Cell } from '../../lib/tableTypes'
-import { fetchBankMovements, type BankMovement } from '../../lib/banks'
-import { money, periodText, todayISO } from '../../lib/format'
-import { runLedger } from '../../lib/reportBuilders'
-import { useAsync } from '../../lib/useAsync'
-import { toCents } from '../../lib/money'
-import { filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reportFilter'
+import type { Cell } from '../../lib/core/tableTypes'
+import { fetchBankMovements, type BankMovement } from '../../lib/banks/banks'
+import { money, periodText, todayISO } from '../../lib/core/format'
+import { runLedger } from '../../lib/reports/reportBuilders'
+import { useAsync } from '../../lib/core/useAsync'
+import { toCents } from '../../lib/core/money'
+import { filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 /** One bank account: balance before the period, every movement with its running balance, and the closing balance. */
 export default function BankStatement({

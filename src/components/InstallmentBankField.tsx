@@ -1,4 +1,4 @@
-import type { BankChoice } from '../lib/lookups'
+import type { BankChoice } from '../lib/core/lookups'
 import BankPicker from './BankPicker'
 
 /** Bank field of a custody payment: picked from the list, never typed in. */

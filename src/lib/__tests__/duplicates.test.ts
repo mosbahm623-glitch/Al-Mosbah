@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { extraAmount, isConsecutivePair, summarizeDuplicates, type DuplicateGroup } from '../duplicates'
+import { extraAmount, isConsecutivePair, summarizeDuplicates, type DuplicateGroup } from '../entries/duplicates'
 
 const group = (over: Partial<DuplicateGroup>): DuplicateGroup => ({
   entry_date: '2026-11-11',

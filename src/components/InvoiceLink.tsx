@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Paperclip } from 'lucide-react'
-import { invoiceCount } from '../lib/attachments'
+import { invoiceCount } from '../lib/entries/attachments'
 import Dialog from './Dialog'
 import InvoiceField from './InvoiceField'
 

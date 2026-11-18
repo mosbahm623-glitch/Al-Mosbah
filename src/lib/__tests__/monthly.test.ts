@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { lastMonths, monthlyTotals } from '../monthly'
+import { lastMonths, monthlyTotals } from '../entries/monthly'
 
 describe('lastMonths', () => {
   it('counts back across a year change, oldest first', () => {

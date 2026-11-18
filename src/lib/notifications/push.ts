@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 /** Public key of the push service (the private half stays in the database). */
 const VAPID_PUBLIC = 'BMs1psC-xw9P7X7SccwUHBvK8F3NaIiMXgJhtUMF17lKIuemA-TBsAxR1blH9cOyV_YlC-K6Xf3NdKKFY7RHA8Y'

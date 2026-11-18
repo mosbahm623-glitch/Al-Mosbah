@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { countPending } from '../lib/approvals'
-import { APPROVALS_CHANGED } from '../lib/events'
+import { countPending } from '../lib/approvals/approvals'
+import { APPROVALS_CHANGED } from '../lib/core/events'
 import { useRoute } from './route'
 
 /** Entries waiting for approval (admins only); refreshed on navigation, after a decision and every minute. */

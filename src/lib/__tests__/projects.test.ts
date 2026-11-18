@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { dateText, money } from '../format'
-import { isOver, percentOf, pickableProjects, type ProjectSummary } from '../projects'
+import { dateText, money } from '../core/format'
+import { isOver, percentOf, pickableProjects, type ProjectSummary } from '../projects/projects'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
   id: '1',

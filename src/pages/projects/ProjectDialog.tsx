@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import Segmented from '../../components/Segmented'
-import { TYPE_LABEL, type ProjectType } from '../../lib/format'
-import { saveProject, type ProjectSummary } from '../../lib/projects'
+import { TYPE_LABEL, type ProjectType } from '../../lib/core/format'
+import { saveProject, type ProjectSummary } from '../../lib/projects/projects'
 
 const TYPES = (Object.keys(TYPE_LABEL) as ProjectType[]).map((value) => ({ value, label: TYPE_LABEL[value] }))
 const STATUSES = [

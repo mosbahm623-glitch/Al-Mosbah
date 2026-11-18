@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
-import { fetchDeleted, restoreEntry, type DeletedEntry } from '../../lib/approvals'
-import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText } from '../../lib/format'
-import { amountTone, entryTitle } from '../../lib/entryKind'
+import { fetchDeleted, restoreEntry, type DeletedEntry } from '../../lib/approvals/approvals'
+import { notifyApprovalsChanged } from '../../lib/core/events'
+import { dateText } from '../../lib/core/format'
+import { amountTone, entryTitle } from '../../lib/entries/entryKind'
 import { AmountText, KindChip } from '../../components/EntryParts'
-import { useAsync } from '../../lib/useAsync'
+import { useAsync } from '../../lib/core/useAsync'
 
 const STATUS: Record<string, string> = { approved: 'معتمد', pending: 'مستنّي', rejected: 'مرفوض' }
 const when = (iso: string) => new Date(iso).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })

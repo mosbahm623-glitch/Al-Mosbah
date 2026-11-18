@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import type { Cell, Col } from '../../lib/tableTypes'
-import { money, periodText, todayISO } from '../../lib/format'
-import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/movements'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
-import { useAsync } from '../../lib/useAsync'
-import type { ReportColumns } from '../../lib/reportColumns'
+import type { Cell, Col } from '../../lib/core/tableTypes'
+import { money, periodText, todayISO } from '../../lib/core/format'
+import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/entries/movements'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
+import { useAsync } from '../../lib/core/useAsync'
+import type { ReportColumns } from '../../lib/reports/reportColumns'
 
 type Props = { from: string; to: string; projectId: string; projectName: string; filter: ReportFilter } & ReportColumns
 

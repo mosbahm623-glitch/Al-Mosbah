@@ -1,4 +1,4 @@
-import type { Entry } from './projects'
+import type { Entry } from '../entries/entryTypes'
 
 export type ExpenseFilter = { text: string; project: string; category: string; from: string; to: string }
 export const NO_EXPENSE_FILTER: ExpenseFilter = { text: '', project: '', category: '', from: '', to: '' }

@@ -1,5 +1,5 @@
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
-import { todayISO } from '../format'
+import { todayISO } from '../core/format'
 import { day, type Sheet } from './backupTypes'
 
 /** Lays the prepared sheets out as one Arabic (right-to-left) Excel file and downloads it. */

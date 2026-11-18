@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Segmented from '../../components/Segmented'
-import { dateText, money } from '../../lib/format'
+import { dateText, money } from '../../lib/core/format'
 import {
   extraAmount,
   fetchDuplicateGroups,
   isConsecutivePair,
   summarizeDuplicates,
   type DuplicateGroup,
-} from '../../lib/duplicates'
-import { useAsync } from '../../lib/useAsync'
+} from '../../lib/entries/duplicates'
+import { useAsync } from '../../lib/core/useAsync'
 
 const KINDS = [
   { value: 'all', label: 'الكل' },

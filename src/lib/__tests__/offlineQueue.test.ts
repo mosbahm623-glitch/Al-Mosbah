@@ -11,14 +11,14 @@ const m = vi.hoisted(() => ({
   online: true,
 }))
 
-vi.mock('../entries', () => ({ insertEntry: m.insertEntry }))
-vi.mock('../attachments', () => ({ uploadInvoices: m.uploadInvoices }))
-vi.mock('../catalog', () => ({ createContractor: m.createContractor, createBank: m.createBank }))
-vi.mock('../lookups', () => ({ fetchContractorNames: m.fetchContractorNames, fetchBankNames: m.fetchBankNames }))
+vi.mock('../entries/entries', () => ({ insertEntry: m.insertEntry }))
+vi.mock('../entries/attachments', () => ({ uploadInvoices: m.uploadInvoices }))
+vi.mock('../entries/catalog', () => ({ createContractor: m.createContractor, createBank: m.createBank }))
+vi.mock('../core/lookups', () => ({ fetchContractorNames: m.fetchContractorNames, fetchBankNames: m.fetchBankNames }))
 vi.mock('../offline/auth', () => ({ currentUserId: m.currentUserId }))
-vi.mock('../events', () => ({ notifyDataChanged: vi.fn() }))
-vi.mock('../offline/connection', async (original) => ({
-  ...(await original<typeof import('../offline/connection')>()),
+vi.mock('../core/events', () => ({ notifyDataChanged: vi.fn() }))
+vi.mock('../net/connection', async (original) => ({
+  ...(await original<typeof import('../net/connection')>()),
   isOnline: () => m.online,
 }))
 

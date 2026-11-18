@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import type { Cell } from '../../lib/tableTypes'
-import { money, periodText, todayISO } from '../../lib/format'
-import { fetchAllContractorTxns, type SummaryTxn as Txn } from '../../lib/contractors'
-import { useAsync } from '../../lib/useAsync'
-import { toCents } from '../../lib/money'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import type { Cell } from '../../lib/core/tableTypes'
+import { money, periodText, todayISO } from '../../lib/core/format'
+import { fetchAllContractorTxns, type SummaryTxn as Txn } from '../../lib/contractors/contractors'
+import { useAsync } from '../../lib/core/useAsync'
+import { toCents } from '../../lib/core/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 /** Every contractor on one page: balance before the period, dues, payments and what is left to pay. */
 export default function ContractorsSummary({ from, to, filter }: { from: string; to: string; filter: ReportFilter }) {

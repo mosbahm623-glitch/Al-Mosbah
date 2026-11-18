@@ -1,9 +1,9 @@
 import { useCallback, useState, type FormEvent } from 'react'
 import { Smartphone } from 'lucide-react'
 import Dialog from './Dialog'
-import { fetchPushDevices, sendTestNotification } from '../lib/testNotice'
-import { fetchUsers, type UserRow } from '../lib/users'
-import { useAsync } from '../lib/useAsync'
+import { fetchPushDevices, sendTestNotification } from '../lib/notifications/testNotice'
+import { fetchUsers, type UserRow } from '../lib/users/users'
+import { useAsync } from '../lib/core/useAsync'
 
 const ROLE_TEXT: Record<UserRow['role'], string> = { admin: 'أدمن', owner: 'مالك', user: 'مستخدم' }
 

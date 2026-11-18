@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import type { Cell, Section } from '../../lib/tableTypes'
-import { money, monthLabel, periodText, todayISO } from '../../lib/format'
-import { fetchContractorLedger, type LedgerTxn as Txn, type Spent } from '../../lib/contractors'
-import { inRange, monthTotals, projectGroups, runLedger } from '../../lib/reportBuilders'
-import { useAsync } from '../../lib/useAsync'
-import { toCents } from '../../lib/money'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import type { Cell, Section } from '../../lib/core/tableTypes'
+import { money, monthLabel, periodText, todayISO } from '../../lib/core/format'
+import { fetchContractorLedger, type LedgerTxn as Txn, type Spent } from '../../lib/contractors/contractors'
+import { inRange, monthTotals, projectGroups, runLedger } from '../../lib/reports/reportBuilders'
+import { useAsync } from '../../lib/core/useAsync'
+import { toCents } from '../../lib/core/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 /**
  * Everything recorded under one contractor's name (the total, by month, and by project with a subtotal each),

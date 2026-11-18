@@ -1,5 +1,5 @@
 import { supabase } from '../supabase'
-import { fetchPaged } from '../paged'
+import { fetchPaged } from '../core/paged'
 import { writeBackupWorkbook } from './backupWorkbook'
 import { str, type Col, type Kind, type Row, type Sheet } from './backupTypes'
 

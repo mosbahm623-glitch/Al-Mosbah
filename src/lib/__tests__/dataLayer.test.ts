@@ -11,10 +11,10 @@ import {
   saveAdvanceMoney,
   setAdvanceStatus,
   updateAdvance,
-} from '../advances'
-import { saveBank } from '../banks'
-import { addExpenseItem, createBank, createCategory, createContractor, fetchCategories } from '../catalog'
-import { fetchAllContractorTxns, fetchContractorLedger } from '../contractors'
+} from '../advances/advances'
+import { saveBank } from '../banks/banks'
+import { addExpenseItem, createBank, createCategory, createContractor, fetchCategories } from '../entries/catalog'
+import { fetchAllContractorTxns, fetchContractorLedger } from '../contractors/contractors'
 import {
   deleteEntry,
   fetchApprovedExpenses,
@@ -25,9 +25,9 @@ import {
   insertEntry,
   updateEntry,
   type EntryInput,
-} from '../entries'
-import { fetchDashboardSummary, saveProject } from '../projects'
-import { replaceAdvanceAccess, replaceBankAccess, replacePermissions, updateRole } from '../users'
+} from '../entries/entries'
+import { fetchDashboardSummary, saveProject } from '../projects/projects'
+import { replaceAdvanceAccess, replaceBankAccess, replacePermissions, updateRole } from '../users/users'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)

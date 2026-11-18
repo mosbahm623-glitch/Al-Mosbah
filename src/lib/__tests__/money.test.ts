@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { sumMoney, toCents } from '../money'
+import { sumMoney, toCents } from '../core/money'
 
 describe('toCents', () => {
   it('rounds to whole cents', () => {

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
-import { createUser } from '../../lib/users'
+import { createUser } from '../../lib/users/users'
 
 export default function NewUserDialog({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [name, setName] = useState('')

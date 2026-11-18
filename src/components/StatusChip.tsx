@@ -1,4 +1,4 @@
-import { STATUS, type EntryStatus } from '../lib/status'
+import { STATUS, type EntryStatus } from '../lib/core/status'
 type Status = EntryStatus
 
 // the same status reads the same everywhere; a custody payment is feminine in Arabic (دفعة)

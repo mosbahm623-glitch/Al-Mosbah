@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { enteredByOf } from '../enteredBy'
+import { enteredByOf } from '../entries/enteredBy'
 
 describe('enteredByOf', () => {
   it('prefers the profile name', () => {

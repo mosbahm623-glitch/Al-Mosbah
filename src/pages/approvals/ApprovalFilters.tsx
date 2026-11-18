@@ -1,4 +1,4 @@
-import { NO_FILTER, isFiltering, type ApprovalFilter } from '../../lib/approvals'
+import { NO_FILTER, isFiltering, type ApprovalFilter } from '../../lib/approvals/approvals'
 
 type Props = {
   filter: ApprovalFilter

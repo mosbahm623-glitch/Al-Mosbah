@@ -1,8 +1,12 @@
 import { useCallback, useState } from 'react'
 import Dialog from './Dialog'
-import { money } from '../lib/format'
-import { fetchLowBalanceOverview, sendLowBalanceReminder, type LowBalanceOverview } from '../lib/testNotice'
-import { useAsync } from '../lib/useAsync'
+import { money } from '../lib/core/format'
+import {
+  fetchLowBalanceOverview,
+  sendLowBalanceReminder,
+  type LowBalanceOverview,
+} from '../lib/notifications/testNotice'
+import { useAsync } from '../lib/core/useAsync'
 
 /** Shows the projects under the limit and who will be told, and sends the reminder to the owners only after a confirm. */
 export default function LowBalanceReminderDialog({ onClose }: { onClose: () => void }) {

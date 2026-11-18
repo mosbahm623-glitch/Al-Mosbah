@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import InstallmentBankField from './InstallmentBankField'
 import { useInstallmentBanks } from './useInstallmentBanks'
-import { addInstallment, fetchAdvanceSummaries, type AdvanceSummary } from '../lib/advances'
-import { money, todayISO } from '../lib/format'
-import { useAsync } from '../lib/useAsync'
-import { useSubmitGuard } from '../lib/useSubmitGuard'
+import { addInstallment, fetchAdvanceSummaries, type AdvanceSummary } from '../lib/advances/advances'
+import { money, todayISO } from '../lib/core/format'
+import { useAsync } from '../lib/core/useAsync'
+import { useSubmitGuard } from '../lib/core/useSubmitGuard'
 
 const fetchOpenAdvances = async () => {
   const { data, error } = await fetchAdvanceSummaries()

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { countUnread } from '../lib/notifications'
-import { DATA_CHANGED } from '../lib/events'
-import { playChime, unlockChime } from '../lib/chime'
+import { countUnread } from '../lib/notifications/notifications'
+import { DATA_CHANGED } from '../lib/core/events'
+import { playChime, unlockChime } from '../lib/notifications/chime'
 
 /** Unread notifications of the signed-in user; follows the live updates and rings when a new one arrives. */
 export function useUnread() {

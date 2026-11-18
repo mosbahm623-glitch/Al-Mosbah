@@ -1,4 +1,4 @@
-import type { FilterKey } from '../../lib/reportFilter'
+import type { FilterKey } from '../../lib/reports/reportFilter'
 
 export type ReportType =
   | 'journal'

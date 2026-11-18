@@ -8,8 +8,8 @@ import {
   type AdvanceSummary,
   type Installment,
 } from './advances'
-import type { Entry } from './projects'
-import { useAsync } from './useAsync'
+import type { Entry } from '../entries/entryTypes'
+import { useAsync } from '../core/useAsync'
 
 /** One custody: its totals, installments, returns and the expenses paid from it. */
 export function useAdvanceData(id: string) {

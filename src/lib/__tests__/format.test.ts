@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { TYPE_LABEL, dateText, money, periodText, timeText, todayISO, todayText } from '../format'
+import { TYPE_LABEL, dateText, money, periodText, timeText, todayISO, todayText } from '../core/format'
 
 describe('money', () => {
   it('uses latin digits with at most two decimals', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { entryTitle, isMoneyIn, isRefund, kindLabel, signedAmount } from '../entryKind'
+import { entryTitle, isMoneyIn, isRefund, kindLabel, signedAmount } from '../entries/entryKind'
 
 const expense = { kind: 'expense', amount: 500, category: 'كهرباء', item: 'أسلاك' } as const
 const refund = { ...expense, amount: -500 }

@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
-import { fetchEntryHistory, type EntryChange } from '../lib/entries'
-import { money } from '../lib/format'
-import { useAsync } from '../lib/useAsync'
+import { fetchEntryHistory, type EntryChange } from '../lib/entries/entries'
+import { money } from '../lib/core/format'
+import { useAsync } from '../lib/core/useAsync'
 
 const ACTION: Record<string, string> = {
   edit: 'تعديل',

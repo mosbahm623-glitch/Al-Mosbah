@@ -1,4 +1,4 @@
-import type { Kpi } from '../lib/tableTypes'
+import type { Kpi } from '../lib/core/tableTypes'
 
 /** Summary cards at the top of a printed report. */
 export function Kpis({ items }: { items: Kpi[] }) {

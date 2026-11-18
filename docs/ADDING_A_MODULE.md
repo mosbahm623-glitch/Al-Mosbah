@@ -29,14 +29,14 @@ create policy suppliers_write on public.suppliers for all
 
 - كل جدول **لازم** يتفعّل عليه RLS، وإلا أي مستخدم مسجّل يقدر يقراه.
 - لو فيه حسابات (أرصدة، إجماليات) اعملها **دالة** في قاعدة البيانات (`security definer` + `set search_path = ''` + `revoke execute ... from public, anon`) والواجهة تناديها بـ `rpc`.
-- لو الجدول بيتغيّر وعايز الصفحات المفتوحة تتحدث لوحدها: ضيفه في `supabase_realtime` (شوف migration 018) وفي قايمة `TABLES` في `src/lib/live.ts`.
+- لو الجدول بيتغيّر وعايز الصفحات المفتوحة تتحدث لوحدها: ضيفه في `supabase_realtime` (شوف migration 018) وفي قايمة `TABLES` في `src/lib/core/live.ts`.
 - جدّد `src/lib/database.types.ts` بعد تطبيق الـ migration.
 - ضيف حالات للاختبار التكاملي `supabase/tests/rls_and_totals.sql` (مين يشوف ومين يعدّل).
 
 ## 2) `src/lib`: دوال البيانات
 
 ```ts
-// src/lib/suppliers.ts
+// src/lib/suppliers/suppliers.ts
 import { supabase } from './supabase'
 
 export type Supplier = { id: string; name: string }
@@ -76,7 +76,7 @@ if (route === 'suppliers') return <Suppliers />
 
 ## 4) الصفحة
 
-الصفحة بتستورد من `../../lib/suppliers` **مش** من `lib/supabase` (الفحص المعماري هيفشل لو عملت كده). خد `src/pages/banks/Banks.tsx` و`BankDialog.tsx` كقالب:
+الصفحة بتستورد من `../../lib/suppliers/suppliers` **مش** من `lib/supabase` (الفحص المعماري هيفشل لو عملت كده). خد `src/pages/banks/Banks.tsx` و`BankDialog.tsx` كقالب:
 
 - القراءة: `useAsync(fetchSuppliers)` (بيتحدّث لحظياً مع `live.ts`).
 - الكتابة: `await saveSupplier(row, supplier?.id)`، ورسالة الخطأ للمستخدم بتتكتب في الصفحة.

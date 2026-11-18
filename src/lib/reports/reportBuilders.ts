@@ -1,5 +1,5 @@
-import { isOver, percentOf, type ProjectSummary } from './projects'
-import { toCents } from './money'
+import { isOver, percentOf, type ProjectSummary } from '../projects/projects'
+import { toCents } from '../core/money'
 
 export type CategoryRow = { category: string; count: number; total: number; share: number }
 

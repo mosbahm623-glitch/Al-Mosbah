@@ -13,10 +13,10 @@ import { useAuth } from '../auth/AuthProvider'
 import LowBalanceReminderDialog from '../components/LowBalanceReminderDialog'
 import TestNoticeDialog from '../components/TestNoticeDialog'
 import PageHead from '../components/PageHead'
-import { clearAll, fetchNotices, markAllRead, markRead, type Notice } from '../lib/notifications'
-import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
-import { notifyDataChanged } from '../lib/events'
-import { useAsync } from '../lib/useAsync'
+import { clearAll, fetchNotices, markAllRead, markRead, type Notice } from '../lib/notifications/notifications'
+import { disablePush, enablePush, pushState, type PushState } from '../lib/notifications/push'
+import { notifyDataChanged } from '../lib/core/events'
+import { useAsync } from '../lib/core/useAsync'
 
 type InstallEvent = Event & { prompt: () => Promise<void> }
 const isIphone = /iphone|ipad|ipod/i.test(navigator.userAgent)

@@ -2,19 +2,19 @@ import { useMemo, useState } from 'react'
 import { Pencil, Plus } from 'lucide-react'
 import InvoiceLink from '../../components/InvoiceLink'
 import Pager from '../../components/Pager'
-import { usePages } from '../../lib/usePages'
+import { usePages } from '../../lib/users/usePages'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
-import { dateShort, dateText, money, timeText } from '../../lib/format'
-import type { Entry } from '../../lib/projects'
-import { enteredByOf } from '../../lib/enteredBy'
+import { dateShort, dateText, money, timeText } from '../../lib/core/format'
+import type { Entry } from '../../lib/entries/entryTypes'
+import { enteredByOf } from '../../lib/entries/enteredBy'
 import {
   distinct,
   filterExpenses,
   isExpenseFiltering,
   NO_EXPENSE_FILTER,
   type ExpenseFilter,
-} from '../../lib/advanceFilter'
-import { STATUS } from '../../lib/status'
+} from '../../lib/advances/advanceFilter'
+import { STATUS } from '../../lib/core/status'
 
 type Props = {
   entries: Entry[] | null | undefined

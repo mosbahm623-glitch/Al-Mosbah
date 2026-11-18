@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import { TYPE_LABEL, money, periodText, todayISO, type ProjectType } from '../../lib/format'
-import { fetchApprovedExpenses, type ExpenseRow as Row } from '../../lib/entries'
-import { categoryTotals } from '../../lib/reportBuilders'
-import { useAsync } from '../../lib/useAsync'
-import { sumMoney } from '../../lib/money'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import { TYPE_LABEL, money, periodText, todayISO, type ProjectType } from '../../lib/core/format'
+import { fetchApprovedExpenses, type ExpenseRow as Row } from '../../lib/entries/entries'
+import { categoryTotals } from '../../lib/reports/reportBuilders'
+import { useAsync } from '../../lib/core/useAsync'
+import { sumMoney } from '../../lib/core/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 /** Where the money went: expenses per بند across all projects (including what was paid from custodies). */
 export default function CategoryReport({

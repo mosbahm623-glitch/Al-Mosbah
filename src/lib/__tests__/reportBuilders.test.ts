@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { ProjectSummary } from '../projects'
-import { budgetRows, categoryTotals, inRange, monthTotals, projectGroups, runLedger } from '../reportBuilders'
+import type { ProjectSummary } from '../projects/projects'
+import { budgetRows, categoryTotals, inRange, monthTotals, projectGroups, runLedger } from '../reports/reportBuilders'
 
 const project = (over: Partial<ProjectSummary>): ProjectSummary => ({
   id: '1',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { pageButtons } from '../usePages'
+import { pageButtons } from '../users/usePages'
 
 describe('pageButtons', () => {
   it('shows every number when there are few pages', () => {

@@ -3,7 +3,7 @@ self.addEventListener('push', (event) => {
   let d = {}
   try { d = event.data.json() } catch { /* empty */ }
   event.waitUntil(
-    self.registration.showNotification(d.title || 'المصباح', {
+    self.registration.showNotification(d.title || 'Legacy ERP', {
       body: d.body || '',
       icon: 'pwa-192.png',
       badge: 'pwa-192.png',

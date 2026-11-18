@@ -50,11 +50,11 @@ jobs:
 
       - name: Install the test browsers
         # تحميل المتصفحات بيعلّق أحياناً على سيرفرات GitHub: مهلة قصيرة ومحاولة تانية بدل ما الفحص كله يستنى 10 دقايق
-        timeout-minutes: 4
+        timeout-minutes: 9
         run: |
-          for i in 1 2 3; do
-            timeout 200 npx playwright install --with-deps chromium firefox webkit && exit 0
-            echo "install attempt $i failed or hung"
+          for i in 1 2; do
+            npx playwright install --with-deps chromium firefox webkit && exit 0
+            echo "install attempt $i failed"; sleep 20
           done
           exit 1
 
@@ -130,11 +130,11 @@ jobs:
         run: npm ci
 
       - name: Install the test browser
-        timeout-minutes: 4
+        timeout-minutes: 9
         run: |
-          for i in 1 2 3; do
-            timeout 200 npx playwright install --with-deps chromium && exit 0
-            echo "install attempt $i failed or hung"
+          for i in 1 2; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "install attempt $i failed"; sleep 20
           done
           exit 1
 

@@ -1,4 +1,4 @@
-import type { Module } from '../auth/permissions'
+import type { Module } from '../lib/users/permissions'
 import {
   Bell,
   CheckSquare,

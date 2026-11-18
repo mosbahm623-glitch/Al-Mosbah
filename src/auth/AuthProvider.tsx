@@ -6,7 +6,7 @@ import { isOnline } from '../lib/net/connection'
 import { readStoredSession } from '../lib/offline/auth'
 import { clearReadCache } from '../lib/net/fetch'
 import { syncPush } from '../lib/notifications/push'
-import { allows, type Level, type Module, type Permissions } from './permissions'
+import { allows, type Level, type Module, type Permissions } from '../lib/users/permissions'
 import { STATUS } from '../lib/core/status'
 
 export type Profile = {

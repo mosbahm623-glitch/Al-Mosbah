@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
-import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
+import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../lib/users/permissions'
 import { TYPE_LABEL, type ProjectType } from '../../lib/core/format'
 import type { Named } from '../../lib/core/lookups'
 import {

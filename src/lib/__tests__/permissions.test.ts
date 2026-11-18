@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MODULES, allows, type Permissions } from '../../auth/permissions'
+import { MODULES, allows, type Permissions } from '../users/permissions'
 
 describe('allows', () => {
   const perms: Permissions = { projects: 'edit', advances: 'view' }

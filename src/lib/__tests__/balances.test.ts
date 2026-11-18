@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { allows } from '../../auth/permissions'
+import { allows } from '../users/permissions'
 import { advanceBalance } from '../advances/advances'
 import { bankBalance, byProject, type BankMovement } from '../banks/banks'
 import { dateText, money } from '../core/format'

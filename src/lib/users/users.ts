@@ -1,5 +1,5 @@
 import { supabase } from '../supabase'
-import type { Level, Module } from '../../auth/permissions'
+import type { Level, Module } from './permissions'
 import type { ProjectType } from '../core/format'
 
 export type UserRow = {

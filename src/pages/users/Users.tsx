@@ -2,7 +2,7 @@ import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import { Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import { LEVEL_LABEL, MODULES } from '../../auth/permissions'
+import { LEVEL_LABEL, MODULES } from '../../lib/users/permissions'
 import {
   fetchAdvanceOptions,
   fetchProjectOptions,

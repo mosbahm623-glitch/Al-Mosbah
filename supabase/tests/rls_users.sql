@@ -26,6 +26,12 @@ update ids set pid = (select id from public.projects where name = '__RLS'), bank
 insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'expense','كهربا','x',100,bank from ids;
 update ids set eid = (select id from public.entries where item = 'x' and project_id = (select pid from ids));
 
+-- the same writes work for the admin, so a refusal below is the rights, not a wrong column
+select pg_temp.chk('control_admin_grants_a_page', pg_temp.try(format('insert into public.user_permissions(user_id, module, level) values (%L, ''projects'', ''view'')', (select usr from ids))), '1');
+select pg_temp.chk('control_admin_writes_backup_log', pg_temp.try(format('insert into public.backup_log(by, note) values (%L, ''x'')', (select admin from ids))), '1');
+select pg_temp.chk('control_admin_creates_a_bank', pg_temp.try('insert into public.bank_accounts(name) values (''__ctl'')'), '1');
+delete from public.user_permissions where user_id = (select usr from ids);
+
 -- now as the plain user
 select set_config('request.jwt.claims', json_build_object('sub',(select usr from ids),'role','authenticated')::text, true);
 select pg_temp.chk('user_sees_no_entries_without_rights', pg_temp.try('select 1 from public.entries where item = ''x'' having count(*) > 0'), '0');

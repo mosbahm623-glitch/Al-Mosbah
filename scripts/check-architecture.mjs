@@ -1,6 +1,6 @@
 // Keeps the layers apart:
 //   pages / components / layout  ->  talk to the data only through src/lib (never to Supabase directly)
-//   src/lib                      ->  never imports from pages / components / layout
+//   src/lib                      ->  never imports from pages / components / layout / auth
 //   src/lib/<feature>/           ->  may only import the features listed in LIB_DEPENDENCIES (one direction, no cycles)
 // (src/auth is the one place besides lib that may use the Supabase client: it is the sign-in layer.)
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -96,6 +96,14 @@ export function findViolations(root = '.') {
     for (const spec of importsOf(readFileSync(file, 'utf8'))) {
       if (!spec.startsWith('.')) continue
       const target = normalize(join(dirname(file), spec))
+      if (target === join(root, 'src/auth') || target.startsWith(join(root, 'src/auth') + sep)) {
+        violations.push({
+          file: relative(root, file),
+          spec,
+          message: 'src/lib must not depend on src/auth: pass what it needs in',
+        })
+        continue
+      }
       if (relative(libRoot, target).startsWith('..')) continue
       const to = folderOf(target)
       if (to === from || (to === '.' && from !== '.')) continue

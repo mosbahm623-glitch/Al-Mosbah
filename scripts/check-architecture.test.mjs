@@ -67,6 +67,10 @@ describe('findViolations', () => {
     put('src/lib/supabase.ts', `import { e } from './entries/e'`)
     expect(findViolations(root)[0].message).toMatch(/may not depend on "entries"/)
   })
+  it('flags src/lib reaching into src/auth', () => {
+    put('src/lib/users/u.ts', `import type { Level } from '../../auth/permissions'`)
+    expect(findViolations(root)[0].message).toMatch(/must not depend on src\/auth/)
+  })
   it('ignores test files', () => {
     put('src/pages/__tests__/p.ts', `import { supabase } from '../../lib/supabase'`)
     put('src/pages/p.test.tsx', `import { supabase } from '../lib/supabase'`)

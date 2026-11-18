@@ -17,6 +17,10 @@ export function setReachable(value: boolean) {
   emit()
 }
 
+// the browser says the network is back: try again (a request that fails will mark us offline again).
+// Without this, a failed request while offline kept us "unreachable" and nothing was sent to prove otherwise.
+if (typeof window !== 'undefined') window.addEventListener('online', () => setReachable(true))
+
 /** Listens to every change of the connection; returns the function that stops listening. */
 export function subscribeConnection(onChange: () => void): () => void {
   if (typeof window === 'undefined') return () => undefined

@@ -2,7 +2,7 @@ import type { Page, Route } from '@playwright/test'
 
 const ADMIN = { id: '11111111-1111-4111-8111-111111111111', email: 'admin@test.local' }
 
-const PROFILE = {
+const ADMIN_PROFILE = {
   id: ADMIN.id,
   full_name: 'محمود',
   role: 'admin',
@@ -74,12 +74,70 @@ const pendingEntry = {
 
 export type Sent = { method: string; path: string; body: unknown }
 
+type Options = {
+  /** who is signed in: the admin (default), or an ordinary user with these page permissions */
+  user?: { module: string; level: 'view' | 'edit' }[]
+  /** extra answers for reads: return a value to answer, or undefined to leave it to the defaults */
+  answer?: (path: string, search: string) => unknown
+}
+
+// database functions that only read: they are not "writes" a test needs to see
+const READ_RPCS = new Set([
+  'project_summaries',
+  'dashboard_summary',
+  'bank_summaries',
+  'advance_summaries',
+  'bank_movements',
+  'deleted_entries',
+  'project_deleted_entries',
+  'entry_history_of',
+])
+
+export const APPROVED_ENTRY = {
+  id: '77777777-7777-4777-8777-777777777771',
+  seq: 55,
+  rev: 3,
+  kind: 'expense',
+  category: 'عمالة',
+  item: 'نجارة',
+  amount: 1000,
+  entry_date: '2026-11-10',
+  created_at: '2026-11-10T09:00:00Z',
+  notes: null,
+  advance_id: null,
+  status: 'approved',
+  invoices: [{ count: 1 }],
+  contractor: null,
+  bank: { name: 'CIB' },
+  creator: { full_name: 'محمود' },
+}
+
+export const DELETED_ENTRY = {
+  id: '88888888-8888-4888-8888-888888888881',
+  seq: 56,
+  rev: 2,
+  kind: 'expense',
+  category: 'عمالة',
+  item: 'سباكة',
+  amount: 300,
+  entry_date: '2026-11-09',
+  notes: null,
+  status_before_delete: 'approved',
+  deleted_at: '2026-11-11T09:00:00Z',
+  delete_reason: 'غلط',
+  project: 'فرش الحج مبروك',
+  contractor: null,
+  deleted_by_name: 'محمود',
+  created_by_name: 'محمود',
+}
+
 const json = (route: Route, data: unknown, status = 200) =>
   route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(data) })
 
 /** Fakes the whole database API. Returns every write the app sent so a test can check it. */
-export async function mockApi(page: Page): Promise<Sent[]> {
+export async function mockApi(page: Page, options: Options = {}): Promise<Sent[]> {
   const sent: Sent[] = []
+  const PROFILE = options.user ? { ...ADMIN_PROFILE, role: 'user' } : ADMIN_PROFILE
   await page.route('https://mock.supabase.co/**', async (route) => {
     const req = route.request()
     const url = new URL(req.url())
@@ -90,6 +148,9 @@ export async function mockApi(page: Page): Promise<Sent[]> {
     if (path.startsWith('/auth/v1/user')) return json(route, SESSION.user)
     if (path.startsWith('/auth/v1/')) return json(route, {})
     if (path.endsWith('/profiles')) return json(route, single ? PROFILE : [PROFILE])
+    if (path.endsWith('/user_permissions')) return json(route, options.user ?? [])
+    const custom = options.answer?.(path, url.search)
+    if (custom !== undefined) return json(route, custom)
     if (path.endsWith('/backup_log') && req.method() === 'GET') return json(route, [{ at: new Date().toISOString() }])
     if (path.endsWith('/rpc/project_summaries')) return json(route, PROJECTS)
     if (path.endsWith('/rpc/dashboard_summary')) {
@@ -105,7 +166,20 @@ export async function mockApi(page: Page): Promise<Sent[]> {
         budget_rows: [],
       })
     }
-    if (path.includes('/rpc/')) return json(route, [])
+    if (path.includes('/rpc/')) {
+      const name = path.split('/rpc/')[1]
+      if (!READ_RPCS.has(name)) {
+        let body: unknown = null
+        try {
+          body = req.postDataJSON()
+        } catch {
+          /* no body */
+        }
+        sent.push({ method, path, body })
+        return json(route, [{ ok: true }])
+      }
+      return json(route, [])
+    }
     if (method !== 'GET' && method !== 'HEAD') {
       let body: unknown = null
       try {
@@ -131,5 +205,5 @@ export async function signIn(page: Page) {
   await page.getByRole('textbox').first().fill(ADMIN.email)
   await page.locator('input[type="password"]').fill('password123')
   await page.getByRole('button', { name: /دخول/ }).click()
-  await page.getByRole('link', { name: 'لوحة التحكم' }).first().waitFor()
+  await page.getByRole('button', { name: 'تسجيل الخروج' }).waitFor()
 }

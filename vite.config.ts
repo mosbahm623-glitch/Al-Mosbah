@@ -49,7 +49,11 @@ export default defineConfig({
   base: '/Al-Mosbah/',
   define: { __APP_VERSION__: JSON.stringify(releaseName()) },
   // the tests never reach a real server: placeholders keep them runnable without a local .env file
-  test: { env: { VITE_SUPABASE_URL: 'https://example.supabase.co', VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key' } },
+  test: {
+    // the browser screen tests in e2e/ run with Playwright (npm run test:e2e), not here
+    include: ['src/**/*.test.{ts,tsx}', 'scripts/*.test.mjs'],
+    env: { VITE_SUPABASE_URL: 'https://example.supabase.co', VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key' },
+  },
   plugins: [
     react(),
     VitePWA({

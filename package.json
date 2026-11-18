@@ -8,9 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"scripts/*.mjs\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
     "architecture:check": "node scripts/check-architecture.mjs",
     "knip": "knip",
     "quality": "npm run format:check && npm run lint && npm run architecture:check && npm run knip && npm test && npm run build"
@@ -23,6 +24,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

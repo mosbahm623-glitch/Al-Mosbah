@@ -48,8 +48,8 @@ jobs:
       - name: Typecheck and build
         run: npm run build
 
-      - name: Install the test browser
-        run: npx playwright install --with-deps chromium
+      - name: Install the test browsers
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Screen tests
         run: npm run test:e2e

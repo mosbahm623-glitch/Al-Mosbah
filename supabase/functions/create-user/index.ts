@@ -8,7 +8,7 @@ const cors = {
 const reply = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
-// Creates an account for an email the admin typed in. Only an active admin or owner may call it.
+// Creates an account for an email the admin typed in. Only an active admin may call it.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return reply({ error: 'method' }, 405)
@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   }
   if (!callerId) return reply({ error: 'unauthorized' }, 401)
   const { data: me } = await caller.from('profiles').select('role,is_active').eq('id', callerId).maybeSingle()
-  if (!me || !['admin', 'owner'].includes(me.role) || !me.is_active) return reply({ error: 'forbidden' }, 403)
+  if (!me || me.role !== 'admin' || !me.is_active) return reply({ error: 'forbidden' }, 403)
 
   let body: { email?: string; password?: string; full_name?: string }
   try {

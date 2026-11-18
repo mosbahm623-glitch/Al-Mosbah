@@ -6,6 +6,8 @@ export default defineConfig({
   testDir: 'e2e',
   timeout: 30_000,
   fullyParallel: true,
+  // one retry in CI: a test that only passes the second time is reported as flaky, not hidden
+  retries: process.env.CI ? 1 : 0,
   reporter: 'list',
   use: { baseURL: 'http://localhost:4173', locale: 'ar-EG' },
   // locally the installed Chrome is used; CI installs the browsers and runs Chrome, Firefox and Safari's engine

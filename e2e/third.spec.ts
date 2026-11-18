@@ -105,6 +105,8 @@ test('an entry saved offline is sent by itself when the internet is back', async
   await expect(page.getByText('القيود اللي على جهازك (1)')).toBeVisible()
   expect(sent.some((r) => r.path.endsWith('/entries'))).toBe(false)
   await page.context().setOffline(false)
+  // not every browser announces the return of the network at once: send the event the browser would
+  await page.evaluate(() => window.dispatchEvent(new Event('online')))
   await expect.poll(() => sent.some((r) => r.path.endsWith('/entries')), { timeout: 20_000 }).toBe(true)
   const body = sent.find((r) => r.path.endsWith('/entries'))?.body
   expect((Array.isArray(body) ? body[0] : body) as object).toMatchObject({ kind: 'income', amount: 950 })

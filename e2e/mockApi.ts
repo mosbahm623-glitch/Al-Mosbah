@@ -79,6 +79,8 @@ type Options = {
   user?: { module: string; level: 'view' | 'edit' }[]
   /** extra answers for reads: return a value to answer, or undefined to leave it to the defaults */
   answer?: (path: string, search: string) => unknown
+  /** other accounts shown in the users list */
+  others?: Record<string, unknown>[]
 }
 
 // database functions that only read: they are not "writes" a test needs to see
@@ -147,7 +149,11 @@ export async function mockApi(page: Page, options: Options = {}): Promise<Sent[]
     if (path.startsWith('/auth/v1/token')) return json(route, SESSION)
     if (path.startsWith('/auth/v1/user')) return json(route, SESSION.user)
     if (path.startsWith('/auth/v1/')) return json(route, {})
-    if (path.endsWith('/profiles')) return json(route, single ? PROFILE : [PROFILE])
+    if (path.endsWith('/profiles') && method === 'GET') {
+      // the signed-in user's own record is one row; the users page asks for all of them
+      if (url.search.includes('id=eq.')) return json(route, single ? PROFILE : [PROFILE])
+      return json(route, [PROFILE, ...(options.others ?? [])])
+    }
     if (path.endsWith('/user_permissions')) return json(route, options.user ?? [])
     const custom = options.answer?.(path, url.search)
     if (custom !== undefined) return json(route, custom)
@@ -165,6 +171,16 @@ export async function mockApi(page: Page, options: Options = {}): Promise<Sent[]
         over_count: 0,
         budget_rows: [],
       })
+    }
+    if (path.startsWith('/functions/v1/')) {
+      let body: unknown = null
+      try {
+        body = req.postDataJSON()
+      } catch {
+        /* no body */
+      }
+      sent.push({ method, path, body })
+      return json(route, { id: '99999999-9999-4999-8999-999999999991', ok: true })
     }
     if (path.includes('/rpc/')) {
       const name = path.split('/rpc/')[1]

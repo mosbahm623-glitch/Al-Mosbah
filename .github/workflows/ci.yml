@@ -62,9 +62,31 @@ jobs:
       - name: Screen tests
         run: npm run test:e2e
 
+  database:
+    # اختبارات الأمان والحسابات على قاعدة Postgres مؤقتة بتتبني من ملفات supabase/migrations، مش على قاعدتك الحقيقية
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Database tests
+        env:
+          PGURL: postgres://postgres:postgres@localhost:5432/postgres
+        run: scripts/run-sql-tests.sh
+
   deploy:
     # ينشر الموقع تلقائيًا على gh-pages بعد كل دمج في main، وبس لو كل الفحوصات نجحت
-    needs: check
+    needs: [check, database]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10

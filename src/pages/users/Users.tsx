@@ -48,10 +48,12 @@ export default function Users() {
         title="المستخدمين والصلاحيات"
         crumb="المستخدمين"
         actions={
-          <button className="btn btn-icon" onClick={() => setAdding(true)}>
-            <Plus size={18} aria-hidden="true" />
-            مستخدم جديد
-          </button>
+          isAdmin ? (
+            <button className="btn btn-icon" onClick={() => setAdding(true)}>
+              <Plus size={18} aria-hidden="true" />
+              مستخدم جديد
+            </button>
+          ) : undefined
         }
       />
 

@@ -1,6 +1,7 @@
 // Keeps the layers apart:
 //   pages / components / layout  ->  talk to the data only through src/lib (never to Supabase directly)
 //   src/lib                      ->  never imports from pages / components / layout / auth
+//   every source file             ->  at most MAX_LINES lines (split a long file by what it does, not by line count)
 //   src/lib/<feature>/           ->  may only import the features listed in LIB_DEPENDENCIES (one direction, no cycles)
 // (src/auth is the one place besides lib that may use the Supabase client: it is the sign-in layer.)
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -9,6 +10,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const UI_DIRS = ['src/pages', 'src/components', 'src/layout']
 const UI_FILES = ['src/App.tsx', 'src/main.tsx']
+
+/** A file longer than this is doing too much: it gets hard to read, review and test. */
+export const MAX_LINES = 350
 
 /**
  * Which folders of src/lib may use which. Read it as "left needs right". The files directly in src/lib
@@ -84,6 +88,17 @@ export function findViolations(root = '.') {
           message: 'src/lib must not depend on pages, components or layout',
         })
       }
+    }
+  }
+  for (const file of listSourceFiles(join(root, 'src'))) {
+    const text = readFileSync(file, 'utf8')
+    const lines = text.split('\n').length - (text.endsWith('\n') ? 1 : 0)
+    if (lines > MAX_LINES) {
+      violations.push({
+        file: relative(root, file),
+        spec: `${lines} lines`,
+        message: `longer than ${MAX_LINES} lines: split it by what it does`,
+      })
     }
   }
   const libRoot = join(root, 'src/lib')

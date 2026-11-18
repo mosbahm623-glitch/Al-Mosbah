@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react'
 import { DatabaseBackup } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
-import { downloadBackup, lastBackup } from '../lib/export/backup'
+import { downloadBackup } from '../lib/export/backup'
+import { lastBackup } from '../lib/export/lastBackup'
 import { useAsync } from '../lib/core/useAsync'
 
 const when = (iso: string) => new Date(iso).toLocaleDateString('ar-EG', { dateStyle: 'long' })

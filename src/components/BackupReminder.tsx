@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import Dialog from './Dialog'
 import { useAuth } from '../auth/AuthProvider'
-import { lastBackup } from '../lib/export/backup'
+import { lastBackup } from '../lib/export/lastBackup'
 import { useAsync } from '../lib/core/useAsync'
 
 const KEY = 'mosbah-backup-reminder'

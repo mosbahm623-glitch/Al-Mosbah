@@ -39,6 +39,39 @@ const SESSION = {
   },
 }
 
+const CATEGORIES = [
+  {
+    id: '44444444-4444-4444-8444-444444444441',
+    name: 'عمالة',
+    expense_items: [{ id: '55555555-5555-4555-8555-555555555551', name: 'نجارة' }],
+  },
+]
+
+export const PENDING_SEQ = 101
+
+const pendingEntry = {
+  id: '66666666-6666-4666-8666-666666666661',
+  project_id: P1,
+  seq: PENDING_SEQ,
+  rev: 1,
+  kind: 'expense',
+  category: 'عمالة',
+  item: 'نجارة',
+  amount: 2500,
+  entry_date: '2026-11-17',
+  notes: null,
+  advance_id: null,
+  status: 'pending',
+  created_at: '2026-11-17T10:00:00Z',
+  reject_reason: null,
+  edit_reason: null,
+  invoices: [{ count: 1 }],
+  project: { name: 'فرش الحج مبروك' },
+  contractor: null,
+  bank: { name: 'CIB' },
+  creator: { full_name: 'أحمد' },
+}
+
 export type Sent = { method: string; path: string; body: unknown }
 
 const json = (route: Route, data: unknown, status = 200) =>
@@ -85,6 +118,8 @@ export async function mockApi(page: Page): Promise<Sent[]> {
       const row = { id: '33333333-3333-4333-8333-333333333333', ...(Array.isArray(body) ? body[0] : (body as object)) }
       return json(route, single ? row : [row], method === 'POST' ? 201 : 200)
     }
+    if (path.endsWith('/expense_categories')) return json(route, CATEGORIES)
+    if (path.endsWith('/entries') && url.search.includes('status=eq.pending')) return json(route, [pendingEntry])
     return json(route, single ? null : [])
   })
   return sent

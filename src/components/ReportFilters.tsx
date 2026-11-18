@@ -1,5 +1,5 @@
 import SearchSelect from './SearchSelect'
-import { FILTER_LABEL, type FilterKey, type ReportFilter } from '../lib/reportFilter'
+import { FILTER_LABEL, type FilterKey, type ReportFilter } from '../lib/reports/reportFilter'
 
 type Props = {
   keys: readonly FilterKey[]

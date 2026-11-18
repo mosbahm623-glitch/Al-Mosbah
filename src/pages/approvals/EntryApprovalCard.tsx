@@ -2,12 +2,12 @@ import { Check, Pencil, X } from 'lucide-react'
 import EntryHistory from '../../components/EntryHistory'
 import InvoiceField from '../../components/InvoiceField'
 import InvoiceLink from '../../components/InvoiceLink'
-import { invoiceCount } from '../../lib/attachments'
-import type { PendingEntry } from '../../lib/approvals'
-import { dateText, timeText } from '../../lib/format'
-import { amountTone, entryTitle } from '../../lib/entryKind'
+import { invoiceCount } from '../../lib/entries/attachments'
+import type { PendingEntry } from '../../lib/approvals/approvals'
+import { dateText, timeText } from '../../lib/core/format'
+import { amountTone, entryTitle } from '../../lib/entries/entryKind'
 import { AmountText, KindChip } from '../../components/EntryParts'
-import { enteredByOf } from '../../lib/enteredBy'
+import { enteredByOf } from '../../lib/entries/enteredBy'
 
 type Props = {
   entry: PendingEntry

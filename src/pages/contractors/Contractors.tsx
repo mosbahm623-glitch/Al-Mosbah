@@ -3,9 +3,9 @@ import { Plus } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { useAuth } from '../../auth/AuthProvider'
-import { fetchContractorSummaries, type ContractorRow } from '../../lib/contractors'
-import { money } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
+import { fetchContractorSummaries, type ContractorRow } from '../../lib/contractors/contractors'
+import { money } from '../../lib/core/format'
+import { useAsync } from '../../lib/core/useAsync'
 import ContractorDialog from './ContractorDialog'
 
 const owed = (c: ContractorRow) => c.due - c.paid

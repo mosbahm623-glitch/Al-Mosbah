@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { BankChoice } from '../lib/lookups'
+import type { BankChoice } from '../lib/core/lookups'
 import BankLogo from './BankLogo'
 
 type Props = {

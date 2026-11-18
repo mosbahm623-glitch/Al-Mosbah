@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { knownBankLogo } from '../bankLogos'
+import { knownBankLogo } from '../banks/bankLogos'
 
 describe('knownBankLogo', () => {
   it('matches the known banks by name', () => {

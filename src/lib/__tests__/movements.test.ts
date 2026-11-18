@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { direction, shiftDay, sortMovements, totalsOfDay, type Movement } from '../movements'
+import { direction, shiftDay, sortMovements, totalsOfDay, type Movement } from '../entries/movements'
 
 const m = (over: Partial<Movement>): Movement => ({
   key: 'k',

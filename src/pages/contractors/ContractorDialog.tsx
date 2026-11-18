@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
-import { createContractor } from '../../lib/catalog'
+import { createContractor } from '../../lib/entries/catalog'
 
 export default function ContractorDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState('')

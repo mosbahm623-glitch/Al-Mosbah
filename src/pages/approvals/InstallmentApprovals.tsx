@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Check, Pencil, X } from 'lucide-react'
 import StatusChip from '../../components/StatusChip'
 import MoneyDialog from '../advances/MoneyDialog'
-import { decideInstallments, type PendingInstallment } from '../../lib/approvals'
-import { notifyApprovalsChanged } from '../../lib/events'
-import { dateText, money, timeText } from '../../lib/format'
-import { useSubmitGuard } from '../../lib/useSubmitGuard'
-import { STATUS, type DecisionStatus } from '../../lib/status'
+import { decideInstallments, type PendingInstallment } from '../../lib/approvals/approvals'
+import { notifyApprovalsChanged } from '../../lib/core/events'
+import { dateText, money, timeText } from '../../lib/core/format'
+import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
+import { STATUS, type DecisionStatus } from '../../lib/core/status'
 
 type Props = { rows: PendingInstallment[]; onChanged: () => void }
 

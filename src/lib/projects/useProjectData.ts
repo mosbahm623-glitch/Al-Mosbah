@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from 'react'
-import { fetchProjectDeleted, type DeletedEntry } from './approvals'
-import { fetchEntries, fetchSummaries, type Entry, type ProjectSummary } from './projects'
-import { useAsync } from './useAsync'
+import { fetchProjectDeleted, type DeletedEntry } from '../approvals/approvals'
+import { fetchEntries, fetchSummaries, type ProjectSummary } from './projects'
+import type { Entry } from '../entries/entryTypes'
+import { useAsync } from '../core/useAsync'
 
 const asEntry = (d: DeletedEntry): Entry => ({
   id: d.id,

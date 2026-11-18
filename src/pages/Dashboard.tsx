@@ -1,7 +1,7 @@
 import { FolderKanban, HandCoins, HardHat, Banknote, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
-import { fetchDashboardSummary, type DashboardSummary } from '../lib/projects'
-import { money } from '../lib/format'
-import { useAsync } from '../lib/useAsync'
+import { fetchDashboardSummary, type DashboardSummary } from '../lib/projects/projects'
+import { money } from '../lib/core/format'
+import { useAsync } from '../lib/core/useAsync'
 import { AttentionCards } from './DashboardCards'
 import { BankBalances, MonthlyChart } from './DashboardExtras'
 

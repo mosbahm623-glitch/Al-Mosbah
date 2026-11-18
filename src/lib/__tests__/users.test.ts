@@ -4,7 +4,7 @@ import { query } from './supabaseMock'
 vi.mock('../supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn(), functions: { invoke: vi.fn() } } }))
 
 import { supabase } from '../supabase'
-import { createUser, fetchUsers, resetUserPassword } from '../users'
+import { createUser, fetchUsers, resetUserPassword } from '../users/users'
 
 const from = vi.mocked(supabase.from)
 const invoke = vi.mocked(supabase.functions.invoke)

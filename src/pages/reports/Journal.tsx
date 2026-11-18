@@ -1,16 +1,16 @@
 import { useCallback, useMemo, useState } from 'react'
 import { FileSpreadsheet, Printer } from 'lucide-react'
-import { dateText, money } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
-import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/movements'
+import { dateText, money } from '../../lib/core/format'
+import { useAsync } from '../../lib/core/useAsync'
+import { KIND_LABEL, fetchMovements, movementRow, totalsOfDay, type Movement } from '../../lib/entries/movements'
 import { exportJournalExcel } from '../../lib/export/exportJournalExcel'
 import { Kpis, Signatures } from '../../components/PaperExtras'
 import DataGrid from '../../components/DataGrid'
 import PrintTables from '../../components/PrintTables'
-import type { Section, Tone } from '../../lib/tableTypes'
+import type { Section, Tone } from '../../lib/core/tableTypes'
 import { usePreparedBy } from '../../auth/usePreparedBy'
-import type { ReportColumns } from '../../lib/reportColumns'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import type { ReportColumns } from '../../lib/reports/reportColumns'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 const PILL: Record<string, Tone> = {
   [KIND_LABEL.income]: 'ok',

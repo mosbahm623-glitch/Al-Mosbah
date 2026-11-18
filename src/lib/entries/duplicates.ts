@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 export type DuplicateGroup = {
   entry_date: string

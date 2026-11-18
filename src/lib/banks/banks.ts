@@ -1,5 +1,5 @@
-import { supabase } from './supabase'
-import { STATUS } from './status'
+import { supabase } from '../supabase'
+import { STATUS } from '../core/status'
 
 export type BankSummary = {
   id: string

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { createOfflineFetch, isCacheable } from '../offline/fetch'
-import { kvClear } from '../offline/store'
+import { createOfflineFetch, isCacheable } from '../net/fetch'
+import { kvClear } from '../net/store'
 
 const BASE = 'https://x.supabase.co'
 const token = (sub: string) => `h.${btoa(JSON.stringify({ sub, role: 'authenticated' })).replace(/=/g, '')}.s`

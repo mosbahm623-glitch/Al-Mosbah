@@ -1,10 +1,10 @@
-import { uploadInvoices } from './attachments'
-import { addExpenseItem, createBank, createContractor, type Category } from './catalog'
-import { isNetworkError, isOnline } from './offline/connection'
-import { insertEntry, updateEntry, type EntryInput } from './entries'
-import type { Named } from './lookups'
-import { queueEntry } from './offline/queue'
-import type { Entry } from './projects'
+import { uploadInvoices } from '../entries/attachments'
+import { addExpenseItem, createBank, createContractor, type Category } from '../entries/catalog'
+import { isNetworkError, isOnline } from '../net/connection'
+import { insertEntry, updateEntry, type EntryInput } from '../entries/entries'
+import type { Named } from '../core/lookups'
+import { queueEntry } from './queue'
+import type { Entry } from '../entries/entryTypes'
 
 /** What the person filled in, plus the lists the names are matched against. */
 export type SaveInput = {

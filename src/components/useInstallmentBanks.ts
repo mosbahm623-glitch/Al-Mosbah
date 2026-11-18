@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useAuth } from '../auth/AuthProvider'
-import { fetchBankNames, fetchMyBankIds, type BankChoice } from '../lib/lookups'
-import { useAsync } from '../lib/useAsync'
+import { fetchBankNames, fetchMyBankIds, type BankChoice } from '../lib/core/lookups'
+import { useAsync } from '../lib/core/useAsync'
 
 /** The banks a custody payment may come out of: all of them for the admin, only his own list for an owner. */
 export function useInstallmentBanks() {

@@ -4,7 +4,7 @@ import { query } from './supabaseMock'
 vi.mock('../supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }))
 
 import { supabase } from '../supabase'
-import { SEARCH_LIMIT, searchEntries } from '../search'
+import { SEARCH_LIMIT, searchEntries } from '../entries/search'
 
 const from = vi.mocked(supabase.from)
 const ok = (data: unknown) => ({ data, error: null })

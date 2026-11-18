@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fetchPaged } from '../paged'
+import { fetchPaged } from '../core/paged'
 
 const source = (total: number) => {
   const rows = Array.from({ length: total }, (_, i) => i)

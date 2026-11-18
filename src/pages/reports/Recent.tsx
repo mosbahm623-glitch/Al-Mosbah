@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Segmented from '../../components/Segmented'
 import StatusChip from '../../components/StatusChip'
-import { dateText, money } from '../../lib/format'
-import { useAsync } from '../../lib/useAsync'
-import { KIND_LABEL, direction, fetchMovements, type Movement, type MovementKind } from '../../lib/movements'
-import { STATUS } from '../../lib/status'
+import { dateText, money } from '../../lib/core/format'
+import { useAsync } from '../../lib/core/useAsync'
+import { KIND_LABEL, direction, fetchMovements, type Movement, type MovementKind } from '../../lib/entries/movements'
+import { STATUS } from '../../lib/core/status'
 
 const LIMIT = 50
 const GROUPS = [

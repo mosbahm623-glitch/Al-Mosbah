@@ -1,4 +1,4 @@
-import type { AdvanceSummary } from '../../lib/advances'
+import type { AdvanceSummary } from '../../lib/advances/advances'
 
 export default function AdvanceChip({ status }: { status: AdvanceSummary['status'] }) {
   return status === 'open' ? (

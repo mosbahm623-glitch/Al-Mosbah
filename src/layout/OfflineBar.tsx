@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { CloudOff, RefreshCw, Trash2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
-import { isOnline, subscribeConnection } from '../lib/offline/connection'
+import { isOnline, subscribeConnection } from '../lib/net/connection'
 import { discardQueued, queueSnapshot, retryQueued, subscribeQueue } from '../lib/offline/queue'
 
 /** Shows when the app is offline and lists the entries waiting on this device to be sent. */

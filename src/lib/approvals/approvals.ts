@@ -1,6 +1,6 @@
-import { supabase } from './supabase'
-import { enteredByOf } from './enteredBy'
-import { STATUS, type OpenStatus, type DecisionStatus } from './status'
+import { supabase } from '../supabase'
+import { enteredByOf } from '../entries/enteredBy'
+import { STATUS, type OpenStatus, type DecisionStatus } from '../core/status'
 
 export type PendingEntry = {
   id: string

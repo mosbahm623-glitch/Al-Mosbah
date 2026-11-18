@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 const storage = vi.hoisted(() => ({ createSignedUrls: vi.fn() }))
 vi.mock('../supabase', () => ({ supabase: { storage: { from: () => storage } } }))
 
-import { invoiceCount, signedUrls } from '../attachments'
+import { invoiceCount, signedUrls } from '../entries/attachments'
 
 describe('invoiceCount', () => {
   it('reads the embedded count and treats a missing one as zero', () => {
@@ -33,7 +33,7 @@ describe('signedUrls', () => {
 
 describe('isPdf', () => {
   it('recognises a PDF by type, path or file name', async () => {
-    const { isPdf } = await import('../attachments')
+    const { isPdf } = await import('../entries/attachments')
     expect(isPdf({ type: 'application/pdf' })).toBe(true)
     expect(isPdf({ path: 'e/1.pdf' })).toBe(true)
     expect(isPdf({ file_name: 'Invoice.PDF' })).toBe(true)

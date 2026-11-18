@@ -4,10 +4,10 @@ import { query } from './supabaseMock'
 vi.mock('../supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }))
 
 import { supabase } from '../supabase'
-import { fetchAdvanceEntries, fetchAdvanceSummaries, fetchInstallments, fetchReturns } from '../advances'
-import { fetchBankMovements, fetchBankSummaries } from '../banks'
-import { fetchBankNames, fetchContractorNames, fetchPeople } from '../lookups'
-import { clearAll, countUnread, fetchNotices, markAllRead, markRead } from '../notifications'
+import { fetchAdvanceEntries, fetchAdvanceSummaries, fetchInstallments, fetchReturns } from '../advances/advances'
+import { fetchBankMovements, fetchBankSummaries } from '../banks/banks'
+import { fetchBankNames, fetchContractorNames, fetchPeople } from '../core/lookups'
+import { clearAll, countUnread, fetchNotices, markAllRead, markRead } from '../notifications/notifications'
 
 const from = vi.mocked(supabase.from)
 const rpc = vi.mocked(supabase.rpc)

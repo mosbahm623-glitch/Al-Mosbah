@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { allows } from '../../auth/permissions'
-import { advanceBalance } from '../advances'
-import { bankBalance, byProject, type BankMovement } from '../banks'
-import { dateText, money } from '../format'
+import { advanceBalance } from '../advances/advances'
+import { bankBalance, byProject, type BankMovement } from '../banks/banks'
+import { dateText, money } from '../core/format'
 
 const move = (over: Partial<BankMovement>): BankMovement => ({
   id: '1',

@@ -13,20 +13,20 @@ import {
   type ApprovalFilter,
   type PendingEntry,
   type PendingInstallment,
-} from '../../lib/approvals'
-import { notifyApprovalsChanged } from '../../lib/events'
-import { money, todayISO } from '../../lib/format'
+} from '../../lib/approvals/approvals'
+import { notifyApprovalsChanged } from '../../lib/core/events'
+import { money, todayISO } from '../../lib/core/format'
 import ApprovalFilters from './ApprovalFilters'
 import EntryApprovalCard from './EntryApprovalCard'
 import InstallmentApprovals from './InstallmentApprovals'
 import ApprovalsReport from './ApprovalsReport'
 import DeletedList from './DeletedList'
 import { useAuth } from '../../auth/AuthProvider'
-import { useAsync } from '../../lib/useAsync'
-import { useSubmitGuard } from '../../lib/useSubmitGuard'
+import { useAsync } from '../../lib/core/useAsync'
+import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
 import EntryDialog from '../../components/EntryDialog'
-import { enteredByOf } from '../../lib/enteredBy'
-import { type DecisionStatus } from '../../lib/status'
+import { enteredByOf } from '../../lib/entries/enteredBy'
+import { type DecisionStatus } from '../../lib/core/status'
 
 const TABS = [
   { value: 'pending', label: 'مستنية الموافقة' },

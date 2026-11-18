@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
 import BankLogo from '../../components/BankLogo'
-import { bankBalance, saveBankTransfer, type BankSummary } from '../../lib/banks'
-import { money, todayISO } from '../../lib/format'
+import { bankBalance, saveBankTransfer, type BankSummary } from '../../lib/banks/banks'
+import { money, todayISO } from '../../lib/core/format'
 
 type Props = { banks: BankSummary[]; fromId?: string; onClose: () => void; onSaved: () => void }
 

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 export type Category = { id: string; name: string; expense_items: { id: string; name: string }[] }
 

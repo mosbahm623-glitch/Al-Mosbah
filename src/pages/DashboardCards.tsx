@@ -1,8 +1,8 @@
 import { CheckSquare } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
-import { fetchPendingSummary } from '../lib/approvals'
-import { money } from '../lib/format'
-import { useAsync } from '../lib/useAsync'
+import { fetchPendingSummary } from '../lib/approvals/approvals'
+import { money } from '../lib/core/format'
+import { useAsync } from '../lib/core/useAsync'
 
 const link = { color: 'inherit', textDecoration: 'none', display: 'block' } as const
 

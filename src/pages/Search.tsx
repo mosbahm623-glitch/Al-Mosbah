@@ -4,11 +4,11 @@ import { useAuth } from '../auth/AuthProvider'
 import InvoiceLink from '../components/InvoiceLink'
 import EntryDialog from '../components/EntryDialog'
 import PageHead from '../components/PageHead'
-import { dateText, money, timeText } from '../lib/format'
-import { kindLabel } from '../lib/entryKind'
-import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/search'
-import { useAsync } from '../lib/useAsync'
-import { STATUS } from '../lib/status'
+import { dateText, money, timeText } from '../lib/core/format'
+import { kindLabel } from '../lib/entries/entryKind'
+import { SEARCH_LIMIT, searchEntries, type Hit } from '../lib/entries/search'
+import { useAsync } from '../lib/core/useAsync'
+import { STATUS } from '../lib/core/status'
 
 const subscribe = (cb: () => void) => {
   window.addEventListener('hashchange', cb)

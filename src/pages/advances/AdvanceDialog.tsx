@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
-import { todayISO } from '../../lib/format'
+import { todayISO } from '../../lib/core/format'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
-import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances'
+import { addInstallment, createAdvance, updateAdvance, type AdvanceSummary } from '../../lib/advances/advances'
 import InstallmentBankField from '../../components/InstallmentBankField'
 import { useInstallmentBanks } from '../../components/useInstallmentBanks'
 

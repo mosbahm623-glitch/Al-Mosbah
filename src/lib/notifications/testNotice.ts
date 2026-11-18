@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../supabase'
 
 /**
  * Sends the test notification to the chosen accounts, or to every active account when `userIds` is null

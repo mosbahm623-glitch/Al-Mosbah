@@ -1,5 +1,5 @@
-import { supabase } from './supabase'
-import { ENTRY_COLUMNS, type Entry } from './projects'
+import { supabase } from '../supabase'
+import { ENTRY_COLUMNS, type Entry } from './entryTypes'
 
 export type Hit = Entry & { project_id: string; project: { name: string } | null }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { footerSpan, isNumericCol, pillOf, showCell } from '../tableFormat'
-import type { Col } from '../tableTypes'
+import { footerSpan, isNumericCol, pillOf, showCell } from '../core/tableFormat'
+import type { Col } from '../core/tableTypes'
 
 describe('showCell', () => {
   it('shows nothing for null and empty text', () => {

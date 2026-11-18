@@ -11,21 +11,21 @@ const m = vi.hoisted(() => ({
   online: true,
 }))
 
-vi.mock('../entries', () => ({ insertEntry: m.insertEntry, updateEntry: m.updateEntry }))
-vi.mock('../catalog', () => ({
+vi.mock('../entries/entries', () => ({ insertEntry: m.insertEntry, updateEntry: m.updateEntry }))
+vi.mock('../entries/catalog', () => ({
   addExpenseItem: m.addExpenseItem,
   createBank: m.createBank,
   createContractor: m.createContractor,
 }))
 vi.mock('../offline/queue', () => ({ queueEntry: m.queueEntry }))
-vi.mock('../attachments', () => ({ uploadInvoices: m.uploadInvoices }))
-vi.mock('../offline/connection', async (original) => ({
-  ...(await original<typeof import('../offline/connection')>()),
+vi.mock('../entries/attachments', () => ({ uploadInvoices: m.uploadInvoices }))
+vi.mock('../net/connection', async (original) => ({
+  ...(await original<typeof import('../net/connection')>()),
   isOnline: () => m.online,
 }))
 
-import { saveEntry, type SaveInput } from '../entrySave'
-import type { Entry } from '../projects'
+import { saveEntry, type SaveInput } from '../offline/entrySave'
+import type { Entry } from '../entries/entryTypes'
 
 const category = { id: 'c1', name: 'كهرباء', expense_items: [{ id: 'i1', name: 'أسلاك' }] }
 const base = (over: Partial<SaveInput> = {}): SaveInput =>

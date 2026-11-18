@@ -1,6 +1,6 @@
-import { supabase } from './supabase'
-import { sumMoney } from './money'
-import { STATUS } from './status'
+import { supabase } from '../supabase'
+import { sumMoney } from '../core/money'
+import { STATUS } from '../core/status'
 
 export type MonthRow = { month: string; income: number; expenses: number }
 type Line = { kind: 'income' | 'expense'; amount: number; entry_date: string }

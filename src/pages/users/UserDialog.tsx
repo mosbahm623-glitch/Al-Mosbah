@@ -3,8 +3,8 @@ import Dialog from '../../components/Dialog'
 import Segmented from '../../components/Segmented'
 import { useAuth } from '../../auth/AuthProvider'
 import { LEVEL_LABEL, MODULES, type Level, type Module } from '../../auth/permissions'
-import { TYPE_LABEL, type ProjectType } from '../../lib/format'
-import type { Named } from '../../lib/lookups'
+import { TYPE_LABEL, type ProjectType } from '../../lib/core/format'
+import type { Named } from '../../lib/core/lookups'
 import {
   replaceAdvanceAccess,
   replaceBankAccess,
@@ -17,7 +17,7 @@ import {
   type AdvanceOption,
   type ProjectOption,
   type UserRow,
-} from '../../lib/users'
+} from '../../lib/users/users'
 
 type Choice = Level | 'none'
 const CHOICES = (['none', 'view', 'edit'] as const).map((value) => ({ value, label: LEVEL_LABEL[value] }))

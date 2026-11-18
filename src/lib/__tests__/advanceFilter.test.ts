@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { distinct, filterExpenses, isExpenseFiltering, NO_EXPENSE_FILTER } from '../advanceFilter'
-import type { Entry } from '../projects'
+import { distinct, filterExpenses, isExpenseFiltering, NO_EXPENSE_FILTER } from '../advances/advanceFilter'
+import type { Entry } from '../entries/entryTypes'
 
 const e = (o: Partial<Entry> & { id: string }) =>
   ({

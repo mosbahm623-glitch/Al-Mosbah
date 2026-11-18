@@ -1,4 +1,4 @@
-import { isOver, type ProjectSummary } from '../../lib/projects'
+import { isOver, type ProjectSummary } from '../../lib/projects/projects'
 
 export default function StatusChip({ p }: { p: ProjectSummary }) {
   if (isOver(p))

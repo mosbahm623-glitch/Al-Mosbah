@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import TableReport from '../../components/TableReport'
-import { TYPE_LABEL, money, todayISO } from '../../lib/format'
-import { fetchSummaries, type ProjectSummary } from '../../lib/projects'
-import { NEAR_LIMIT, budgetRows, type BudgetMode } from '../../lib/reportBuilders'
-import { useAsync } from '../../lib/useAsync'
-import { toCents } from '../../lib/money'
-import { filterMeta, matches, type ReportFilter } from '../../lib/reportFilter'
+import { TYPE_LABEL, money, todayISO } from '../../lib/core/format'
+import { fetchSummaries, type ProjectSummary } from '../../lib/projects/projects'
+import { NEAR_LIMIT, budgetRows, type BudgetMode } from '../../lib/reports/reportBuilders'
+import { useAsync } from '../../lib/core/useAsync'
+import { toCents } from '../../lib/core/money'
+import { filterMeta, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 
 const TITLE: Record<BudgetMode, string> = {
   all: 'متابعة الميزانيات',

@@ -1,6 +1,6 @@
 import type { MouseEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { pageButtons } from '../lib/usePages'
+import { pageButtons } from '../lib/users/usePages'
 
 type Props = {
   page: number

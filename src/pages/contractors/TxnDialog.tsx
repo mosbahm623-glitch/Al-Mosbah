@@ -1,10 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
-import { deleteContractorTxn, saveContractorTxn, type LedgerTxn } from '../../lib/contractors'
-import { todayISO } from '../../lib/format'
-import type { Named } from '../../lib/lookups'
-import { useSubmitGuard } from '../../lib/useSubmitGuard'
+import { deleteContractorTxn, saveContractorTxn, type LedgerTxn } from '../../lib/contractors/contractors'
+import { todayISO } from '../../lib/core/format'
+import type { Named } from '../../lib/core/lookups'
+import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
 
 type Props = {
   contractorId: string

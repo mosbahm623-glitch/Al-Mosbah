@@ -42,8 +42,8 @@ export default function TestNoticeDialog({ onClose }: { onClose: () => void }) {
       {sentTo !== null ? (
         <div className="dialog-form">
           <p className="msg msg-ok" role="status">
-            الإشعار التجريبي اتبعت لـ {sentTo} {sentTo === 1 ? 'مستخدم' : 'مستخدمين'}. بيظهر عندهم فورًا في التطبيق،
-            وعلى التليفون لمن فعّل إشعارات الموبايل.
+            الإشعار التجريبي اتبعت لـ {sentTo} {sentTo === 1 ? 'مستخدم' : 'مستخدمين'}. بيظهر عندهم فورًا في التطبيق، وعلى
+            التليفون لمن فعّل إشعارات الموبايل.
           </p>
           <div className="dialog-actions">
             <button type="button" className="btn" onClick={onClose}>
@@ -93,8 +93,8 @@ export default function TestNoticeDialog({ onClose }: { onClose: () => void }) {
             </div>
           </div>
           <p className="muted small">
-            هيوصلهم إشعار عنوانه «إشعار تجريبي» ومفيش مطلوب منهم حاجة. اللي مسجّل تليفونه بيوصله على التليفون كمان،
-            واللي لأ بيوصله جوه التطبيق بس.
+            هيوصلهم إشعار عنوانه «إشعار تجريبي» ومفيش مطلوب منهم حاجة. اللي مسجّل تليفونه بيوصله على التليفون كمان، واللي
+            لأ بيوصله جوه التطبيق بس.
           </p>
           {error && (
             <p className="msg msg-error" role="alert">

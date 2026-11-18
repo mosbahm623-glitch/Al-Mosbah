@@ -168,8 +168,7 @@ export default function UserDialog({ user, advances, banks, projects, isSelf, on
             <span className="strong">المشاريع المسموحة</span>
             <div className="perm-sub">
               <span className="muted small">
-                علّم المشاريع اللي يسجّل عليها قيود ومصروف عهدة. لو ما علّمتش ولا مشروع يسجّل على كل مشاريع النوع
-                المحدد.
+                علّم المشاريع اللي يسجّل عليها قيود ومصروف عهدة. لو ما علّمتش ولا مشروع يسجّل على كل مشاريع النوع المحدد.
               </span>
               {typeProjects.length === 0 && <span className="muted small">مفيش مشاريع شغّالة من النوع ده.</span>}
               {typeProjects.map((pr) => (

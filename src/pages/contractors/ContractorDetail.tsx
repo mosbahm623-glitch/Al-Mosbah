@@ -53,8 +53,7 @@ export default function ContractorDetail({ id }: { id: string }) {
     }
   }, [ledger.data, project])
 
-  if ((names.loading && !names.data) || (ledger.loading && !ledger.data))
-    return <p className="muted">جارٍ التحميل...</p>
+  if ((names.loading && !names.data) || (ledger.loading && !ledger.data)) return <p className="muted">جارٍ التحميل...</p>
   if (names.failed || ledger.failed) return <p className="msg msg-error">مقدرناش نحمّل المقاول، جرّب تاني</p>
   if (!name) {
     return (

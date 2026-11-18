@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { findViolations, importsOf } from './check-architecture.mjs'
+import { MAX_LINES, findViolations, importsOf } from './check-architecture.mjs'
 
 let root
 const put = (file, text) => {
@@ -70,6 +70,14 @@ describe('findViolations', () => {
   it('flags src/lib reaching into src/auth', () => {
     put('src/lib/users/u.ts', `import type { Level } from '../../auth/permissions'`)
     expect(findViolations(root)[0].message).toMatch(/must not depend on src\/auth/)
+  })
+  it('flags a source file that is too long, and accepts one at the limit', () => {
+    put('src/pages/Long.tsx', 'x\n'.repeat(MAX_LINES + 1))
+    put('src/pages/Ok.tsx', 'x\n'.repeat(MAX_LINES - 1))
+    const found = findViolations(root)
+    expect(found).toHaveLength(1)
+    expect(found[0].file).toBe('src/pages/Long.tsx')
+    expect(found[0].message).toMatch(/longer than/)
   })
   it('ignores test files', () => {
     put('src/pages/__tests__/p.ts', `import { supabase } from '../../lib/supabase'`)

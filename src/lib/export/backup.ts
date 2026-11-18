@@ -2,84 +2,11 @@ import { supabase } from '../supabase'
 import { fetchPaged } from '../core/paged'
 import { writeBackupWorkbook } from './backupWorkbook'
 import { str, type Col, type Kind, type Row, type Sheet } from './backupTypes'
+import { ACTION, KIND, LEVEL, ROLE, STATUS, tr } from './backupLabels'
+import { read } from './backupRead'
+import { sheetName } from './sheetName'
 
-const BACKUP_EVERY_DAYS = 7
-const SHEET_NAME_MAX = 31
 const PROJECT_TAB = 'FF1F5FA8'
-
-/**
- * An Excel-safe sheet name that is not taken yet: no \ / ? * [ ] :, no quote at either end, at most 31 characters.
- * A clash (the letter case does not matter) gets " (2)", " (3)" … Records the name in `taken`.
- */
-export function sheetName(raw: string, taken: Set<string>): string {
-  const base =
-    raw
-      .replace(/[\\/?*[\]:]/g, '-')
-      .replace(/^'+|'+$/g, '')
-      .trim()
-      .slice(0, SHEET_NAME_MAX)
-      .trim() || 'مشروع'
-  let name = base
-  for (let n = 2; taken.has(name.toLowerCase()); n++) {
-    const suffix = ` (${n})`
-    name = base.slice(0, SHEET_NAME_MAX - suffix.length).trim() + suffix
-  }
-  taken.add(name.toLowerCase())
-  return name
-}
-
-export type LastBackup = { at: string | null; stale: boolean }
-
-export async function lastBackup(): Promise<LastBackup | null> {
-  const { data, error } = await supabase.from('backup_log').select('at').order('at', { ascending: false }).limit(1)
-  if (error) return null
-  const at = data?.[0]?.at ?? null
-  const days = at ? (Date.now() - new Date(at).getTime()) / 86_400_000 : Infinity
-  return { at, stale: days >= BACKUP_EVERY_DAYS }
-}
-
-type Reader = (
-  t: string,
-  order: string,
-  from: number,
-  to: number,
-) => PromiseLike<{ data: Row[] | null; error: unknown }>
-// table names are dynamic here, so the typed client is bypassed on purpose
-const read: Reader = (t, order, from, to) =>
-  (
-    supabase as unknown as {
-      from: (t: string) => {
-        select: (c: string) => { order: (c: string) => { range: (a: number, b: number) => ReturnType<Reader> } }
-      }
-    }
-  )
-    .from(t)
-    .select('*')
-    .order(order)
-    .range(from, to)
-
-const KIND: Record<string, string> = { income: 'وارد', expense: 'مصروف', due: 'مستحق', payment: 'دفعة' }
-const STATUS: Record<string, string> = {
-  pending: 'مستنّي موافقة',
-  approved: 'معتمد',
-  rejected: 'مرفوض',
-  deleted: 'محذوف',
-  open: 'مفتوحة',
-  closed: 'مقفولة',
-  active: 'نشط',
-  done: 'منتهي',
-}
-const ACTION: Record<string, string> = {
-  edit: 'تعديل',
-  approve: 'موافقة',
-  reject: 'رفض',
-  delete: 'مسح',
-  restore: 'استرجاع',
-  hard_delete: 'مسح نهائي',
-}
-const ROLE: Record<string, string> = { admin: 'أدمن', user: 'مستخدم' }
-const LEVEL: Record<string, string> = { view: 'عرض', edit: 'تعديل' }
-const tr = (m: Record<string, string>, v: unknown) => (v == null ? '' : (m[String(v)] ?? String(v)))
 
 /** Reads every table (the deleted entries too) and saves one tidy Excel file: Arabic sheets, names instead of codes. Logs the backup. */
 export async function downloadBackup(userId: string): Promise<boolean> {

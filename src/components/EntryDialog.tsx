@@ -16,6 +16,7 @@ import { useSubmitGuard } from '../lib/core/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/core/lookups'
 import { isRefund } from '../lib/entries/entryKind'
 import type { ProjectSummary } from '../lib/projects/projects'
+import { EntryAmountFields, EntryProjectField, IncomeLabelField, ReasonField } from './EntryFormParts'
 import type { Entry } from '../lib/entries/entryTypes'
 import { STATUS } from '../lib/core/status'
 
@@ -194,21 +195,12 @@ export default function EntryDialog({
     <form onSubmit={(e) => void submit(e)} className="dialog-form">
       <fieldset disabled={locked} style={{ display: 'contents', border: 0, margin: 0, padding: 0 }}>
         {projects && (fromAdvance || inline ? projects.length > 0 : entry && projects.length > 1) && (
-          <label className="field span-2">
-            المشروع
-            <select
-              value={targetProject}
-              onChange={(e) => setTargetProject(e.target.value)}
-              required={fromAdvance || inline}
-            >
-              {(fromAdvance || inline) && <option value="">اختار المشروع</option>}
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <EntryProjectField
+            projects={projects}
+            value={targetProject}
+            onChange={setTargetProject}
+            required={Boolean(fromAdvance || inline)}
+          />
         )}
         {!fromAdvance && (
           <div className="field span-2 kind-field">
@@ -237,15 +229,7 @@ export default function EntryDialog({
             strict={strict}
           />
         ) : (
-          <label className="field span-2">
-            بيان الوارد
-            <input
-              value={incomeLabel}
-              onChange={(e) => setIncomeLabel(e.target.value)}
-              placeholder="مثلاً: دفعة عميل"
-              required
-            />
-          </label>
+          <IncomeLabelField value={incomeLabel} onChange={setIncomeLabel} />
         )}
         {!fromAdvance && (
           <div className="field">
@@ -266,30 +250,22 @@ export default function EntryDialog({
           </div>
         )}
 
-        <div className="field-row">
-          <label className="field">
-            المبلغ (ج.م)
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" required />
-          </label>
-          <label className="field">
-            التاريخ
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-          </label>
-        </div>
-        <label className="field">
-          ملاحظات
-          <input value={notes} onChange={(e) => setNotes(e.target.value)} />
-        </label>
+        <EntryAmountFields
+          amount={amount}
+          onAmount={setAmount}
+          date={date}
+          onDate={setDate}
+          notes={notes}
+          onNotes={setNotes}
+        />
         {entry && !locked && (
-          <label className="field span-2 reason">
-            سبب التعديل
-            <input
-              value={editReason}
-              onChange={(e) => setEditReason(e.target.value)}
-              placeholder="مثلًا: المبلغ كان مكتوب غلط"
-              required
-            />
-          </label>
+          <ReasonField
+            className="reason"
+            label="سبب التعديل"
+            value={editReason}
+            onChange={setEditReason}
+            placeholder="مثلًا: المبلغ كان مكتوب غلط"
+          />
         )}
         <InvoiceField
           entryId={entry?.id ?? savedId ?? undefined}
@@ -316,16 +292,13 @@ export default function EntryDialog({
       {isStaff && entry && <EntryHistory entryId={entry.id} />}
       {!isAdmin && <p className="msg span-2 muted">القيد هيروح للأدمن للموافقة، وبعدها بس هيتحسب في الأرقام.</p>}
       {confirmDelete && (
-        <label className="field span-2">
-          سبب الحذف
-          <input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="مثلًا: القيد اتسجل بالغلط"
-            autoFocus
-            required
-          />
-        </label>
+        <ReasonField
+          label="سبب الحذف"
+          value={reason}
+          onChange={setReason}
+          placeholder="مثلًا: القيد اتسجل بالغلط"
+          autoFocus
+        />
       )}
       {error && <p className="msg msg-error span-2">{error}</p>}
       {done && (

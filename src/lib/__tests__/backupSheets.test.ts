@@ -10,7 +10,8 @@ vi.mock('../export/excelCommon', async (original) => ({
 
 import { supabase } from '../supabase'
 import { downloadWorkbook } from '../export/excelCommon'
-import { downloadBackup, sheetName } from '../export/backup'
+import { downloadBackup } from '../export/backup'
+import { sheetName } from '../export/sheetName'
 
 describe('sheetName', () => {
   it('keeps a normal name', () => {

@@ -6,20 +6,11 @@ import { fetchSummaries, type ProjectSummary } from '../../lib/projects/projects
 import { fetchAdvanceSummaries, type AdvanceSummary } from '../../lib/advances/advances'
 import { fetchBankSummaries, type BankSummary } from '../../lib/banks/banks'
 import type { BudgetMode } from '../../lib/reports/reportBuilders'
-import ProjectReport from '../projects/ProjectReport'
-import AdvanceReport from '../advances/AdvanceReport'
-import Journal from './Journal'
-import PeriodReport from './PeriodReport'
-import CategoryReport from './CategoryReport'
-import BudgetReport from './BudgetReport'
-import ApprovalsReport from '../approvals/ApprovalsReport'
-import ContractorsSummary from './ContractorsSummary'
-import ContractorStatement from './ContractorStatement'
-import BankStatement from './BankStatement'
-import PendingReport, { type PendingStatus } from './PendingReport'
+import { type PendingStatus } from './PendingReport'
+import ReportPreview from './ReportPreview'
 import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
 import ReportOptions from './ReportOptions'
-import SearchSelect from '../../components/SearchSelect'
+import { pickerSelect } from './pickerSelect'
 import ReportFilters from '../../components/ReportFilters'
 import { fetchCategories, type Category } from '../../lib/entries/catalog'
 import { NO_FILTER, only, type ReportFilter } from '../../lib/reports/reportFilter'
@@ -143,24 +134,8 @@ export default function Reports() {
   const cols = { withContractor, withBank, withNotes, withEnteredBy }
   const n = shown?.n ?? 0
 
-  const select = (
-    label: string,
-    value: string,
-    set: (v: string) => void,
-    options: Named[] | undefined,
-    loading: boolean,
-    emptyText: string,
-    all?: string,
-  ) => (
-    <SearchSelect
-      label={label}
-      value={options?.find((o) => o.id === value)?.name ?? ''}
-      options={(options ?? []).map((o) => o.name)}
-      placeholder={all ?? (options?.length ? 'اختار...' : loading ? 'جارٍ التحميل...' : emptyText)}
-      disabled={!options?.length}
-      onChange={(name) => set(options?.find((o) => o.name === name)?.id ?? '')}
-    />
-  )
+  const projectChoices = projects.data?.map((p) => ({ id: p.id, name: p.name }))
+  const bankChoices = banks.data?.map((b) => ({ id: b.id, name: b.name }))
 
   const filtersBox = (
     <ReportFilters keys={FILTERS[type]} value={filterAll} options={filterOptions} onChange={setFilterAll} />
@@ -206,26 +181,19 @@ export default function Reports() {
 
           {type === 'contractor' && filtersBox}
           {type === 'project' &&
-            select(
-              'المشروع',
-              pickedProject,
-              setProjectId,
-              projects.data?.map((p) => ({ id: p.id, name: p.name })),
-              projects.loading,
-              'مفيش مشاريع',
-            )}
+            pickerSelect('المشروع', pickedProject, setProjectId, projectChoices, projects.loading, 'مفيش مشاريع')}
           {type === 'period' &&
-            select(
+            pickerSelect(
               'المشروع',
               projectId,
               setProjectId,
-              projects.data?.map((p) => ({ id: p.id, name: p.name })),
+              projectChoices,
               projects.loading,
               'مفيش مشاريع',
               'كل المشاريع',
             )}
           {type === 'advance' &&
-            select(
+            pickerSelect(
               'العهدة',
               pickedAdvance,
               setAdvanceId,
@@ -237,7 +205,7 @@ export default function Reports() {
               'مفيش عهد',
             )}
           {type === 'contractor' &&
-            select(
+            pickerSelect(
               'المقاول',
               pickedContractor,
               setContractorId,
@@ -245,15 +213,7 @@ export default function Reports() {
               contractors.loading || projectContractors.loading,
               filterAll.project ? 'مفيش مقاولين على المشروع ده' : 'مفيش مقاولين',
             )}
-          {type === 'bank' &&
-            select(
-              'البنك',
-              pickedBank,
-              setBankId,
-              banks.data?.map((b) => ({ id: b.id, name: b.name })),
-              banks.loading,
-              'مفيش بنوك',
-            )}
+          {type === 'bank' && pickerSelect('البنك', pickedBank, setBankId, bankChoices, banks.loading, 'مفيش بنوك')}
 
           {type === 'category' && (
             <label className="field">
@@ -287,7 +247,7 @@ export default function Reports() {
             </label>
           )}
           {type === 'pending' &&
-            select(
+            pickerSelect(
               'سجّله',
               creatorId,
               setCreatorId,
@@ -351,68 +311,30 @@ export default function Reports() {
           </button>
         </section>
 
-        <div className="reports-preview">
-          {!visible && (
-            <div className="card empty no-print">
-              <p>اختار نوع التقرير من الجنب واضغط «عرض التقرير».</p>
-            </div>
-          )}
-          {visible && type === 'journal' && <Journal key={n} day={day} filter={filter} {...cols} />}
-          {visible && type === 'approvals' && <ApprovalsReport key={n} day={day} filter={filter} />}
-          {visible && type === 'period' && (
-            <PeriodReport
-              key={n}
-              from={from}
-              to={to}
-              projectId={projectId}
-              projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''}
-              filter={filter}
-              {...cols}
-            />
-          )}
-          {visible && type === 'project' && (
-            <ProjectReport key={n} id={pickedProject} embedded={cols} filter={filter} />
-          )}
-          {visible && type === 'category' && (
-            <CategoryReport key={n} from={from} to={to} type={kindFilter} filter={filter} />
-          )}
-          {visible && type === 'budget' && <BudgetReport key={n} mode={budgetMode} filter={filter} />}
-          {visible && type === 'advance' && (
-            <AdvanceReport key={n} id={pickedAdvance} embedded={{ ...cols, parts }} filter={filter} />
-          )}
-          {visible && type === 'contractor' && (
-            <ContractorStatement
-              key={n}
-              id={pickedContractor}
-              name={contractorList.find((c) => c.id === pickedContractor)?.name ?? ''}
-              from={from}
-              to={to}
-              filter={filter}
-              includeClosed={includeClosed}
-            />
-          )}
-          {visible && type === 'contractors' && <ContractorsSummary key={n} from={from} to={to} filter={filter} />}
-          {visible && type === 'bank' && bank && (
-            <BankStatement
-              key={n}
-              id={bank.id}
-              name={bank.name}
-              opening={bank.opening_balance}
-              from={from}
-              to={to}
-              filter={filter}
-            />
-          )}
-          {visible && type === 'pending' && (
-            <PendingReport
-              key={n}
-              status={pendingStatus}
-              creatorId={creatorId}
-              creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''}
-              filter={filter}
-            />
-          )}
-        </div>
+        <ReportPreview
+          type={type}
+          visible={visible}
+          n={n}
+          day={day}
+          from={from}
+          to={to}
+          filter={filter}
+          cols={cols}
+          projectId={projectId}
+          projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''}
+          pickedProject={pickedProject}
+          kindFilter={kindFilter}
+          budgetMode={budgetMode}
+          pickedAdvance={pickedAdvance}
+          parts={parts}
+          pickedContractor={pickedContractor}
+          contractorName={contractorList.find((c) => c.id === pickedContractor)?.name ?? ''}
+          includeClosed={includeClosed}
+          bank={bank}
+          pendingStatus={pendingStatus}
+          creatorId={creatorId}
+          creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''}
+        />
       </div>
     </div>
   )

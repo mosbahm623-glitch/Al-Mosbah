@@ -9,9 +9,10 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:live": "playwright test -c playwright.live.config.ts",
     "preview": "vite preview",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"e2e-live/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.{ts,json}\" \"e2e/*.ts\" \"e2e-live/*.ts\" \"scripts/*.mjs\" \".github/**/*.yml\"",
     "architecture:check": "node scripts/check-architecture.mjs",
     "knip": "knip",
     "quality": "npm run format:check && npm run lint && npm run architecture:check && npm run knip && npm test && npm run build"

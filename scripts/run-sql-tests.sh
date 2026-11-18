@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the database from supabase/migrations on a plain Postgres and runs every supabase/tests/rls_*.sql file.
+# Builds the database from supabase/migrations on a plain Postgres and runs the SQL tests in supabase/tests.
 # Usage: PGURL=postgres://postgres:postgres@localhost:5432/postgres scripts/run-sql-tests.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -13,9 +13,7 @@ done
 psql -f supabase/tests/ci/seed.sql
 [ -z "${EXTRA_SQL:-}" ] || psql -c "$EXTRA_SQL" # used only to prove the tests fail when protection is removed
 fail=0
-# only the tests that match the current schema; the older ones (installment_approval, low_balance_alert,
-# owner_banks, rls_and_totals, send_message) were written before later migrations and need rewriting first
-TESTS="counted_entries reset_data rls_advances rls_users"
+TESTS="counted_entries reset_data rls_advances rls_users rls_and_totals installment_approval low_balance_alert owner_banks"
 for t in $TESTS; do
   f="supabase/tests/$t.sql"
   echo "== $f"

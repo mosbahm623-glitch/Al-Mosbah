@@ -33,8 +33,8 @@ insert into public.entries(project_id, kind, category, item, amount, bank_id) se
 insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'expense','كهربا','أسلاك',300,(select id from public.bank_accounts where name = '__RB') from ids;
 insert into public.advances(holder_name) values ('__H1'), ('__H2');
 update ids set adv1 = (select id from public.advances where holder_name='__H1'), adv2 = (select id from public.advances where holder_name='__H2');
-insert into public.advance_installments(advance_id, amount) select adv1, 500 from ids;
-insert into public.advance_installments(advance_id, amount) select adv2, 700 from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv1, 500, (select id from public.bank_accounts where name = '__RB') from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv2, 700, (select id from public.bank_accounts where name = '__RB') from ids;
 insert into public.entries(project_id, advance_id, kind, category, item, amount) select pid, adv1,'expense','نثريات','x',120 from ids;
 select pg_temp.chk('admin_entry_status', (select status from public.entries where item='أسلاك'), 'approved');
 select pg_temp.chk('project_expenses', (select (x->>'expenses')::numeric from jsonb_array_elements(public.project_summaries()) x where x->>'id' = (select pid::text from ids)), 420::numeric);
@@ -46,7 +46,10 @@ select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000
 insert into public.entries(project_id, kind, category, item, amount, bank_id) select pid,'expense','سباكة','مواسير',80,(select id from public.bank_accounts where name = '__RB') from ids;
 select pg_temp.chk('P_entry_pending', (select status from public.entries where item='مواسير'), 'pending');
 select pg_temp.chk('P_pending_not_counted', (select (x->>'expenses')::numeric from jsonb_array_elements(public.project_summaries()) x where x->>'id' = (select pid::text from ids)), 420::numeric);
+-- a change to an entry needs a reason (the app sends it through edit_entry)
+select set_config('app.edit_reason','تعديل المبلغ', true);
 update public.entries set amount = 90 where item='مواسير';
+select set_config('app.edit_reason','', true);
 select pg_temp.chk('P_edits_own_pending', (select amount from public.entries where item='مواسير'), 90::numeric);
 update public.entries set status = 'approved' where item='مواسير';
 select pg_temp.chk('P_cannot_self_approve', (select status from public.entries where item='مواسير'), 'pending');
@@ -73,7 +76,7 @@ select pg_temp.chk('H_expense_pending', (select status from public.entries where
 do $$ begin
   begin insert into public.entries(project_id, advance_id, kind, category, item, amount) select pid, adv2,'expense','نقل','y',10 from ids; perform pg_temp.chk('H_expense_on_other_custody','ALLOWED'::text,'blocked'::text);
   exception when others then perform pg_temp.chk('H_expense_on_other_custody','blocked'::text,'blocked'::text); end;
-  begin insert into public.advance_installments(advance_id, amount) select adv1, 1 from ids; perform pg_temp.chk('H_add_installment','ALLOWED'::text,'blocked'::text);
+  begin insert into public.advance_installments(advance_id, amount, bank_id) select adv1, 1, (select id from public.bank_accounts where name = '__RB') from ids; perform pg_temp.chk('H_add_installment','ALLOWED'::text,'blocked'::text);
   exception when others then perform pg_temp.chk('H_add_installment','blocked'::text,'blocked'::text); end;
   begin insert into public.advances(holder_name) values ('__new'); perform pg_temp.chk('H_create_custody','ALLOWED'::text,'blocked'::text);
   exception when others then perform pg_temp.chk('H_create_custody','blocked'::text,'blocked'::text); end;
@@ -83,7 +86,11 @@ end $$;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-00000000000c","role":"authenticated"}', true);
 select pg_temp.chk('N_projects', (select count(*) from public.projects), 0::bigint);
 select pg_temp.chk('N_entries', (select count(*) from public.entries), 0::bigint);
-select pg_temp.chk('N_cannot_promote_self', (with u as (update public.profiles set role='admin' where id='00000000-0000-0000-0000-00000000000c' returning 1) select count(*) from u), 0::bigint);
+do $t$ declare n bigint; begin
+  update public.profiles set role='admin' where id='00000000-0000-0000-0000-00000000000c';
+  get diagnostics n = row_count;
+  perform pg_temp.chk('N_cannot_promote_self', n, 0::bigint);
+end $t$;
 select set_config('role','anon',true);
 select pg_temp.chk('anon_projects', (select count(*) from public.projects), 0::bigint);
 select set_config('role','postgres',true);

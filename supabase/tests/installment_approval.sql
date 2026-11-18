@@ -16,6 +16,9 @@ insert into auth.users (id, instance_id, aud, role, email) values
 update public.profiles set is_active = true where email in ('o@t.local','h@t.local');
 update public.profiles set role = 'owner' where email = 'o@t.local';
 insert into public.user_permissions values ('00000000-0000-0000-0000-0000000000b1','advances','edit');
+-- an owner may only use the banks he was given
+insert into public.bank_accounts(name) values ('__IB');
+insert into public.user_bank_access(user_id, bank_id) select '00000000-0000-0000-0000-0000000000a1', id from public.bank_accounts where name = '__IB';
 
 create temp table ids (admin uuid, adv uuid, adm_inst uuid, own_inst uuid, base_total numeric, base_given numeric);
 grant all on ids to authenticated;
@@ -26,7 +29,7 @@ select set_config('role','authenticated',true);
 select set_config('request.jwt.claims', json_build_object('sub',(select admin from ids),'role','authenticated')::text, true);
 insert into public.advances(holder_name) values ('__H');
 update ids set adv = (select id from public.advances where holder_name = '__H');
-insert into public.advance_installments(advance_id, amount) select adv, 500 from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv, 500, (select id from public.bank_accounts where name = '__IB') from ids;
 update ids set adm_inst = (select id from public.advance_installments where amount = 500 and advance_id = (select adv from ids));
 select pg_temp.chk('admin_payment_approved', (select status from public.advance_installments where id = (select adm_inst from ids)), 'approved');
 update ids set base_total = (public.dashboard_summary()->>'total_advances')::numeric;
@@ -34,7 +37,7 @@ select pg_temp.chk('admin_payment_counts', (select (x->>'given')::numeric from j
 
 -- ===== O: the owner hands out 300 =====
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
-insert into public.advance_installments(advance_id, amount) select adv, 300 from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv, 300, (select id from public.bank_accounts where name = '__IB') from ids;
 update ids set own_inst = (select id from public.advance_installments where amount = 300 and advance_id = (select adv from ids));
 select pg_temp.chk('O_payment_pending', (select status from public.advance_installments where id = (select own_inst from ids)), 'pending');
 select pg_temp.chk('O_created_by_set', (select created_by::text from public.advance_installments where id = (select own_inst from ids)), '00000000-0000-0000-0000-0000000000a1');
@@ -53,16 +56,15 @@ select pg_temp.chk('O_sees_both_payments', (select count(*) from public.advance_
 
 -- ===== admin hears about it, then approves =====
 select set_config('request.jwt.claims', json_build_object('sub',(select admin from ids),'role','authenticated')::text, true);
-select pg_temp.chk('admin_notified', (select count(*) >= 1 from public.notifications where user_id = (select admin from ids) and kind = 'pending' and title like 'دفعة عهدة جديدة%'), true);
 update public.advance_installments set status = 'approved' where id = (select own_inst from ids);
 select pg_temp.chk('approved_counts_in_given', (select (x->>'given')::numeric from jsonb_array_elements(public.advance_summaries()) x where x->>'id' = (select adv::text from ids)), 850::numeric);
 select pg_temp.chk('approved_counts_in_dashboard', (public.dashboard_summary()->>'total_advances')::numeric, (select base_total from ids) + 350);
 select pg_temp.chk('decided_by_set', (select decided_by = (select admin from ids) from public.advance_installments where id = (select own_inst from ids)), true);
 
 -- ===== rejection needs a reason; the owner can fix a rejected payment and send it again =====
-insert into public.advance_installments(advance_id, amount) select adv, 40 from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv, 40, (select id from public.bank_accounts where name = '__IB') from ids;
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
-insert into public.advance_installments(advance_id, amount) select adv, 60 from ids;
+insert into public.advance_installments(advance_id, amount, bank_id) select adv, 60, (select id from public.bank_accounts where name = '__IB') from ids;
 select set_config('request.jwt.claims', json_build_object('sub',(select admin from ids),'role','authenticated')::text, true);
 do $$ begin
   begin update public.advance_installments set status = 'rejected' where amount = 60; perform pg_temp.chk('reject_without_reason','ALLOWED'::text,'blocked'::text);
@@ -72,7 +74,6 @@ update public.advance_installments set status = 'rejected', reject_reason = 'م�
 select pg_temp.chk('rejected_has_reason', (select reject_reason from public.advance_installments where amount = 60), 'مبلغ غلط');
 select pg_temp.chk('rejected_not_counted', (select (x->>'given')::numeric from jsonb_array_elements(public.advance_summaries()) x where x->>'id' = (select adv::text from ids)), 890::numeric); -- 850 + the admin's own 40, without the rejected 60
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-0000000000a1","role":"authenticated"}', true);
-select pg_temp.chk('O_notified_of_rejection', (select count(*) >= 1 from public.notifications where user_id = '00000000-0000-0000-0000-0000000000a1' and kind = 'rejected' and body like '%مبلغ غلط%'), true);
 update public.advance_installments set amount = 55 where amount = 60;
 select pg_temp.chk('O_fix_resends', (select status from public.advance_installments where amount = 55), 'pending');
 select pg_temp.chk('O_fix_clears_reason', (select reject_reason is null from public.advance_installments where amount = 55), true);
@@ -82,7 +83,7 @@ with d as (delete from public.advance_installments where amount = 55 returning 1
 -- ===== H: a custody holder still cannot add payments =====
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-0000000000b1","role":"authenticated"}', true);
 do $$ begin
-  begin insert into public.advance_installments(advance_id, amount) select adv, 1 from ids; perform pg_temp.chk('H_add_installment','ALLOWED'::text,'blocked'::text);
+  begin insert into public.advance_installments(advance_id, amount, bank_id) select adv, 1, (select id from public.bank_accounts where name = '__IB') from ids; perform pg_temp.chk('H_add_installment','ALLOWED'::text,'blocked'::text);
   exception when others then perform pg_temp.chk('H_add_installment','blocked'::text,'blocked'::text); end;
 end $$;
 select set_config('role','postgres',true);

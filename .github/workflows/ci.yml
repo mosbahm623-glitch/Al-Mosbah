@@ -12,7 +12,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       contents: read
     env:
@@ -49,7 +49,14 @@ jobs:
         run: npm run build
 
       - name: Install the test browsers
-        run: npx playwright install --with-deps chromium firefox webkit
+        # تحميل المتصفحات بيعلّق أحياناً على سيرفرات GitHub: مهلة قصيرة ومحاولة تانية بدل ما الفحص كله يستنى 10 دقايق
+        timeout-minutes: 4
+        run: |
+          for i in 1 2 3; do
+            timeout 200 npx playwright install --with-deps chromium firefox webkit && exit 0
+            echo "install attempt $i failed or hung"
+          done
+          exit 1
 
       - name: Screen tests
         run: npm run test:e2e
@@ -123,7 +130,13 @@ jobs:
         run: npm ci
 
       - name: Install the test browser
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 4
+        run: |
+          for i in 1 2 3; do
+            timeout 200 npx playwright install --with-deps chromium && exit 0
+            echo "install attempt $i failed or hung"
+          done
+          exit 1
 
       - name: Live smoke tests
         run: npm run test:live

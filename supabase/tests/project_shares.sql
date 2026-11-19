@@ -38,6 +38,11 @@ update ids set share = (select id from public.project_shares where project_id = 
                tok = (select token from public.project_shares where project_id = (select pid from ids));
 select pg_temp.chk('admin_reads_shares', (select count(*)::int from public.project_shares), 1);
 
+-- two invoice files on the expense «أبواب»; the client gets only their number, never the path
+insert into public.entry_attachments(entry_id, path, file_name)
+  select e.id, e.id || '/a.jpg', 'a' from public.entries e where e.item = 'أبواب'
+  union all select e.id, e.id || '/b.pdf', 'b' from public.entries e where e.item = 'أبواب';
+
 -- ===== anonymous visitor =====
 select set_config('role','anon',true);
 select set_config('request.jwt.claims','{"role":"anon"}', true);
@@ -50,11 +55,13 @@ select pg_temp.chk('income_total', (public.shared_project((select tok from ids))
 select pg_temp.chk('expense_total_counts_only_approved', (public.shared_project((select tok from ids)) ->> 'expenses')::numeric, 300.00::numeric);
 select pg_temp.chk('entries_count_excludes_pending_and_deleted', jsonb_array_length(public.shared_project((select tok from ids)) -> 'entries'), 2);
 select pg_temp.chk('categories_listed', public.shared_project((select tok from ids)) -> 'categories' -> 0 ->> 'category', 'نجارة');
+select pg_temp.chk('file_count_shown', (select (x ->> 'files')::int from jsonb_array_elements(public.shared_project((select tok from ids)) -> 'entries') x where x ->> 'item' = 'أبواب'), 2);
+select pg_temp.chk('file_paths_not_leaked', (public.shared_project((select tok from ids))::text like '%a.jpg%')::text, 'false');
 select pg_temp.chk('other_project_not_leaked', (public.shared_project((select tok from ids))::text like '%7777%')::text, 'false');
 select pg_temp.chk('notes_not_leaked', (public.shared_project((select tok from ids))::text like '%سري%')::text, 'false');
 select pg_temp.chk('entry_has_no_hidden_keys',
   (select string_agg(k, ',' order by k) from jsonb_object_keys(public.shared_project((select tok from ids)) -> 'entries' -> 0) k),
-  'amount,category,entry_date,item,kind,seq');
+  'amount,category,entry_date,files,item,kind,seq');
 
 -- ===== admin revokes, and the link dies =====
 select set_config('role','authenticated',true);

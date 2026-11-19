@@ -31,8 +31,7 @@ test('the admin picks a photo for an entry and uploads it', async ({ page }) => 
   )
   await signIn(page)
   await page.goto('/#/bulk-invoices')
-  await page.getByLabel('بحث في القيود').fill('20261031')
-  await page.getByRole('button', { name: 'بحث', exact: true }).click()
+  await page.getByLabel('المشروع', { exact: true }).selectOption({ index: 1 })
   await expect(page.getByText('أجرة نجار')).toBeVisible()
 
   const png = Buffer.from(

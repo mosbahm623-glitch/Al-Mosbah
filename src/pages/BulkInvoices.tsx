@@ -134,14 +134,14 @@ export default function BulkInvoices() {
             {rows.length} قيد{(data?.length ?? 0) >= SEARCH_LIMIT ? ` (أول ${SEARCH_LIMIT} بس، ضيّق البحث)` : ''}
           </p>
           <div className="table-wrap">
-            <table className="table">
+            <table className="table wrap-desc">
               <thead>
                 <tr>
                   <th>رقم</th>
-                  <th>المشروع</th>
+                  <th className="sm-hide">المشروع</th>
                   <th>البند / البيان</th>
                   <th>المبلغ</th>
-                  <th>فواتير</th>
+                  <th className="sm-hide">فواتير</th>
                   <th>
                     <span className="sr-only">اختيار صور</span>
                   </th>
@@ -157,18 +157,20 @@ export default function BulkInvoices() {
                         {h.seq}
                         <span className="sub">{dateText(h.entry_date)}</span>
                       </td>
-                      <td>{h.project?.name}</td>
+                      <td className="sm-hide">{h.project?.name}</td>
                       <td className="strong">
                         {h.item}
-                        <span className="sub">{[h.category, h.contractor?.name].filter(Boolean).join(' · ')}</span>
+                        <span className="sub">
+                          {[h.project?.name, h.category, h.contractor?.name].filter(Boolean).join(' · ')}
+                        </span>
                       </td>
                       <td className="num strong">{money(h.amount)}</td>
-                      <td className="num">{invoiceCount(h)}</td>
-                      <td>
+                      <td className="num sm-hide">{invoiceCount(h)}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
                         {room === 0 ? (
                           <span className="muted small">وصل للحد الأقصى</span>
                         ) : (
-                          <label className="btn">
+                          <label className="btn" style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
                             <input
                               type="file"
                               hidden

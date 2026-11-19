@@ -8,6 +8,7 @@ import { dateText, timeText } from '../lib/core/format'
 import { toCents } from '../lib/core/money'
 import { fetchSharedProject, type SharedProject as Shared } from '../lib/projects/shares'
 import { usePages } from '../lib/users/usePages'
+import SharedInvoiceLink from '../components/SharedInvoiceLink'
 import { AmountText, KindChip } from '../components/EntryParts'
 import { amountTone } from '../lib/entries/entryKind'
 
@@ -121,6 +122,7 @@ export default function SharedProject({ token }: { token: string }) {
                 <table className="table table-grid wrap-desc">
                   <thead>
                     <tr>
+                      <th>رقم</th>
                       <th>التاريخ</th>
                       <th>النوع</th>
                       <th>البند</th>
@@ -131,12 +133,16 @@ export default function SharedProject({ token }: { token: string }) {
                   <tbody>
                     {pager.items.map((e) => (
                       <tr key={e.seq}>
+                        <td className="strong num">#{e.seq}</td>
                         <td className="num muted">{dateText(e.entry_date)}</td>
                         <td>
                           <KindChip entry={e} />
                         </td>
                         <td className="share-cat">{e.category}</td>
-                        <td className="strong">{e.item}</td>
+                        <td className="strong">
+                          {e.item}
+                          <SharedInvoiceLink token={token} seq={e.seq} count={e.files} />
+                        </td>
                         <td className={`num strong col-amt ${amountTone(e)}`}>
                           <AmountText entry={e} />
                         </td>

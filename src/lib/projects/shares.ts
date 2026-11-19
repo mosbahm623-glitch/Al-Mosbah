@@ -10,6 +10,8 @@ type SharedEntry = {
   category: string
   item: string | null
   amount: number
+  /** how many invoice files the entry has (the files themselves come from `fetchShareFiles`) */
+  files: number
 }
 
 /** What the client sees. The database sends only these fields: no contractor, bank, who recorded it, or notes. */
@@ -58,3 +60,13 @@ export const revokeShares = (projectId: string) =>
 /** The client page's data. `null` data with no error means the link is wrong, cancelled or expired. */
 export const fetchSharedProject = (token: string) =>
   supabase.rpc('shared_project', { p_token: token }).returns<SharedProject | null>()
+
+export type ShareFile = { url: string; name: string | null; pdf: boolean }
+
+/** The invoice files of one entry, as ten-minute links. The `share-files` edge function checks the link first. */
+export async function fetchShareFiles(token: string, seq: number): Promise<ShareFile[] | null> {
+  const { data, error } = await supabase.functions.invoke<{ files?: ShareFile[] }>('share-files', {
+    body: { token, seq },
+  })
+  return error || !data?.files ? null : data.files
+}

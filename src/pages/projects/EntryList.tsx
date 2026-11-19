@@ -82,12 +82,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
           </div>
           <div className="cat-strip-wrap">
             {!showAll && (
-              <button
-                type="button"
-                className="cat-arrow"
-                aria-label="السابق"
-                onClick={() => scrollStrip(false)}
-              >
+              <button type="button" className="cat-arrow" aria-label="السابق" onClick={() => scrollStrip(false)}>
                 <ChevronRight size={18} aria-hidden="true" />
               </button>
             )}

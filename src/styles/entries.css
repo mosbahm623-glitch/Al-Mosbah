@@ -85,3 +85,50 @@
 .cat-arrow:hover {
   background: var(--hover);
 }
+
+/* entries table: thin lines between rows and columns, zebra rows, highlighted amount column */
+.table-grid th,
+.table-grid td {
+  border-bottom: 1px solid var(--line);
+  border-inline-start: 1px solid var(--line-2);
+}
+.table-grid th {
+  border-bottom-width: 2px;
+}
+.table-grid th:first-child,
+.table-grid td:first-child {
+  border-inline-start: 0;
+}
+.table-grid tbody tr:last-child td {
+  border-bottom: 0;
+}
+.table-grid tbody tr:nth-child(even) td {
+  background: var(--surface-2);
+}
+.table-grid tbody tr:hover td {
+  background: var(--hover);
+}
+.table-grid th.col-amt,
+.table-grid td.col-amt {
+  background: var(--surface-2);
+}
+.table-grid tbody tr:nth-child(even) td.col-amt {
+  background: var(--hover);
+}
+.table-grid td.col-amt {
+  font-size: 1rem;
+}
+
+/* wide screens: every column fits, so drop the horizontal scroll and pin the header under the top bar */
+@media (min-width: 1280px) {
+  .entries-panel,
+  .entries-panel .table-wrap {
+    overflow: clip;
+  }
+  .entries-panel .table.table-grid thead th {
+    position: sticky;
+    top: calc(var(--header-h) + env(safe-area-inset-top));
+    z-index: 2;
+    background: var(--surface-2);
+  }
+}

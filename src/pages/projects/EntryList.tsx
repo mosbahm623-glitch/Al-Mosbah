@@ -148,9 +148,9 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
       {shown.length === 0 && <div className="card empty">مفيش قيود.</div>}
 
       {shown.length > 0 && (
-        <section className="panel">
+        <section className="panel entries-panel">
           <div className="table-wrap">
-            <table className="table">
+            <table className="table table-grid">
               <thead>
                 <tr>
                   <th>رقم</th>
@@ -162,7 +162,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                   <th className="sm-hide">البنك</th>
                   <th className="sm-hide">سجّله</th>
                   {hasNotes && <th className="sm-hide">ملاحظات</th>}
-                  <th>المبلغ</th>
+                  <th className="col-amt">المبلغ</th>
                   <th className="sm-only">الحالة</th>
                   {canEdit && (
                     <th>
@@ -211,7 +211,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
                     <td className="muted sm-hide">{e.bank?.name}</td>
                     <td className="muted sm-hide">{enteredByOf(e)}</td>
                     {hasNotes && <td className="muted sm-hide">{e.notes}</td>}
-                    <td className={`num strong ${amountTone(e)}`}>
+                    <td className={`num strong col-amt ${amountTone(e)}`}>
                       <AmountText entry={e} />
                     </td>
                     <td className="sm-only">{e.status !== STATUS.deleted && <StatusChip status={e.status} />}</td>

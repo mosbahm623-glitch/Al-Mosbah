@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   FolderKanban,
   Search,
+  Upload,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -52,6 +53,7 @@ export const NAV: NavGroup[] = [
     items: [
       { path: 'search', label: 'بحث في القيود', icon: Search, module: 'tools' },
       { path: 'recent', label: 'آخر القيود', icon: History, module: 'tools' },
+      { path: 'bulk-invoices', label: 'رفع فواتير بالجملة', icon: Upload, adminOnly: true },
       { path: 'notifications', label: 'إشعارات', icon: Bell, module: 'tools' },
     ],
   },

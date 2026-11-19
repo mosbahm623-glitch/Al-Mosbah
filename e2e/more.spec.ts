@@ -35,6 +35,7 @@ const ADVANCES = [
   },
 ]
 const answers = (path: string, search: string) => {
+  if (path.endsWith('/bank_accounts')) return [{ id: 'a0000000-0000-4000-8000-000000000001', name: 'CIB', logo: null }]
   if (path.endsWith('/rpc/bank_summaries')) return BANKS
   if (path.endsWith('/rpc/advance_summaries')) return ADVANCES
   if (path.endsWith('/rpc/project_deleted_entries')) return [DELETED_ENTRY]
@@ -141,7 +142,8 @@ test('an entry made without internet is kept on the device and not sent', async 
   await dialog.waitFor()
   await dialog.getByRole('button', { name: 'وارد', exact: true }).click()
   await dialog.getByPlaceholder('مثلاً: دفعة عميل').fill('دفعة عميل')
-  await dialog.getByPlaceholder('اتودّع في أنهي بنك').fill('CIB')
+  await dialog.getByPlaceholder('اتودّع في أنهي بنك').click()
+  await dialog.getByRole('option', { name: 'CIB' }).click()
   await dialog.getByLabel('المبلغ (ج.م)').fill('900')
   await page.context().setOffline(true)
   await dialog.getByRole('button', { name: /حفظ/ }).click()

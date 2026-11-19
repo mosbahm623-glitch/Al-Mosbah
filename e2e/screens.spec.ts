@@ -1,6 +1,17 @@
 import { expect, test, type Page } from '@playwright/test'
 import { mockApi, P1, PENDING_SEQ, signIn, type Sent } from './mockApi.ts'
 
+const withBanks = (path: string) =>
+  path.endsWith('/bank_accounts')
+    ? [{ id: 'a0000000-0000-4000-8000-000000000001', name: 'CIB', logo: null }]
+    : undefined
+
+/** the bank is picked from the list, never typed */
+async function pickBank(dialog: ReturnType<Page['getByRole']>, placeholder: string) {
+  await dialog.getByPlaceholder(placeholder).click()
+  await dialog.getByRole('option', { name: 'CIB' }).click()
+}
+
 test('sign in lands on the dashboard', async ({ page }) => {
   await mockApi(page)
   await signIn(page)
@@ -39,7 +50,7 @@ test('a focused search box shows one ring, not two', async ({ page }) => {
 })
 
 test('adding an income entry to a project sends it to the database', async ({ page }) => {
-  const sent = await mockApi(page)
+  const sent = await mockApi(page, { answer: withBanks })
   await signIn(page)
   await page.goto(`/#/projects/${P1}`)
   await page.getByRole('button', { name: 'قيد جديد' }).click()
@@ -47,7 +58,7 @@ test('adding an income entry to a project sends it to the database', async ({ pa
   await dialog.waitFor()
   await dialog.getByRole('button', { name: 'وارد', exact: true }).click()
   await dialog.getByPlaceholder('مثلاً: دفعة عميل').fill('دفعة عميل')
-  await dialog.getByPlaceholder('اتودّع في أنهي بنك').fill('CIB')
+  await pickBank(dialog, 'اتودّع في أنهي بنك')
   await dialog.getByLabel('المبلغ (ج.م)').fill('1500')
   await dialog.getByRole('button', { name: /حفظ/ }).click()
   await expect.poll(() => sent.some((r) => r.path.endsWith('/entries'))).toBe(true)
@@ -75,7 +86,7 @@ async function addExpenseOrRefund(page: Page, sent: Sent[], kind: 'مصروف' |
   await dialog.getByRole('option', { name: 'عمالة' }).click()
   await dialog.getByRole('textbox', { name: 'البيان', exact: true }).fill('نجارة')
   await dialog.getByRole('option', { name: 'نجارة' }).click()
-  await dialog.getByPlaceholder(kind === 'مرتجع' ? 'اتودّع في أنهي بنك' : 'مدفوع من أنهي بنك').fill('CIB')
+  await pickBank(dialog, kind === 'مرتجع' ? 'اتودّع في أنهي بنك' : 'مدفوع من أنهي بنك')
   await dialog.getByLabel('المبلغ (ج.م)').fill('700')
   await dialog.getByRole('button', { name: /حفظ/ }).click()
   await expect.poll(() => sent.some((r) => r.path.endsWith('/entries'))).toBe(true)
@@ -84,13 +95,13 @@ async function addExpenseOrRefund(page: Page, sent: Sent[], kind: 'مصروف' |
 }
 
 test('an expense entry is saved with a positive amount', async ({ page }) => {
-  const sent = await mockApi(page)
+  const sent = await mockApi(page, { answer: withBanks })
   const row = await addExpenseOrRefund(page, sent, 'مصروف')
   expect(row).toMatchObject({ kind: 'expense', amount: 700, category: 'عمالة', item: 'نجارة', project_id: P1 })
 })
 
 test('a refund entry is saved as an expense with a negative amount', async ({ page }) => {
-  const sent = await mockApi(page)
+  const sent = await mockApi(page, { answer: withBanks })
   const row = await addExpenseOrRefund(page, sent, 'مرتجع')
   expect(row).toMatchObject({ kind: 'expense', amount: -700, category: 'عمالة', item: 'نجارة' })
 })

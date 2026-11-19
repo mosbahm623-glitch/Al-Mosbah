@@ -9,6 +9,11 @@ type T<R, I, U, Rels extends Rel[] = []> = { Row: R; Insert: I; Update: U; Relat
 export type Database = {
   public: {
     Tables: {
+      project_shares: T<
+        { id: string; project_id: string; token: string; created_by: string | null; created_at: string; expires_at: string | null; revoked_at: string | null },
+        { id?: string; project_id: string; token?: string; created_by?: string | null; created_at?: string; expires_at?: string | null; revoked_at?: string | null },
+        { expires_at?: string | null; revoked_at?: string | null }
+      >
       entry_attachments: T<
         { id: string; entry_id: string; path: string; file_name: string | null; created_by: string | null; created_at: string },
         { id?: string; entry_id: string; path: string; file_name?: string | null; created_by?: string | null; created_at?: string },
@@ -146,6 +151,7 @@ export type Database = {
       deleted_entries: { Args: never; Returns: Json[] }
       entry_history_of: { Args: { p_id: string }; Returns: Json[] }
       project_summaries: { Args: never; Returns: Json[] }
+      shared_project: { Args: { p_token: string }; Returns: { [key: string]: Json | undefined } | null }
     }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }

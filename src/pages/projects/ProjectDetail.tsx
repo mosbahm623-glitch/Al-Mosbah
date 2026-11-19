@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
-import { FileText, Pencil, Plus } from 'lucide-react'
+import { FileText, Link2, Pencil, Plus } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Progress from '../../components/Progress'
 import { money, TYPE_LABEL } from '../../lib/core/format'
@@ -10,14 +10,15 @@ import { isOver, percentOf } from '../../lib/projects/projects'
 import { type Entry } from '../../lib/entries/entryTypes'
 import StatusChip from './StatusChip'
 import ProjectDialog from './ProjectDialog'
+import ShareDialog from './ShareDialog'
 import EntryDialog from '../../components/EntryDialog'
 import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {
-  const { can } = useAuth()
+  const { can, isAdmin } = useAuth()
   const canEdit = can('projects', 'edit')
   const { project, projects, entries, loading, failed, reload } = useProjectData(id)
-  const [dialog, setDialog] = useState<'entry' | 'edit' | null>(null)
+  const [dialog, setDialog] = useState<'entry' | 'edit' | 'share' | null>(null)
   const [editing, setEditing] = useState<Entry | null>(null)
 
   if (loading) return <p className="muted">جارٍ التحميل...</p>
@@ -70,6 +71,12 @@ export default function ProjectDetail({ id }: { id: string }) {
               <FileText size={18} aria-hidden="true" />
               تقرير / تصدير
             </a>
+            {isAdmin && (
+              <button className="btn btn-ghost btn-icon" onClick={() => setDialog('share')}>
+                <Link2 size={18} aria-hidden="true" />
+                مشاركة مع العميل
+              </button>
+            )}
             {canEdit && (
               <>
                 <button className="btn btn-ghost btn-icon" onClick={() => setDialog('edit')}>
@@ -122,6 +129,7 @@ export default function ProjectDetail({ id }: { id: string }) {
           onSaved={reload}
         />
       )}
+      {dialog === 'share' && <ShareDialog projectId={id} projectName={project.name} onClose={() => setDialog(null)} />}
       {dialog === 'edit' && <ProjectDialog project={project} onClose={() => setDialog(null)} onSaved={reload} />}
     </div>
   )

@@ -26,10 +26,12 @@ const Duplicates = lazy(() => import('./pages/reports/Duplicates'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const BulkInvoices = lazy(() => import('./pages/BulkInvoices'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
+const SharedProject = lazy(() => import('./pages/SharedProject'))
 import PageErrorBoundary from './components/PageErrorBoundary'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
+import { shareTokenOf } from './lib/projects/shares'
 
 function Content() {
   const { isAdmin, isStaff, isOwner, can } = useAuth()
@@ -118,6 +120,15 @@ function Gate() {
 }
 
 export default function App() {
+  const shareToken = shareTokenOf(useRoute())
+  // a client link opens the read-only project page with no sign-in at all
+  if (shareToken) {
+    return (
+      <Suspense fallback={<p className="muted">جارٍ التحميل...</p>}>
+        <SharedProject token={shareToken} />
+      </Suspense>
+    )
+  }
   return (
     <AuthProvider>
       <Gate />

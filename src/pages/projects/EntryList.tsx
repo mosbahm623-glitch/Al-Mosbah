@@ -1,13 +1,14 @@
-import { useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Pencil, RotateCcw, Undo2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Pencil, RotateCcw, Undo2 } from 'lucide-react'
 import { reopenEntry, restoreEntry } from '../../lib/approvals/approvals'
 import { notifyApprovalsChanged } from '../../lib/core/events'
 import { useAuth } from '../../auth/AuthProvider'
 import InvoiceLink from '../../components/InvoiceLink'
 import StatusChip, { EntryFlag } from '../../components/StatusChip'
+import CategoryStrip from '../../components/CategoryStrip'
 import Pager from '../../components/Pager'
 import Segmented from '../../components/Segmented'
-import { dateShort, dateText, money, timeText } from '../../lib/core/format'
+import { dateShort, dateText, timeText } from '../../lib/core/format'
 import { amountTone } from '../../lib/entries/entryKind'
 import { AmountText, KindChip } from '../../components/EntryParts'
 import type { Entry } from '../../lib/entries/entryTypes'
@@ -27,18 +28,6 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   const { isAdmin, canTouch } = useAuth()
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
   const [category, setCategory] = useState<string | null>(null)
-  const [showAll, setShowAll] = useState(false)
-  const stripRef = useRef<HTMLDivElement>(null)
-
-  // arrows scroll the strip; in RTL the "forward" direction is negative scrollLeft
-  function scrollStrip(forward: boolean) {
-    const el = stripRef.current
-    if (!el) return
-    const rtl = getComputedStyle(el).direction === 'rtl'
-    const step = Math.max(el.clientWidth * 0.8, 200)
-    el.scrollBy({ left: (forward ? 1 : -1) * (rtl ? -1 : 1) * step, behavior: 'smooth' })
-  }
-
   async function restore(id: string) {
     if (await restoreEntry(id)) notifyApprovalsChanged()
     onRestored?.()
@@ -73,62 +62,15 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
   return (
     <>
       {chips.length > 0 && (
-        <section className="panel cat-panel">
-          <div className="cat-head">
-            <h2 className="section-title">تصنيفات المصروفات</h2>
-            <button type="button" className="btn btn-ghost" onClick={() => setShowAll((v) => !v)}>
-              {showAll ? 'عرض أقل' : 'عرض الكل'}
-            </button>
-          </div>
-          <div className="cat-strip-wrap">
-            {!showAll && (
-              <button type="button" className="cat-arrow" aria-label="السابق" onClick={() => scrollStrip(false)}>
-                <ChevronRight size={18} aria-hidden="true" />
-              </button>
-            )}
-            <div
-              ref={stripRef}
-              className={`cat-strip ${showAll ? 'cat-strip-all' : ''}`}
-              role="group"
-              aria-label="تصفية حسب البند"
-            >
-              <button
-                type="button"
-                className={`cat-card ${category === null ? 'cat-card-on' : ''}`}
-                aria-pressed={category === null}
-                onClick={() => {
-                  setCategory(null)
-                  pager.setPage(1)
-                }}
-              >
-                <span className="cat-name">الكل</span>
-                <span className="cat-total">{money(expenseTotal)}</span>
-                <span className="cat-cur">ج.م</span>
-              </button>
-              {chips.map(([name, total]) => (
-                <button
-                  key={name}
-                  type="button"
-                  className={`cat-card ${category === name ? 'cat-card-on' : ''}`}
-                  aria-pressed={category === name}
-                  onClick={() => {
-                    setCategory(category === name ? null : name)
-                    pager.setPage(1)
-                  }}
-                >
-                  <span className="cat-name">{name}</span>
-                  <span className="cat-total">{money(total)}</span>
-                  <span className="cat-cur">ج.م</span>
-                </button>
-              ))}
-            </div>
-            {!showAll && (
-              <button type="button" className="cat-arrow" aria-label="التالي" onClick={() => scrollStrip(true)}>
-                <ChevronLeft size={18} aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </section>
+        <CategoryStrip
+          items={chips.map(([name, total]) => ({ name, total }))}
+          allTotal={expenseTotal}
+          selected={category}
+          onSelect={(next) => {
+            setCategory(next)
+            pager.setPage(1)
+          }}
+        />
       )}
 
       <div className="toolbar">

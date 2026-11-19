@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAsync } from '../lib/core/useAsync'
 import Segmented from '../components/Segmented'
+import CategoryStrip from '../components/CategoryStrip'
 import Pager from '../components/Pager'
 import Stats from '../components/Stats'
-import { dateText, money, timeText } from '../lib/core/format'
+import { dateText, timeText } from '../lib/core/format'
 import { toCents } from '../lib/core/money'
 import { fetchSharedProject, type SharedProject as Shared } from '../lib/projects/shares'
 import { usePages } from '../lib/users/usePages'
@@ -90,34 +91,12 @@ export default function SharedProject({ token }: { token: string }) {
           />
 
           {data.categories.length > 0 && (
-            <section className="panel cat-panel">
-              <h2 className="section-title">تصنيفات المصروفات</h2>
-              <div className="cat-strip cat-strip-all" role="group" aria-label="تصفية حسب البند">
-                <button
-                  type="button"
-                  className={`cat-card ${category === null ? 'cat-card-on' : ''}`}
-                  aria-pressed={category === null}
-                  onClick={() => pick(null)}
-                >
-                  <span className="cat-name">الكل</span>
-                  <span className="cat-total">{money(data.expenses)}</span>
-                  <span className="cat-cur">ج.م</span>
-                </button>
-                {data.categories.map((c) => (
-                  <button
-                    key={c.category}
-                    type="button"
-                    className={`cat-card ${category === c.category ? 'cat-card-on' : ''}`}
-                    aria-pressed={category === c.category}
-                    onClick={() => pick(category === c.category ? null : c.category)}
-                  >
-                    <span className="cat-name">{c.category}</span>
-                    <span className="cat-total">{money(c.total)}</span>
-                    <span className="cat-cur">ج.م</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+            <CategoryStrip
+              items={data.categories.map((c) => ({ name: c.category, total: c.total }))}
+              allTotal={data.expenses}
+              selected={category}
+              onSelect={pick}
+            />
           )}
 
           <div className="toolbar">
@@ -156,7 +135,7 @@ export default function SharedProject({ token }: { token: string }) {
                         <td>
                           <KindChip entry={e} />
                         </td>
-                        <td>{e.category}</td>
+                        <td className="share-cat">{e.category}</td>
                         <td className="strong">{e.item}</td>
                         <td className={`num strong col-amt ${amountTone(e)}`}>
                           <AmountText entry={e} />

@@ -34,8 +34,7 @@ export default function EntryExpenseFields(p: Props) {
         label="اسم المقاول"
         value={p.noContractor ? '' : p.contractorName}
         options={p.contractorOptions}
-        placeholder={p.strict ? 'دوّر أو اختار المقاول' : 'دوّر أو اكتب اسم المقاول (اختياري)'}
-        freeText
+        placeholder={p.strict ? 'دوّر أو اختار المقاول' : 'دوّر أو اختار المقاول (اختياري)'}
         disabled={p.noContractor}
         onChange={p.onContractor}
         labelExtra={

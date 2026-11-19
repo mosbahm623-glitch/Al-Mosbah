@@ -38,6 +38,7 @@ const base = (over: Partial<SaveInput> = {}): SaveInput =>
     contractorName: '',
     bankName: 'الأهلي',
     banks: [{ id: 'b1', name: 'الأهلي' }],
+    banksOnly: true,
     amount: '500',
     date: '2026-11-03',
     notes: '',
@@ -127,9 +128,8 @@ describe('saveEntry: every entry needs a bank', () => {
     expect(m.insertEntry).not.toHaveBeenCalled()
   })
   it('saves an income that has a bank', async () => {
-    m.createBank.mockResolvedValue('b9')
-    await saveEntry(income({ bankName: 'بنك جديد', banks: [] }))
-    expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ kind: 'income', bank_id: 'b9' })
+    await saveEntry(income({ bankName: 'الأهلي' }))
+    expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ kind: 'income', bank_id: 'b1' })
   })
   it('refuses an expense without a bank too, but not a payment from a custody', async () => {
     expect(await saveEntry(base({ bankName: '' }))).toEqual({ status: 'error', error: 'bank-required' })
@@ -186,13 +186,15 @@ describe('saveEntry: saving', () => {
     expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ contractor_id: 'k1' })
   })
 
-  it('creates the typed bank when it is new, but never for a payment from a custody', async () => {
-    m.createBank.mockResolvedValue('b9')
-    await saveEntry(base({ bankName: 'بنك جديد', banks: [] }))
-    expect(m.insertEntry.mock.calls[0][0]).toMatchObject({ bank_id: 'b9' })
-    m.createBank.mockClear()
-    await saveEntry(base({ bankName: 'بنك جديد', banks: [], fromAdvance: true }))
+  it('never creates a bank or a contractor: a name that is not in the lists is refused', async () => {
+    expect(await saveEntry(base({ bankName: 'بنك جديد' }))).toEqual({ status: 'error', error: 'bank-denied' })
+    expect(await saveEntry(base({ contractorName: 'مقاول جديد', contractors: [] }))).toEqual({
+      status: 'error',
+      error: 'contractor',
+    })
     expect(m.createBank).not.toHaveBeenCalled()
+    expect(m.createContractor).not.toHaveBeenCalled()
+    expect(m.insertEntry).not.toHaveBeenCalled()
   })
 
   it('remembers a new item name as a suggestion', async () => {
@@ -246,14 +248,20 @@ describe('saveEntry: without a network', () => {
 describe('saveEntry: custody and owner rules', () => {
   const photo = new File(['x'], 'inv.jpg', { type: 'image/jpeg' })
   const strict = (over: Partial<SaveInput> = {}) =>
-    base({ requirePhoto: true, requireContractorChoice: true, files: [photo], contractorName: 'رجب رخام', ...over })
+    base({
+      requirePhoto: true,
+      requireContractorChoice: true,
+      files: [photo],
+      contractorName: 'رجب رخام',
+      contractors: [{ id: 'k1', name: 'رجب رخام' }],
+      ...over,
+    })
 
   it('refuses a new entry with no invoice photo', async () => {
     expect(await saveEntry(strict({ files: [] }))).toEqual({ status: 'error', error: 'photo' })
     expect(m.insertEntry).not.toHaveBeenCalled()
   })
   it('accepts «بدون فاتورة» in place of a photo, and sends no photos', async () => {
-    m.createContractor.mockResolvedValue('k1')
     expect((await saveEntry(strict({ files: [], noInvoice: true }))).status).toBe('saved')
     expect(m.uploadInvoices).not.toHaveBeenCalled()
   })
@@ -267,7 +275,6 @@ describe('saveEntry: custody and owner rules', () => {
     expect(m.insertEntry.mock.calls[0][0].contractor_id).toBeNull()
   })
   it('accepts a named contractor with a photo', async () => {
-    m.createContractor.mockResolvedValue('k1')
     expect((await saveEntry(strict())).status).toBe('saved')
     expect(m.insertEntry.mock.calls[0][0].contractor_id).toBe('k1')
   })

@@ -171,7 +171,7 @@ export default function EntryDialog({
       noInvoice,
       contractors: contractors.data ?? undefined,
       banks: (isOwner ? ownerBanks : banks.data) ?? undefined,
-      banksOnly: isOwner,
+      banksOnly: true,
       newId: (attemptId.current ??= crypto.randomUUID()),
     })
     setSaving(false)
@@ -238,7 +238,7 @@ export default function EntryDialog({
               value={bankName}
               onChange={setBankName}
               banks={isOwner ? ownerBanks : (banks.data ?? [])}
-              allowNew={!isOwner}
+              allowNew={false}
               placeholder={
                 isOwner
                   ? 'اختار البنك'

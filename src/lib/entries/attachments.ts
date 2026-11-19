@@ -59,14 +59,20 @@ const EXT: Record<string, string> = {
   'application/pdf': 'pdf',
 }
 
-/** Stores one invoice photo or PDF on an entry. Returns an error message, or null when it went through. */
-async function uploadInvoice(entryId: string, file: File): Promise<string | null> {
+/** Shrinks and stores one file; returns its stored path, or an error message. */
+async function storeInvoiceFile(entryId: string, file: File): Promise<{ path: string } | { error: string }> {
   const blob: Blob = file.type === 'application/pdf' ? file : await shrinkImage(file)
-  if (!TYPES.includes(blob.type)) return 'نوع الملف مش مدعوم (صورة JPG أو PNG أو WebP، أو PDF)'
-  if (blob.size > (blob.type === 'application/pdf' ? MAX_PDF_BYTES : MAX_IMAGE_BYTES)) return 'الملف كبير قوي'
+  if (!TYPES.includes(blob.type)) return { error: 'نوع الملف مش مدعوم (صورة JPG أو PNG أو WebP، أو PDF)' }
+  if (blob.size > (blob.type === 'application/pdf' ? MAX_PDF_BYTES : MAX_IMAGE_BYTES))
+    return { error: 'الملف كبير قوي' }
   const path = `${entryId}/${crypto.randomUUID()}.${EXT[blob.type]}`
   const up = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: blob.type })
-  if (up.error) return 'الملف ما اترفعش، جرّب تاني'
+  if (up.error) return { error: 'الملف ما اترفعش، جرّب تاني' }
+  return { path }
+}
+
+/** Links a stored file to the entry. Returns an error message, or null when it went through. */
+async function linkInvoice(entryId: string, file: File, path: string): Promise<string | null> {
   const row = await supabase
     .from('entry_attachments')
     .insert({ entry_id: entryId, path, file_name: file.name.slice(0, 120) || null })
@@ -77,10 +83,16 @@ async function uploadInvoice(entryId: string, file: File): Promise<string | null
   return null
 }
 
-/** Stores several photos one after the other. Returns how many failed. */
+/**
+ * Stores several photos: they are shrunk and uploaded together (the slow part), then linked to the entry one after
+ * the other so they keep the order they were picked in. Returns how many failed.
+ */
 export async function uploadInvoices(entryId: string, files: File[]): Promise<number> {
+  const stored = await Promise.all(files.map((f) => storeInvoiceFile(entryId, f)))
   let failed = 0
-  for (const f of files) if (await uploadInvoice(entryId, f)) failed += 1
+  for (const [i, s] of stored.entries()) {
+    if ('error' in s || (await linkInvoice(entryId, files[i]!, s.path))) failed += 1
+  }
   return failed
 }
 

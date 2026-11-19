@@ -153,3 +153,6 @@
   font-weight: 700;
   font-size: 1.05rem;
 }
+.share-cat {
+  white-space: nowrap;
+}

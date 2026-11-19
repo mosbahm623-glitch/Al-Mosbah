@@ -24,6 +24,7 @@ const Backup = lazy(() => import('./pages/Backup'))
 const Search = lazy(() => import('./pages/Search'))
 const Duplicates = lazy(() => import('./pages/reports/Duplicates'))
 const Notifications = lazy(() => import('./pages/Notifications'))
+const BulkInvoices = lazy(() => import('./pages/BulkInvoices'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
 import PageErrorBoundary from './components/PageErrorBoundary'
 import Layout from './layout/Layout'
@@ -50,6 +51,7 @@ function Content() {
   if (route === 'reports' || route === 'reports/journal') return <Reports />
   if (route === 'recent') return <Recent />
   if (route === 'search') return <Search />
+  if (route === 'bulk-invoices') return <BulkInvoices />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
   if (report) return <ProjectReport id={report[1]} />

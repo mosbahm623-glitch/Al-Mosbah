@@ -1,39 +1,87 @@
-/* ===== Entries: category chips + table ===== */
-.chips-row {
+/* ===== Entries: category cards + table ===== */
+.cat-panel {
+  padding: 0.75rem 1rem 1rem;
+}
+.cat-head {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.cat-strip-wrap {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
-.cat-chip {
+.cat-strip {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 0.4rem;
+}
+.cat-strip-all {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+.cat-card {
   font: inherit;
-  font-size: 0.85rem;
-  min-height: 40px;
-  padding: 0 1rem;
+  flex: 0 0 auto;
+  min-width: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.6rem 0.9rem;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--surface);
   color: var(--fg);
   cursor: pointer;
-  white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-.cat-chip:hover {
+.cat-card:hover {
   background: var(--hover);
 }
-.cat-chip-on {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
-  font-weight: 600;
+.cat-card-on,
+.cat-card-on:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
 }
-.cat-chip:focus-visible {
+.cat-card:focus-visible,
+.cat-arrow:focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 2px;
 }
-@media (max-width: 719px) {
-  .chips-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.25rem;
-  }
+.cat-name {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+.cat-total {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.cat-cur {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+.cat-arrow {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+.cat-arrow:hover {
+  background: var(--hover);
 }

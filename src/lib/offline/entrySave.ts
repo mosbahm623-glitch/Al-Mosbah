@@ -1,5 +1,5 @@
 import { uploadInvoices } from '../entries/attachments'
-import { addExpenseItem, createBank, createContractor, type Category } from '../entries/catalog'
+import { addExpenseItem, type Category } from '../entries/catalog'
 import { isNetworkError, isOnline } from '../net/connection'
 import { insertEntry, updateEntry, type EntryInput } from '../entries/entries'
 import type { Named } from '../core/lookups'
@@ -27,7 +27,7 @@ export type SaveInput = {
   files: File[]
   contractors?: Named[]
   banks?: Named[]
-  /** an owner picks the bank from his list only: a name that is not in `banks` is refused, never created */
+  /** the bank is picked from `banks` only: a name that is not in it is refused, never created */
   banksOnly?: boolean
   /** a new entry from a custody or an owner: at least one invoice photo is a must */
   requirePhoto?: boolean
@@ -65,9 +65,6 @@ export type SaveOutcome =
   | { status: 'saved'; id?: string; seq?: number; failedPhotos: number }
 
 const fail = (error: SaveError): SaveOutcome => ({ status: 'error', error })
-
-const findOrCreate = async (list: Named[] | undefined, name: string, create: (n: string) => Promise<string | null>) =>
-  list?.find((x) => x.name.trim().toLowerCase() === name.toLowerCase())?.id ?? create(name)
 
 /**
  * Checks the form, resolves the typed contractor / bank names, and saves (or edits) the entry. A new entry made
@@ -130,22 +127,16 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
       : keepOnDevice(baseRow, typed)
   }
 
-  let contractorId: string | null = null
-  if (typedContractor) {
-    contractorId = await findOrCreate(input.contractors, typedContractor, createContractor)
-    if (!contractorId) return !entry && !isOnline() ? keepOnDevice(baseRow, typed) : fail('contractor')
-  }
-  let bankId: string | null = null
-  if (typedBank) {
-    bankId = input.banksOnly
-      ? (input.banks?.find((x) => x.name.trim().toLowerCase() === typedBank.toLowerCase())?.id ?? null)
-      : await findOrCreate(input.banks, typedBank, createBank)
-    if (!bankId)
-      return input.banksOnly ? fail('bank-denied') : !entry && !isOnline() ? keepOnDevice(baseRow, typed) : fail('bank')
-  }
+  // a contractor and a bank can only be picked from the existing ones: nothing is created here
+  const contractorId = typedContractor
+    ? (input.contractors?.find((x) => x.name.trim().toLowerCase() === typedContractor.toLowerCase())?.id ?? null)
+    : null
+  if (typedContractor && !contractorId) return fail('contractor')
+  const bankId = typedBank ? ownerBankId : null
+  if (typedBank && !bankId) return fail('bank-denied')
   if (isExpense && category && !category.expense_items.some((i) => i.name === input.itemName.trim())) {
-    // remember the name so it shows up as a suggestion next time; the entry does not depend on it
-    await addExpenseItem(input.itemName.trim(), category.id)
+    // remember the name so it shows up as a suggestion next time; the entry does not depend on it, so nothing waits for it
+    void Promise.resolve(addExpenseItem(input.itemName.trim(), category.id)).catch(() => undefined)
   }
 
   const row: EntryInput = { ...baseRow, contractor_id: contractorId, bank_id: bankId }

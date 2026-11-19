@@ -109,8 +109,8 @@ export default function BulkInvoices() {
           type="search"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          placeholder="تصفية جوه المشروع (رقم أو مبلغ أو بند)"
-          aria-label="تصفية القيود"
+          placeholder="ابحث جوه المشروع: رقم القيد أو المبلغ أو البند أو المقاول"
+          aria-label="بحث جوه المشروع"
           autoComplete="off"
           disabled={!projectId}
         />
@@ -164,7 +164,7 @@ export default function BulkInvoices() {
       {rows.length > 0 && (
         <section className="panel">
           <p className="muted small search-count">
-            {matched.length} قيد{matched.length > SHOW_LIMIT ? ` (معروض أول ${SHOW_LIMIT}، استخدم التصفية)` : ''}
+            {matched.length} قيد{matched.length > SHOW_LIMIT ? ` (معروض أول ${SHOW_LIMIT}، استخدم البحث)` : ''}
           </p>
           <div className="table-wrap">
             <table className="table wrap-desc">

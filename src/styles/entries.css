@@ -118,3 +118,17 @@
 .table-grid td.col-amt {
   font-size: 1rem;
 }
+
+/* wide screens: every column fits, so drop the horizontal scroll and pin the header under the top bar */
+@media (min-width: 1280px) {
+  .entries-panel,
+  .entries-panel .table-wrap {
+    overflow: clip;
+  }
+  .entries-panel .table.table-grid thead th {
+    position: sticky;
+    top: calc(var(--header-h) + env(safe-area-inset-top));
+    z-index: 2;
+    background: var(--surface-2);
+  }
+}

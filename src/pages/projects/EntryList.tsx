@@ -148,7 +148,7 @@ export default function EntryList({ entries, canEdit, onEdit, onRestored }: Prop
       {shown.length === 0 && <div className="card empty">مفيش قيود.</div>}
 
       {shown.length > 0 && (
-        <section className="panel">
+        <section className="panel entries-panel">
           <div className="table-wrap">
             <table className="table table-grid">
               <thead>

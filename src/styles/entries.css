@@ -153,9 +153,3 @@
   font-weight: 700;
   font-size: 1.05rem;
 }
-.cat-card-static {
-  cursor: default;
-}
-.cat-card-static:hover {
-  background: var(--surface);
-}

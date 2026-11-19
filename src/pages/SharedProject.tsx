@@ -21,6 +21,7 @@ const REFRESH_MS = 30_000
 /** The client's page: one project, read only, refreshed by itself. No sign-in; the link is the key. */
 export default function SharedProject({ token }: { token: string }) {
   const [kind, setKind] = useState<(typeof KINDS)[number]['value']>('all')
+  const [category, setCategory] = useState<string | null>(null)
   // each fetch is stamped, so "last updated" is the moment the shown data arrived
   const { data, failed, loading, reload } = useAsync<(Shared & { at: string }) | null>(
     useCallback(
@@ -48,8 +49,18 @@ export default function SharedProject({ token }: { token: string }) {
   const state = data ? 'ok' : failed ? 'failed' : loading ? 'loading' : 'invalid'
   const at = data?.at ?? null
 
-  const shown = useMemo(() => (data?.entries ?? []).filter((e) => kind === 'all' || e.kind === kind), [data, kind])
+  const shown = useMemo(
+    () =>
+      (data?.entries ?? []).filter(
+        (e) => (kind === 'all' || e.kind === kind) && (!category || (e.kind === 'expense' && e.category === category)),
+      ),
+    [data, kind, category],
+  )
   const pager = usePages(shown)
+  const pick = (next: string | null) => {
+    setCategory(next)
+    pager.setPage(1)
+  }
 
   return (
     <main className="share-page">
@@ -81,13 +92,29 @@ export default function SharedProject({ token }: { token: string }) {
           {data.categories.length > 0 && (
             <section className="panel cat-panel">
               <h2 className="section-title">تصنيفات المصروفات</h2>
-              <div className="cat-strip cat-strip-all">
+              <div className="cat-strip cat-strip-all" role="group" aria-label="تصفية حسب البند">
+                <button
+                  type="button"
+                  className={`cat-card ${category === null ? 'cat-card-on' : ''}`}
+                  aria-pressed={category === null}
+                  onClick={() => pick(null)}
+                >
+                  <span className="cat-name">الكل</span>
+                  <span className="cat-total">{money(data.expenses)}</span>
+                  <span className="cat-cur">ج.م</span>
+                </button>
                 {data.categories.map((c) => (
-                  <div key={c.category} className="cat-card cat-card-static">
+                  <button
+                    key={c.category}
+                    type="button"
+                    className={`cat-card ${category === c.category ? 'cat-card-on' : ''}`}
+                    aria-pressed={category === c.category}
+                    onClick={() => pick(category === c.category ? null : c.category)}
+                  >
                     <span className="cat-name">{c.category}</span>
                     <span className="cat-total">{money(c.total)}</span>
                     <span className="cat-cur">ج.م</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </section>
@@ -112,7 +139,7 @@ export default function SharedProject({ token }: { token: string }) {
           {shown.length > 0 && (
             <section className="panel">
               <div className="table-wrap">
-                <table className="table table-grid">
+                <table className="table table-grid wrap-desc">
                   <thead>
                     <tr>
                       <th>التاريخ</th>

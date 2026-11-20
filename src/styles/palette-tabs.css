@@ -133,3 +133,11 @@
   border-top: 1px solid var(--line-2);
   font-size: 0.75rem;
 }
+
+/* a page kept alive behind the visible one (see Page in App.tsx) */
+.keep {
+  display: contents;
+}
+.keep[hidden] {
+  display: none;
+}

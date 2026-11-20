@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
 import AuthScreen from './pages/AuthScreen'
 import ComingSoon from './pages/ComingSoon'
@@ -31,11 +31,11 @@ import PageErrorBoundary from './components/PageErrorBoundary'
 import Layout from './layout/Layout'
 import { ALL_ITEMS } from './layout/nav'
 import { useRoute } from './layout/route'
+import { keepsAlive, useOpenPaths } from './layout/useTabs'
 import { shareTokenOf } from './lib/projects/shares'
 
-function Content() {
+function Content({ route }: { route: string }) {
   const { isAdmin, isStaff, isOwner, can } = useAuth()
-  const route = useRoute()
   const item = ALL_ITEMS.find((i) => i.path === route)
   const section = route.split('/')[0]
   const sectionItem = ALL_ITEMS.find((i) => i.path === section)
@@ -76,12 +76,34 @@ function Content() {
   return <ComingSoon title={item.label} />
 }
 
+const KEPT = 6
+
+/**
+ * The page on screen, plus the other pages that are open as tabs. Those stay mounted but hidden, so coming back to a
+ * tab finds it exactly as it was left (what was typed, filters, scroll) instead of loading it again.
+ */
 function Page() {
   const route = useRoute()
+  const open = useOpenPaths()
+  const [visited, setVisited] = useState<string[]>([route])
+  if (keepsAlive(route) && !visited.includes(route)) {
+    // pages in the order they were first opened (adjusting state while rendering, not in an effect)
+    const next = [...visited, route]
+    while (next.length > KEPT) next.shift()
+    setVisited(next)
+  }
+  const shown = visited.filter((r) => r === route || (open.has(r) && keepsAlive(r)))
+  if (!shown.includes(route)) shown.push(route)
   return (
-    <PageErrorBoundary key={route}>
-      <Content />
-    </PageErrorBoundary>
+    <>
+      {shown.map((r) => (
+        <div className="keep" key={r} data-page={r} hidden={r !== route}>
+          <PageErrorBoundary>
+            <Content route={r} />
+          </PageErrorBoundary>
+        </div>
+      ))}
+    </>
   )
 }
 

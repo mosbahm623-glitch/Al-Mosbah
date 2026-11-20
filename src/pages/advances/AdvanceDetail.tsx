@@ -2,9 +2,15 @@ import { useCallback, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import Segmented from '../../components/Segmented'
-import { FileText, Pencil } from 'lucide-react'
+import { ArrowLeftRight, FileText, Pencil } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
-import { advanceBalance, setAdvanceStatus, type AdvanceReturn, type Installment } from '../../lib/advances/advances'
+import {
+  advanceBalance,
+  cancelAdvanceTransfer,
+  setAdvanceStatus,
+  type AdvanceReturn,
+  type Installment,
+} from '../../lib/advances/advances'
 import { pickableProjects, type ProjectSummary } from '../../lib/projects/projects'
 import { type Entry } from '../../lib/entries/entryTypes'
 import { fetchMyProjectAccess, type MyProjectAccess } from '../../lib/users/users'
@@ -18,6 +24,7 @@ import ReturnsPanel from './ReturnsPanel'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
 import MoneyDialog from './MoneyDialog'
+import TransferDialog from './TransferDialog'
 import { STATUS } from '../../lib/core/status'
 
 type Money = { kind: 'installment' | 'return'; row?: Installment | AdvanceReturn }
@@ -47,6 +54,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
   const [spending, setSpending] = useState(false)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
   const [editing, setEditing] = useState(false)
+  const [transferring, setTransferring] = useState(false)
   const [tab, setTab] = useState<(typeof TABS)[number]>('approved')
 
   if (loading) return <p className="muted">جارٍ التحميل...</p>
@@ -75,6 +83,11 @@ export default function AdvanceDetail({ id }: { id: string }) {
     if (!error) reload()
   }
 
+  async function cancelTransfer(transferId: string) {
+    const { error } = await cancelAdvanceTransfer(transferId)
+    if (!error) reload()
+  }
+
   return (
     <div className="page-stack">
       <PageHead
@@ -94,6 +107,12 @@ export default function AdvanceDetail({ id }: { id: string }) {
                   <Pencil size={18} aria-hidden="true" />
                   تعديل
                 </button>
+                {isAdmin && (
+                  <button className="btn btn-ghost btn-icon" onClick={() => setTransferring(true)}>
+                    <ArrowLeftRight size={18} aria-hidden="true" />
+                    تحويل لعهدة تانية
+                  </button>
+                )}
                 <button className="btn btn-ghost" onClick={() => void toggleStatus()}>
                   {advance.status === 'open' ? 'قفل العهدة' : 'إعادة فتح'}
                 </button>
@@ -171,6 +190,7 @@ export default function AdvanceDetail({ id }: { id: string }) {
           installments={installments}
           isStaff={isStaff}
           isAdmin={isAdmin}
+          onCancelTransfer={(tid) => void cancelTransfer(tid)}
           onAdd={() => setMoney({ kind: 'installment' })}
           onEdit={(row) => setMoney({ kind: 'installment', row })}
         />
@@ -180,8 +200,20 @@ export default function AdvanceDetail({ id }: { id: string }) {
         <ReturnsPanel
           returns={returns}
           isStaff={isStaff}
+          isAdmin={isAdmin}
+          onCancelTransfer={(tid) => void cancelTransfer(tid)}
           onAdd={() => setMoney({ kind: 'return' })}
           onEdit={(row) => setMoney({ kind: 'return', row })}
+        />
+      )}
+
+      {transferring && (
+        <TransferDialog
+          fromId={id}
+          fromName={advance.holder_name}
+          fromBalance={balance}
+          onClose={() => setTransferring(false)}
+          onSaved={reload}
         />
       )}
 

@@ -35,12 +35,12 @@ export type Database = {
         { at?: string; by?: string | null; id?: never; note?: string | null }
       >
       advance_installments: T<
-        { advance_id: string; amount: number; bank_id: string | null; created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null; id: string; paid_on: string; reject_reason: string | null; status: string },
+        { advance_id: string; amount: number; bank_id: string | null; created_at: string; created_by: string | null; decided_at: string | null; decided_by: string | null; id: string; paid_on: string; reject_reason: string | null; status: string; transfer_id: string | null },
         { advance_id: string; amount: number; bank_id?: string | null; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string },
         { advance_id?: string; amount?: number; bank_id?: string | null; created_at?: string; id?: string; paid_on?: string; reject_reason?: string | null; status?: string }
       >
       advance_returns: T<
-        { advance_id: string; amount: number; created_at: string; id: string; notes: string | null; returned_on: string },
+        { advance_id: string; amount: number; created_at: string; id: string; notes: string | null; returned_on: string; transfer_id: string | null },
         { advance_id: string; amount: number; created_at?: string; id?: string; notes?: string | null; returned_on?: string },
         { advance_id?: string; amount?: number; created_at?: string; id?: string; notes?: string | null; returned_on?: string }
       >
@@ -138,6 +138,8 @@ export type Database = {
       bank_summaries: { Args: never; Returns: Json[] }
       dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }
       duplicate_entry_groups: { Args: never; Returns: Json[] }
+      transfer_between_advances: { Args: { p_from: string; p_to: string; p_amount: number; p_date: string; p_notes: string | null }; Returns: string }
+      cancel_advance_transfer: { Args: { p_id: string }; Returns: undefined }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }

@@ -10,12 +10,14 @@ type Props = {
   isStaff: boolean
   /** only the admin may change a payment that is already approved */
   isAdmin: boolean
+  /** removes both sides of a transfer between custodies */
+  onCancelTransfer: (transferId: string) => void
   onAdd: () => void
   onEdit: (row: Installment) => void
 }
 
 /** The money handed to the holder, each payment with its approval status. */
-export default function InstallmentsPanel({ installments, isStaff, isAdmin, onAdd, onEdit }: Props) {
+export default function InstallmentsPanel({ installments, isStaff, isAdmin, onCancelTransfer, onAdd, onEdit }: Props) {
   return (
     <section className="panel">
       <div className="panel-head">
@@ -49,18 +51,27 @@ export default function InstallmentsPanel({ installments, isStaff, isAdmin, onAd
                     {dateText(i.paid_on)}
                     <span className="sub">{timeText(i.created_at)}</span>
                   </td>
-                  <td className="num strong">{money(i.amount)}</td>
+                  <td className="num strong">
+                    {money(i.amount)}
+                    {i.transfer_id && <span className="sub">تحويل من عهدة تانية</span>}
+                  </td>
                   <td>
                     <StatusChip status={i.status} kind="payment" />
                     {i.status === STATUS.rejected && <RejectReason reason={i.reject_reason} prefix="السبب" />}
                   </td>
                   {isStaff && (
                     <td>
-                      {(isAdmin || i.status !== STATUS.approved) && (
-                        <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => onEdit(i)}>
-                          <Pencil size={16} aria-hidden="true" />
-                        </button>
-                      )}
+                      {i.transfer_id
+                        ? isAdmin && (
+                            <button className="btn btn-ghost" onClick={() => onCancelTransfer(i.transfer_id as string)}>
+                              إلغاء التحويل
+                            </button>
+                          )
+                        : (isAdmin || i.status !== STATUS.approved) && (
+                            <button className="icon-btn" aria-label="تعديل الدفعة" onClick={() => onEdit(i)}>
+                              <Pencil size={16} aria-hidden="true" />
+                            </button>
+                          )}
                     </td>
                   )}
                 </tr>

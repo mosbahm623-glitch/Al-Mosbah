@@ -5,12 +5,15 @@ import { dateText, money } from '../../lib/core/format'
 type Props = {
   returns: AdvanceReturn[] | null | undefined
   isStaff: boolean
+  isAdmin: boolean
+  /** removes both sides of a transfer between custodies */
+  onCancelTransfer: (transferId: string) => void
   onAdd: () => void
   onEdit: (row: AdvanceReturn) => void
 }
 
 /** The money the holder gave back. */
-export default function ReturnsPanel({ returns, isStaff, onAdd, onEdit }: Props) {
+export default function ReturnsPanel({ returns, isStaff, isAdmin, onCancelTransfer, onAdd, onEdit }: Props) {
   return (
     <section className="panel">
       <div className="panel-head">
@@ -45,9 +48,17 @@ export default function ReturnsPanel({ returns, isStaff, onAdd, onEdit }: Props)
                   <td className="muted">{r.notes}</td>
                   {isStaff && (
                     <td>
-                      <button className="icon-btn" aria-label="تعديل المرتجع" onClick={() => onEdit(r)}>
-                        <Pencil size={16} aria-hidden="true" />
-                      </button>
+                      {r.transfer_id ? (
+                        isAdmin && (
+                          <button className="btn btn-ghost" onClick={() => onCancelTransfer(r.transfer_id as string)}>
+                            إلغاء التحويل
+                          </button>
+                        )
+                      ) : (
+                        <button className="icon-btn" aria-label="تعديل المرتجع" onClick={() => onEdit(r)}>
+                          <Pencil size={16} aria-hidden="true" />
+                        </button>
+                      )}
                     </td>
                   )}
                 </tr>

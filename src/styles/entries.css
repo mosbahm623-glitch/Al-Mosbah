@@ -156,3 +156,6 @@
 .share-cat {
   white-space: nowrap;
 }
+.share-item {
+  min-width: 9rem;
+}

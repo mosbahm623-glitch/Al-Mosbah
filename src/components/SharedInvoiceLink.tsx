@@ -52,7 +52,7 @@ export default function SharedInvoiceLink({ token, seq, count }: Props) {
         {count}
       </button>
       {open && (
-        <Dialog title={`فواتير القيد #${seq}`} onClose={() => setOpen(false)}>
+        <Dialog title="فواتير القيد" onClose={() => setOpen(false)}>
           <Files token={token} seq={seq} />
         </Dialog>
       )}

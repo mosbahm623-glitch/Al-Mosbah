@@ -23,8 +23,17 @@ export type Installment = {
   /** a payment recorded by the owner waits for the admin; only approved ones count in the totals */
   status: LiveStatus
   reject_reason: string | null
+  /** set when the payment is the receiving side of a transfer between custodies */
+  transfer_id: string | null
 }
-export type AdvanceReturn = { id: string; amount: number; returned_on: string; notes: string | null }
+export type AdvanceReturn = {
+  id: string
+  amount: number
+  returned_on: string
+  notes: string | null
+  /** set when the return is the sending side of a transfer between custodies */
+  transfer_id: string | null
+}
 
 /** What the holder still has: received − spent − returned (negative = the company owes him). */
 export const advanceBalance = (a: Pick<AdvanceSummary, 'given' | 'spent' | 'returned'>) =>
@@ -35,7 +44,7 @@ export const fetchAdvanceSummaries = () => supabase.rpc('advance_summaries').ret
 export const fetchInstallments = (advanceId: string) =>
   supabase
     .from('advance_installments')
-    .select('id,amount,paid_on,created_at,bank_id,status,reject_reason')
+    .select('id,amount,paid_on,created_at,bank_id,status,reject_reason,transfer_id')
     .eq('advance_id', advanceId)
     .order('paid_on', { ascending: false })
     .returns<Installment[]>()
@@ -43,7 +52,7 @@ export const fetchInstallments = (advanceId: string) =>
 export const fetchReturns = (advanceId: string) =>
   supabase
     .from('advance_returns')
-    .select('id,amount,returned_on,notes')
+    .select('id,amount,returned_on,notes,transfer_id')
     .eq('advance_id', advanceId)
     .order('returned_on', { ascending: false })
     .returns<AdvanceReturn[]>()
@@ -88,3 +97,10 @@ export const saveAdvanceMoney = (
 
 export const deleteAdvanceMoney = (kind: MoneyKind, rowId: string) =>
   supabase.from(MONEY_TABLE[kind]).delete().eq('id', rowId)
+
+/** Admin only: moves money from one custody to another as a linked return + payment (no bank, no project). */
+export const transferBetweenAdvances = (from: string, to: string, amount: number, date: string, notes: string | null) =>
+  supabase.rpc('transfer_between_advances', { p_from: from, p_to: to, p_amount: amount, p_date: date, p_notes: notes })
+
+/** Admin only: removes both sides of a transfer. */
+export const cancelAdvanceTransfer = (id: string) => supabase.rpc('cancel_advance_transfer', { p_id: id })

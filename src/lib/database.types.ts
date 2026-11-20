@@ -10,9 +10,9 @@ export type Database = {
   public: {
     Tables: {
       project_shares: T<
-        { id: string; project_id: string; token: string; created_by: string | null; created_at: string; expires_at: string | null; revoked_at: string | null },
-        { id?: string; project_id: string; token?: string; created_by?: string | null; created_at?: string; expires_at?: string | null; revoked_at?: string | null },
-        { expires_at?: string | null; revoked_at?: string | null }
+        { id: string; project_id: string; token: string; created_by: string | null; created_at: string; expires_at: string | null; revoked_at: string | null; show_seq: boolean; show_date: boolean },
+        { id?: string; project_id: string; token?: string; created_by?: string | null; created_at?: string; expires_at?: string | null; revoked_at?: string | null; show_seq?: boolean; show_date?: boolean },
+        { expires_at?: string | null; revoked_at?: string | null; show_seq?: boolean; show_date?: boolean }
       >
       entry_attachments: T<
         { id: string; entry_id: string; path: string; file_name: string | null; created_by: string | null; created_at: string },

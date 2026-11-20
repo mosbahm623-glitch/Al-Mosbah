@@ -51,6 +51,8 @@ select pg_temp.chk('anon_cannot_insert_share', pg_temp.try(format($q$insert into
 select pg_temp.chk('anon_sees_no_entries', (select count(*)::int from public.entries), 0);
 select pg_temp.chk('wrong_token_gives_null', (public.shared_project('nope') is null)::text, 'true');
 select pg_temp.chk('token_gives_project', public.shared_project((select tok from ids)) ->> 'name', '__SHARE');
+select pg_temp.chk('seq_hidden_by_default', public.shared_project((select tok from ids)) ->> 'show_seq', 'false');
+select pg_temp.chk('date_hidden_by_default', public.shared_project((select tok from ids)) ->> 'show_date', 'false');
 select pg_temp.chk('income_total', (public.shared_project((select tok from ids)) ->> 'income')::numeric, 1000.00::numeric);
 select pg_temp.chk('expense_total_counts_only_approved', (public.shared_project((select tok from ids)) ->> 'expenses')::numeric, 300.00::numeric);
 select pg_temp.chk('entries_count_excludes_pending_and_deleted', jsonb_array_length(public.shared_project((select tok from ids)) -> 'entries'), 2);

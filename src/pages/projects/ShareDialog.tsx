@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Copy, Link2, Trash2 } from 'lucide-react'
 import Dialog from '../../components/Dialog'
-import { createShare, fetchActiveShare, revokeShares, shareUrl, type ProjectShare } from '../../lib/projects/shares'
+import {
+  createShare,
+  fetchActiveShare,
+  revokeShares,
+  shareUrl,
+  updateShareOptions,
+  type ProjectShare,
+} from '../../lib/projects/shares'
 
 type Props = { projectId: string; projectName: string; onClose: () => void }
 
@@ -46,6 +53,14 @@ export default function ShareDialog({ projectId, projectName, onClose }: Props) 
     setShare(null)
   }
 
+  async function setOption(key: 'show_seq' | 'show_date', value: boolean) {
+    if (!share) return
+    setError(null)
+    const { error: err } = await updateShareOptions(share.id, { [key]: value })
+    if (err) return setError('ما اتحفظش الاختيار، جرّب تاني')
+    setShare({ ...share, [key]: value })
+  }
+
   async function copy() {
     if (!share) return
     try {
@@ -77,6 +92,25 @@ export default function ShareDialog({ projectId, projectName, onClose }: Props) 
               رابط العميل
               <input readOnly value={shareUrl(share.token)} dir="ltr" onFocus={(e) => e.currentTarget.select()} />
             </label>
+            <div className="field">
+              يظهر للعميل كمان
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={share.show_seq}
+                  onChange={(e) => void setOption('show_seq', e.target.checked)}
+                />
+                رقم القيد
+              </label>
+              <label className="check">
+                <input
+                  type="checkbox"
+                  checked={share.show_date}
+                  onChange={(e) => void setOption('show_date', e.target.checked)}
+                />
+                التاريخ
+              </label>
+            </div>
             <div className="dialog-actions">
               <button type="button" className="btn btn-icon" onClick={() => void copy()}>
                 <Copy size={18} aria-hidden="true" />

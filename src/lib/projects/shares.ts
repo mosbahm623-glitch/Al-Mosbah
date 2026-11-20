@@ -1,7 +1,17 @@
 import { supabase } from '../supabase'
 
 /** A client link to one project: read-only, no sign-in, and the office can cancel it any time. */
-export type ProjectShare = { id: string; token: string; created_at: string; expires_at: string | null }
+export type ProjectShare = {
+  id: string
+  token: string
+  created_at: string
+  expires_at: string | null
+  /** what the client sees besides the statement: the entry number and the date (both off unless the office ticks them) */
+  show_seq: boolean
+  show_date: boolean
+}
+
+const SHARE_COLUMNS = 'id, token, created_at, expires_at, show_seq, show_date'
 
 type SharedEntry = {
   seq: number
@@ -18,6 +28,8 @@ type SharedEntry = {
 export type SharedProject = {
   name: string
   status: 'active' | 'closed'
+  show_seq: boolean
+  show_date: boolean
   income: number
   expenses: number
   categories: { category: string; total: number }[]
@@ -36,7 +48,7 @@ export const shareUrl = (token: string) => `${window.location.origin}${window.lo
 export async function fetchActiveShare(projectId: string): Promise<{ data: ProjectShare | null; error: boolean }> {
   const { data, error } = await supabase
     .from('project_shares')
-    .select('id, token, created_at, expires_at')
+    .select(SHARE_COLUMNS)
     .eq('project_id', projectId)
     .is('revoked_at', null)
     .order('created_at', { ascending: false })
@@ -47,7 +59,11 @@ export async function fetchActiveShare(projectId: string): Promise<{ data: Proje
 }
 
 export const createShare = (projectId: string) =>
-  supabase.from('project_shares').insert({ project_id: projectId }).select('id, token, created_at, expires_at').single()
+  supabase.from('project_shares').insert({ project_id: projectId }).select(SHARE_COLUMNS).single()
+
+/** What the link shows the client: the entry number and/or the date. */
+export const updateShareOptions = (id: string, options: { show_seq?: boolean; show_date?: boolean }) =>
+  supabase.from('project_shares').update(options).eq('id', id)
 
 /** Cancels every live link of the project: the old address stops working at once. */
 export const revokeShares = (projectId: string) =>

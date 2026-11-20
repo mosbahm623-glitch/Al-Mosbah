@@ -122,7 +122,8 @@ export default function SharedProject({ token }: { token: string }) {
                 <table className="table table-grid wrap-desc">
                   <thead>
                     <tr>
-                      <th>التاريخ</th>
+                      {data.show_seq && <th>رقم</th>}
+                      {data.show_date && <th>التاريخ</th>}
                       <th>النوع</th>
                       <th>البند</th>
                       <th>البيان</th>
@@ -132,7 +133,8 @@ export default function SharedProject({ token }: { token: string }) {
                   <tbody>
                     {pager.items.map((e) => (
                       <tr key={e.seq}>
-                        <td className="num muted">{dateText(e.entry_date)}</td>
+                        {data.show_seq && <td className="strong num">#{e.seq}</td>}
+                        {data.show_date && <td className="num muted">{dateText(e.entry_date)}</td>}
                         <td>
                           <KindChip entry={e} />
                         </td>

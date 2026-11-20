@@ -64,7 +64,8 @@ export default function ShareDialog({ projectId, projectName, onClose }: Props) 
   async function copy() {
     if (!share) return
     try {
-      await navigator.clipboard.writeText(shareUrl(share.token))
+      // the preview can't know the project (the link is static), so the copied message names it above the link
+      await navigator.clipboard.writeText(`متابعة مشروع ${projectName}\n${shareUrl(share.token)}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -114,7 +115,7 @@ export default function ShareDialog({ projectId, projectName, onClose }: Props) 
             <div className="dialog-actions">
               <button type="button" className="btn btn-icon" onClick={() => void copy()}>
                 <Copy size={18} aria-hidden="true" />
-                {copied ? 'اتنسخ' : 'نسخ الرابط'}
+                {copied ? 'اتنسخ' : 'نسخ الرسالة والرابط'}
               </button>
               {!confirming ? (
                 <button type="button" className="btn btn-ghost btn-icon" onClick={() => setConfirming(true)}>

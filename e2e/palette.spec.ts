@@ -1,0 +1,46 @@
+import { expect, test } from '@playwright/test'
+import { mockApi, signIn, P1 } from './mockApi.ts'
+
+test('Ctrl+K opens the quick search and Enter jumps to the page', async ({ page }) => {
+  await mockApi(page)
+  await signIn(page)
+  await expect(page.getByRole('link', { name: 'البنوك' })).toBeVisible()
+  await page.keyboard.press('Control+k')
+  const box = page.getByRole('dialog', { name: 'بحث سريع' })
+  await expect(box).toBeVisible()
+  await box.getByRole('textbox').fill('البنوك')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/#\/banks$/)
+  await expect(box).toHaveCount(0)
+})
+
+test('the quick search finds a project by name and ignores spelling variants', async ({ page }) => {
+  await mockApi(page)
+  await signIn(page)
+  await page.getByRole('button', { name: 'بحث سريع (Ctrl+K)' }).click()
+  const box = page.getByRole('dialog', { name: 'بحث سريع' })
+  await expect(box).toBeVisible()
+  await expect(box.getByRole('textbox')).toBeEditable()
+  await box.getByRole('textbox').fill('مشروع')
+  await expect(box.getByRole('option').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(box).toHaveCount(0)
+})
+
+test('opened pages become tabs that can be closed', async ({ page }) => {
+  await mockApi(page)
+  await signIn(page)
+  await page.goto('/#/dashboard')
+  await page.goto('/#/banks')
+  await expect(page.locator('.page-title')).toHaveText('البنوك')
+  await page.goto('/#/advances')
+  await expect(page.locator('.page-title')).toHaveText('العهد')
+  const bar = page.getByRole('navigation', { name: 'الصفحات المفتوحة' })
+  await expect(bar.getByRole('link', { name: 'البنوك' })).toBeVisible()
+  await expect(bar.getByRole('link', { name: 'العهد' })).toHaveAttribute('aria-current', 'page')
+  await bar.getByRole('button', { name: 'إغلاق البنوك' }).click()
+  await expect(bar.getByRole('link', { name: 'البنوك' })).toHaveCount(0)
+  await expect(bar.getByRole('link', { name: 'العهد' })).toBeVisible()
+  await page.goto(`/#/projects/${P1}`)
+  await expect(bar.getByRole('link').last()).toHaveAttribute('aria-current', 'page')
+})

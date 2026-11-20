@@ -8,6 +8,7 @@
 @import './styles/shell-desktop.css';
 @import './styles/page-pieces.css';
 @import './styles/dialog.css';
+@import './styles/palette-tabs.css';
 @import './styles/entries.css';
 @import './styles/paper-reports.css';
 @import './styles/permissions-approvals.css';

@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Bell, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
+import { Bell, Command, LogOut, Menu, Moon, Search, Sun } from 'lucide-react'
 import { useAuth } from '../auth/AuthProvider'
-import { NAV } from './nav'
+import { NAV, visibleItems } from './nav'
 import { useRoute } from './route'
 import { usePendingCount } from './usePendingCount'
 import { useUnread } from './useUnread'
 import { startLive } from '../lib/core/live'
 import { startSync } from '../lib/offline/queue'
 import OfflineBar from './OfflineBar'
+import CommandPalette from './CommandPalette'
+import TabBar from './TabBar'
+import { clearTabs, useTabs } from './useTabs'
 import BackupReminder from '../components/BackupReminder'
 import { applyTheme, currentTheme, type Theme } from './theme'
 import { APP_VERSION } from '../lib/core/version'
@@ -31,6 +34,8 @@ export default function Layout({ children }: { children: ReactNode }) {
   const route = useRoute()
   const [open, setOpen] = useState(initialOpen)
   const [theme, setTheme] = useState<Theme>(currentTheme)
+  const [palette, setPalette] = useState(false)
+  const { tabs, close } = useTabs(route, profile?.id ?? '')
 
   useEffect(() => startLive(), [])
   useEffect(() => startSync(), [])
@@ -63,6 +68,18 @@ export default function Layout({ children }: { children: ReactNode }) {
   function onNavigate() {
     if (!window.matchMedia(DESKTOP).matches) setOpen(false)
   }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // e.code keeps it working on the Arabic keyboard too (the same key types a different letter there)
+      if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyK' || e.key.toLowerCase() === 'k')) {
+        e.preventDefault()
+        setPalette((v) => !v)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -115,6 +132,14 @@ export default function Layout({ children }: { children: ReactNode }) {
         </form>
 
         <div className="top-actions">
+          <button
+            className="top-btn"
+            onClick={() => setPalette(true)}
+            aria-label="بحث سريع (Ctrl+K)"
+            title="بحث سريع (Ctrl+K)"
+          >
+            <Command size={20} />
+          </button>
           <a className="top-btn search-link" href="#/search" aria-label="بحث">
             <Search size={20} />
           </a>
@@ -143,7 +168,15 @@ export default function Layout({ children }: { children: ReactNode }) {
               <span className="user-role">{isAdmin ? 'أدمن' : isStaff ? 'مالك' : 'مستخدم'}</span>
             </span>
           </div>
-          <button className="top-btn" onClick={() => void signOut()} aria-label="تسجيل الخروج" title="تسجيل الخروج">
+          <button
+            className="top-btn"
+            onClick={() => {
+              clearTabs(profile?.id ?? '')
+              void signOut()
+            }}
+            aria-label="تسجيل الخروج"
+            title="تسجيل الخروج"
+          >
             <LogOut size={20} />
           </button>
         </div>
@@ -154,9 +187,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <aside id="sidebar" className="sidebar" aria-label="القائمة الرئيسية" inert={!open}>
         <nav className="sidebar-nav">
           {NAV.map((group, i) => {
-            const items = group.items.filter((it) =>
-              it.ownerOnly ? isOwner : it.adminOnly ? isAdmin : it.staffOnly ? isStaff : !it.module || can(it.module),
-            )
+            const items = visibleItems(group.items, { can, isAdmin, isStaff, isOwner })
             if (items.length === 0) return null
             return (
               <div className="nav-group" key={i}>
@@ -189,10 +220,12 @@ export default function Layout({ children }: { children: ReactNode }) {
       </aside>
 
       <main className="content">
+        <TabBar tabs={tabs} route={route} onClose={close} />
         <OfflineBar />
         <BackupReminder />
         {children}
       </main>
+      {palette && <CommandPalette onClose={() => setPalette(false)} />}
     </div>
   )
 }

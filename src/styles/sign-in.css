@@ -12,31 +12,15 @@
   justify-content: space-between;
   padding: 36px 56px;
 }
+.login-logo .wordmark {
+  height: 46px;
+}
 .login-logo {
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 700;
   font-size: 1.25rem;
-}
-.login-brand {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-}
-.login-brand small {
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--muted);
-  text-align: start;
-}
-.login-mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  background: var(--accent);
-  display: grid;
-  place-items: center;
 }
 .login-box {
   width: min(100%, 400px);
@@ -181,17 +165,6 @@
     text-align: center;
     gap: 8px;
     font-size: 1.6rem;
-  }
-  .login-mark {
-    width: 46px;
-    height: 46px;
-  }
-  .login-brand {
-    align-items: center;
-  }
-  .login-brand small {
-    text-align: center;
-    font-size: 0.78rem;
   }
 }
 

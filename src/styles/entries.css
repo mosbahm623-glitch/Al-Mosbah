@@ -150,8 +150,7 @@
   border-bottom: 1px solid var(--line);
 }
 .share-brand {
-  font-weight: 700;
-  font-size: 1.05rem;
+  height: 34px;
 }
 .share-cat {
   white-space: nowrap;

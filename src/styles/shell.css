@@ -36,19 +36,23 @@
   text-decoration: none;
   padding-inline: 0.25rem;
 }
-.logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  display: grid;
-  place-items: center;
+/* the company logo: its shape is a mask, so it takes the colour of the text around it (light on the dark bar, dark on the page) */
+.wordmark {
+  display: inline-block;
+  aspect-ratio: 774 / 268;
+  background: currentColor;
+  -webkit-mask: url('../assets/legacy-logo.png') no-repeat center / contain;
+  mask: url('../assets/legacy-logo.png') no-repeat center / contain;
 }
-.brandname {
-  font-size: 1.1rem;
-  font-weight: 700;
-  white-space: nowrap;
+.brandmark .wordmark {
+  height: 28px;
+}
+/* on a page (not the dark bar): the logo's own dark green, light text colour in the dark theme */
+.wordmark.on-page {
+  color: #083220;
+}
+[data-theme='dark'] .wordmark.on-page {
+  color: var(--fg);
 }
 @media (max-width: 480px) {
   .topbar {
@@ -62,8 +66,8 @@
     gap: 0.4rem;
     padding-inline: 0;
   }
-  .brandname {
-    font-size: 0.9rem;
+  .brandmark .wordmark {
+    height: 24px;
   }
   .top-actions {
     gap: 0;

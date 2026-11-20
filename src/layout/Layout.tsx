@@ -85,22 +85,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         >
           <Menu size={22} />
         </button>
-        <a className="brandmark" href="#/dashboard">
-          <span className="logo" aria-hidden="true">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.9"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z" />
-            </svg>
-          </span>
-          <span className="brandname">Legacy ERP</span>
+        <a className="brandmark" href="#/dashboard" aria-label="Legacy Design & Build">
+          <span className="wordmark" aria-hidden="true" />
         </a>
 
         <form

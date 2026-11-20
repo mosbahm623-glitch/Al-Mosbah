@@ -1,4 +1,5 @@
 import type { ProjectSummary } from '../lib/projects/projects'
+import SearchSelect from './SearchSelect'
 
 /** The project an entry belongs to (an entry being edited can be moved to another project). */
 export function EntryProjectField({
@@ -13,18 +14,21 @@ export function EntryProjectField({
   /** new entries must choose one; an existing entry already has it */
   required: boolean
 }) {
+  const chosen = projects.find((p) => p.id === value)
   return (
-    <label className="field span-2">
-      المشروع
-      <select value={value} onChange={(e) => onChange(e.target.value)} required={required}>
-        {required && <option value="">اختار المشروع</option>}
-        {projects.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className="span-2">
+      <SearchSelect
+        label="المشروع"
+        value={chosen?.name ?? ''}
+        options={projects.map((p) => p.name)}
+        placeholder={required ? 'اختار المشروع (اكتب للبحث)' : 'ابحث عن مشروع'}
+        onChange={(name) => {
+          const hit = projects.find((p) => p.name === name)
+          if (hit) onChange(hit.id)
+          else if (!name && required) onChange('')
+        }}
+      />
+    </div>
   )
 }
 

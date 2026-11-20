@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#312D2A" />
+    <link rel="apple-touch-icon" href="/pwa-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="متابعة المشروع" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>متابعة مشروعك | Legacy Design &amp; Build</title>
+    <meta name="description" content="رابط متابعة المشروع: الإجماليات والقيود والفواتير، للقراءة فقط." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ar_EG" />
+    <meta property="og:site_name" content="Legacy Design &amp; Build" />
+    <meta property="og:title" content="متابعة مشروعك | Legacy Design &amp; Build" />
+    <meta property="og:description" content="رابط متابعة المشروع: الإجماليات والقيود والفواتير، للقراءة فقط." />
+    <meta property="og:image" content="https://mosbahm623-glitch.github.io/Al-Mosbah/og-client.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <script>
+      ;(function () {
+        try {
+          var t = localStorage.getItem('mosbah-theme')
+          if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          document.documentElement.dataset.theme = t
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

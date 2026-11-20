@@ -41,8 +41,9 @@ const TOKEN = /^share\/([0-9a-f]{64})$/
 /** The link token when the route is a client link (#/share/<token>), otherwise null. */
 export const shareTokenOf = (route: string) => TOKEN.exec(route)?.[1] ?? null
 
-/** The full address to send the client. Hash routing, so it works on GitHub Pages as it is. */
-export const shareUrl = (token: string) => `${window.location.origin}${window.location.pathname}#/share/${token}`
+/** The full address to send the client: its own page (client.html) so the preview says it is a client link. Hash routing, so it works on GitHub Pages as it is. */
+export const shareUrl = (token: string) =>
+  `${window.location.origin}${import.meta.env.BASE_URL}client.html#/share/${token}`
 
 /** The project's live link (the newest one that is neither cancelled nor expired), or null. */
 export async function fetchActiveShare(projectId: string): Promise<{ data: ProjectShare | null; error: boolean }> {

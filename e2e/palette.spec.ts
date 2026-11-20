@@ -31,6 +31,7 @@ test('opened pages become tabs that can be closed', async ({ page }) => {
   await mockApi(page)
   await signIn(page)
   await page.goto('/#/dashboard')
+  await expect(page.locator('.page-title')).toBeVisible()
   await page.goto('/#/banks')
   await expect(page.locator('.page-title')).toHaveText('البنوك')
   await page.goto('/#/advances')
@@ -43,4 +44,18 @@ test('opened pages become tabs that can be closed', async ({ page }) => {
   await expect(bar.getByRole('link', { name: 'العهد' })).toBeVisible()
   await page.goto(`/#/projects/${P1}`)
   await expect(bar.getByRole('link').last()).toHaveAttribute('aria-current', 'page')
+})
+
+test('going back to a tab finds the page as it was left', async ({ page }) => {
+  await mockApi(page)
+  await signIn(page)
+  await page.goto('/#/projects')
+  await page.getByPlaceholder('ابحث باسم المشروع').fill('فيلا')
+  await page.locator('.sidebar-nav').getByRole('link', { name: 'البنوك' }).click()
+  await expect(page.locator('.page-title:visible')).toHaveText('البنوك')
+  await page
+    .getByRole('navigation', { name: 'الصفحات المفتوحة' })
+    .getByRole('link', { name: 'المشاريع', exact: true })
+    .click()
+  await expect(page.getByPlaceholder('ابحث باسم المشروع')).toHaveValue('فيلا')
 })

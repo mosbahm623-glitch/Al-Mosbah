@@ -1,5 +1,21 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { ALL_ITEMS } from './nav'
+
+// the paths currently open as tabs, shared so the page area knows which pages to keep alive
+let openPaths: ReadonlySet<string> = new Set()
+const listeners = new Set<() => void>()
+function publish(tabs: Tab[]) {
+  openPaths = new Set(tabs.map((t) => t.path))
+  listeners.forEach((l) => l())
+}
+const subscribeOpen = (cb: () => void) => {
+  listeners.add(cb)
+  return () => void listeners.delete(cb)
+}
+export const useOpenPaths = () => useSyncExternalStore(subscribeOpen, () => openPaths)
+
+/** Search reads its text from the address, so it always starts fresh instead of staying alive. */
+export const keepsAlive = (route: string) => route !== 'search' && labelOf(route) !== null
 
 export type Tab = { path: string; label: string }
 
@@ -45,6 +61,7 @@ export function useTabs(route: string, uid: string) {
   }
 
   useEffect(() => {
+    publish(tabs)
     try {
       sessionStorage.setItem(key, JSON.stringify(tabs))
     } catch {
@@ -56,7 +73,7 @@ export function useTabs(route: string, uid: string) {
     if (!labelOf(route)) return
     let tries = 0
     const id = window.setInterval(() => {
-      const title = document.querySelector('.content .page-title')?.textContent?.trim()
+      const title = document.querySelector(`.content [data-page="${route}"] .page-title`)?.textContent?.trim()
       if (title) {
         setTabs((prev) => prev.map((t) => (t.path === route && t.label !== title ? { ...t, label: title } : t)))
         window.clearInterval(id)

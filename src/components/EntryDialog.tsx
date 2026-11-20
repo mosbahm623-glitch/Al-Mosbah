@@ -15,7 +15,8 @@ import { useAsync } from '../lib/core/useAsync'
 import { useSubmitGuard } from '../lib/core/useSubmitGuard'
 import { fetchBankNames, fetchContractorNames, fetchMyBankIds, type BankChoice, type Named } from '../lib/core/lookups'
 import { isRefund } from '../lib/entries/entryKind'
-import { fetchSummaries, type ProjectSummary } from '../lib/projects/projects'
+import type { ProjectSummary } from '../lib/projects/projects'
+import { useEntryProjects } from '../lib/projects/useEntryProjects'
 import { EntryAmountFields, EntryProjectField, IncomeLabelField, ReasonField } from './EntryFormParts'
 import type { Entry } from '../lib/entries/entryTypes'
 import { STATUS } from '../lib/core/status'
@@ -48,13 +49,7 @@ export default function EntryDialog({
   const locked = Boolean(entry) && !canEditOwn
   const mayDelete = Boolean(entry) && (isStaff || (canDeleteOwn && entry?.status !== STATUS.approved))
   const categories = useAsync<Category[]>(fetchCategories)
-  // an entry opened from search / approvals can be moved to another project too
-  const loadProjects = useCallback(
-    () => (entry && !projectsProp ? fetchSummaries() : Promise.resolve({ data: null, error: null })),
-    [entry, projectsProp],
-  )
-  const loadedProjects = useAsync<ProjectSummary[]>(loadProjects)
-  const projects = projectsProp ?? loadedProjects.data ?? undefined
+  const projects = useEntryProjects(Boolean(entry), projectsProp)
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const banks = useAsync<BankChoice[]>(fetchBankNames)
   // an owner picks from the banks the admin gave him; everyone else may type any bank

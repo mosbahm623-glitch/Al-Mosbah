@@ -128,8 +128,21 @@
   visibility: visible;
 }
 
+/* phone: the page behind the open menu must not scroll, or the bars slide under the status bar and the menu is cut short */
+@media (max-width: 899.98px) {
+  html:has(.app.is-open),
+  html:has(.app.is-open) body {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+}
+.sidebar {
+  overscroll-behavior: contain;
+}
+
 .scrim {
   position: fixed;
+  touch-action: none;
   inset: 0;
   z-index: 40;
   background: var(--scrim);

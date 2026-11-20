@@ -17,9 +17,10 @@ test('Ctrl+K opens the quick search and Enter jumps to the page', async ({ page 
 test('the quick search finds a project by name and ignores spelling variants', async ({ page }) => {
   await mockApi(page)
   await signIn(page)
-  await expect(page.getByRole('link', { name: 'البنوك' })).toBeVisible()
-  await page.keyboard.press('Control+k')
+  await page.getByRole('button', { name: 'بحث سريع (Ctrl+K)' }).click()
   const box = page.getByRole('dialog', { name: 'بحث سريع' })
+  await expect(box).toBeVisible()
+  await expect(box.getByRole('textbox')).toBeEditable()
   await box.getByRole('textbox').fill('مشروع')
   await expect(box.getByRole('option').first()).toBeVisible()
   await page.keyboard.press('Escape')
@@ -29,6 +30,7 @@ test('the quick search finds a project by name and ignores spelling variants', a
 test('opened pages become tabs that can be closed', async ({ page }) => {
   await mockApi(page)
   await signIn(page)
+  await page.goto('/#/dashboard')
   await page.goto('/#/banks')
   await expect(page.locator('.page-title')).toHaveText('البنوك')
   await page.goto('/#/advances')

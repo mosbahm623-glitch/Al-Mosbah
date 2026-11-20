@@ -19,6 +19,7 @@ const EXPECTED = [
   'shell-desktop.css',
   'page-pieces.css',
   'dialog.css',
+  'palette-tabs.css',
   'entries.css',
   'paper-reports.css',
   'permissions-approvals.css',

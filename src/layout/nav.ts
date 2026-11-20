@@ -60,3 +60,22 @@ export const NAV: NavGroup[] = [
 ]
 
 export const ALL_ITEMS = NAV.flatMap((g) => g.items)
+
+type Who = {
+  can: (module: Module) => boolean
+  isAdmin: boolean
+  isStaff: boolean
+  isOwner: boolean
+}
+
+/** The pages this person may open (the sidebar and the quick search show the same ones). */
+export const visibleItems = (items: NavItem[], who: Who) =>
+  items.filter((it) =>
+    it.ownerOnly
+      ? who.isOwner
+      : it.adminOnly
+        ? who.isAdmin
+        : it.staffOnly
+          ? who.isStaff
+          : !it.module || who.can(it.module),
+  )

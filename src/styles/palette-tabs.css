@@ -1,0 +1,135 @@
+/* ===== Open pages as tabs ===== */
+.tabbar {
+  position: sticky;
+  top: calc(var(--header-h) + env(safe-area-inset-top));
+  z-index: 20;
+  display: flex;
+  gap: 0.35rem;
+  margin: -0.5rem 0 0.9rem;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: thin;
+}
+.tab-item {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  max-width: 14rem;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+.tab-item a {
+  padding: 0.4rem 0.2rem 0.4rem 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.tab-item button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-inline-end: 0.15rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tab-item button:hover {
+  background: var(--hover);
+}
+.tab-active {
+  background: var(--surface);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+.tab-active a {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* ===== Quick search (Ctrl+K) ===== */
+.palette {
+  width: min(36rem, calc(100vw - 2rem));
+  margin: 8vh auto auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--fg);
+  overflow: hidden;
+}
+.palette::backdrop {
+  background: var(--scrim);
+}
+.palette-input {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line-2);
+  color: var(--muted);
+}
+.palette-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  box-shadow: none;
+  min-height: 0;
+}
+.palette-input input:focus {
+  box-shadow: none;
+  outline: none;
+}
+.palette-list {
+  max-height: min(24rem, 55dvh);
+  overflow-y: auto;
+  padding-bottom: 0.4rem;
+}
+.palette-group {
+  margin: 0;
+  padding: 0.6rem 1rem 0.2rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.palette-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.palette-on {
+  background: var(--hover);
+}
+.palette-meta {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.palette-empty {
+  padding: 1rem;
+}
+.palette-foot {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--line-2);
+  font-size: 0.75rem;
+}

@@ -54,6 +54,8 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}', 'scripts/*.test.mjs'],
     env: { VITE_SUPABASE_URL: 'https://example.supabase.co', VITE_SUPABASE_PUBLISHABLE_KEY: 'test-key' },
   },
+  // client.html is the same app with its own title and share preview: the link sent to a client opens it
+  build: { rollupOptions: { input: { main: 'index.html', client: 'client.html' } } },
   plugins: [
     react(),
     VitePWA({

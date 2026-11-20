@@ -217,6 +217,19 @@ describe('saveEntry: saving', () => {
   })
 })
 
+describe('saveEntry: income with a statement', () => {
+  it('keeps the category and the statement when an income is edited', async () => {
+    const entry = { id: 'e', rev: 1, kind: 'income', category: 'وارد', item: '٢٣٠ الف وارد' } as Entry
+    await saveEntry(base({ entry, kind: 'income', incomeLabel: '٢٣٠ الف وارد فيلا', editReason: 'تعديل' }))
+    expect(m.updateEntry).toHaveBeenCalledWith(
+      'e',
+      1,
+      expect.objectContaining({ category: 'وارد', item: '٢٣٠ الف وارد فيلا' }),
+      'تعديل',
+    )
+  })
+})
+
 describe('saveEntry: without a network', () => {
   it('keeps a new entry on the device and sends nothing', async () => {
     m.online = false

@@ -67,7 +67,7 @@ export default function SharedProject({ token }: { token: string }) {
   return (
     <main className="share-page">
       <header className="share-head">
-        <span className="share-brand">Legacy Fine Touch</span>
+        <span className="wordmark on-page share-brand" role="img" aria-label="Legacy Design & Build" />
         {at && <span className="muted small">آخر تحديث {timeText(at)}</span>}
       </header>
 

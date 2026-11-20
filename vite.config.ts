@@ -58,7 +58,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png'],
       workbox: {
         importScripts: ['push-sw.js'],
         // the Excel library is big and rarely needed: it is cached the first time someone exports, not at install

@@ -64,7 +64,7 @@ a.btn[aria-disabled='true'] {
 .paper-brand {
   font-size: 0;
   width: 11rem;
-  height: 2.8rem;
+  height: 3.2rem;
   margin-bottom: 0.5rem;
   background: url('../assets/legacy-logo.png') no-repeat right center / contain;
 }

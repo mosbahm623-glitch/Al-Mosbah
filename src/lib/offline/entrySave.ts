@@ -88,11 +88,13 @@ export async function saveEntry(input: SaveInput): Promise<SaveOutcome> {
   const typedBank = input.fromAdvance ? '' : input.bankName.trim()
   // every entry carries a bank (a payment from a custody has none)
   if (!input.fromAdvance && !typedBank) return fail('bank-required')
+  // an income that already has a statement (البيان) under its own category keeps both: the text is the statement
+  const incomeHasItem = !isExpense && entry?.kind === 'income' && Boolean(entry.item)
   const baseRow: EntryInput = {
     project_id: input.targetProject,
     kind: isExpense ? 'expense' : 'income',
-    category: isExpense ? category!.name : input.incomeLabel.trim(),
-    item: isExpense ? input.itemName.trim() : null,
+    category: isExpense ? category!.name : incomeHasItem ? entry!.category : input.incomeLabel.trim(),
+    item: isExpense ? input.itemName.trim() : incomeHasItem ? input.incomeLabel.trim() : null,
     contractor_id: null,
     bank_id: null,
     amount: kind === 'refund' ? -value : value,

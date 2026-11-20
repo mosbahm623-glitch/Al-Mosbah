@@ -77,7 +77,7 @@ export default function EntryDialog({
   const [noContractor, setNoContractor] = useState(false)
   const [noInvoice, setNoInvoice] = useState(false)
   const [bankName, setBankName] = useState(entry?.bank?.name ?? '')
-  const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? entry.category : '')
+  const [incomeLabel, setIncomeLabel] = useState(entry?.kind === 'income' ? (entry.item ?? entry.category) : '')
   const [amount, setAmount] = useState(entry ? String(Math.abs(entry.amount)) : '')
   const [date, setDate] = useState(() => entry?.entry_date ?? todayISO())
   const [notes, setNotes] = useState(entry?.notes ?? '')

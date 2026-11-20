@@ -39,10 +39,12 @@ export default function TransferDialog({ fromId, fromName, fromBalance, onClose,
   async function send() {
     const value = Number(amount)
     if (!target) return setError('اختار العهدة اللي هتتحول لها')
-    if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
+    if (!Number.isFinite(value) || value === 0) return setError('اكتب المبلغ')
     setSaving(true)
     setError(null)
-    const { error: err } = await transferBetweenAdvances(fromId, target.id, value, date, notes.trim() || null)
+    // a negative amount moves the money the other way: from the picked custody into this one
+    const [src, dst] = value > 0 ? [fromId, target.id] : [target.id, fromId]
+    const { error: err } = await transferBetweenAdvances(src, dst, Math.abs(value), date, notes.trim() || null)
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')
     onSaved()
@@ -71,6 +73,11 @@ export default function TransferDialog({ fromId, fromName, fromBalance, onClose,
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        {value < 0 && target && (
+          <p className="muted">
+            مبلغ بالسالب: {money(-value)} هيتحول من عهدة {target.holder_name} إلى عهدة {fromName}
+          </p>
+        )}
         {over && <p className="msg msg-error">المبلغ أكبر من رصيد العهدة، رصيدها هيبقى بالسالب</p>}
         {error && <p className="msg msg-error">{error}</p>}
         <div className="dialog-actions">

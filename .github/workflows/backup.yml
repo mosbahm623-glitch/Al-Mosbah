@@ -63,23 +63,43 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17 rclone
 
-      - name: Dump database
+      - name: Dump database (and fingerprint every table at the same instant)
+        env:
+          PGBIN: /usr/lib/postgresql/17/bin
         run: |
           set -euo pipefail
           umask 077
           stamp=$(TZ=Africa/Cairo date +%Y-%m-%d_%H-%M)  # التاريخ والساعة بتوقيت مصر
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
-          /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
-            --format=custom --no-owner --no-privileges \
+          # جلسة مفتوحة بتثبّت صورة واحدة للداتا: الـ dump والبصمات بيتاخدوا منها بالظبط
+          coproc SRC { "$PGBIN/psql" "$SUPABASE_DB_URL" -qAt -v ON_ERROR_STOP=1; }
+          q() { printf '%s\n' "$1" >&"${SRC[1]}"; }
+          rd() { IFS= read -r REPLY <&"${SRC[0]}"; }
+          q "begin isolation level repeatable read read only;"
+          q "set timezone = 'UTC';"
+          q "set extra_float_digits = 3;"
+          q "select pg_export_snapshot();"; rd; snap="$REPLY"
+          echo "snapshot: $snap"
+          "$PGBIN/pg_dump" "$SUPABASE_DB_URL" \
+            --format=custom --no-owner --no-privileges --snapshot="$snap" \
             --schema=public --schema=private --schema=auth --schema=storage --schema=supabase_migrations \
             --file="legacy_backup_$stamp.dump"
+          q "select string_agg(quote_ident(schemaname)||'.'||quote_ident(tablename), ' ' order by 1) from pg_tables where schemaname in ('public','private','auth','storage');"; rd
+          : > src_fingerprints.txt
+          for t in $REPLY; do
+            q "select md5(coalesce(string_agg(r::text, E'\n' order by r::text collate \"C\"), '')) || ' ' || count(*) from $t r;"; rd
+            echo "$t $REPLY" >> src_fingerprints.txt
+          done
+          q "rollback;"; q '\q'
+          wait "$SRC_PID" || true
+          echo "بصمات اتاخدت لـ $(wc -l < src_fingerprints.txt) جدول"
           # فحص إن الملف سليم وفيه جداول
-          tables=$(/usr/lib/postgresql/17/bin/pg_restore --list "legacy_backup_$stamp.dump" | grep -c "TABLE DATA" || true)
+          tables=$("$PGBIN/pg_restore" --list "legacy_backup_$stamp.dump" | grep -c "TABLE DATA" || true)
           echo "جداول فيها بيانات: $tables"
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
           ls -l legacy_backup_*.dump
 
-      - name: Test restore into a temporary database and compare row counts
+      - name: Test restore into a temporary database and compare every value
         id: restore
         continue-on-error: true
         env:
@@ -95,23 +115,22 @@ jobs:
           echo "أخطاء الاسترجاع (غالبًا إضافات خاصة بـ Supabase): $(grep -c 'error:' restore_errors.txt || true)"
           grep 'error:' restore_errors.txt | sed 's/^pg_restore: //' | sort | uniq -c | sort -rn | head -8 || true
           bad=0; total=0
-          tables=$("$PGBIN/psql" "$SUPABASE_DB_URL" -qAt -c "select quote_ident(schemaname)||'.'||quote_ident(tablename) from pg_tables where schemaname in ('public','private','auth','storage') order by 1")
-          for t in $tables; do
-            a=$("$PGBIN/psql" "$SUPABASE_DB_URL" -qAt -c "select count(*) from $t" 2>/dev/null || echo ERR)
-            b=$("$PGBIN/psql" "$TESTDB" -qAt -c "select count(*) from $t" 2>/dev/null || echo MISSING)
+          "$PGBIN/psql" "$TESTDB" -qAt -c "set timezone='UTC'" >/dev/null 2>&1 || true
+          while read -r t src_md5 src_n; do
             total=$((total+1))
-            if [ "$a" = "ERR" ]; then continue; fi
-            diff=$(( ${a:-0} - ${b:-0} )); [ "$diff" -lt 0 ] && diff=$(( -diff ))
-            tol=$(( ${a:-0} / 100 )); [ "$tol" -lt 2 ] && tol=2
-            if [ "$b" = "MISSING" ] || [ "$diff" -gt "$tol" ]; then
-              echo "::warning::اختلاف في $t: الأصل=$a والاسترجاع=$b"; bad=$((bad+1))
+            out=$("$PGBIN/psql" "$TESTDB" -qAt -c "set timezone='UTC'; set extra_float_digits=3; select md5(coalesce(string_agg(r::text, E'\n' order by r::text collate \"C\"), '')) || ' ' || count(*) from $t r" 2>/dev/null | tail -1 || true)
+            got_md5=${out%% *}; got_n=${out##* }
+            if [ -z "$out" ]; then
+              echo "::warning::الجدول $t مش موجود بعد الاسترجاع"; bad=$((bad+1))
+            elif [ "$got_md5" != "$src_md5" ]; then
+              echo "::warning::القيم مختلفة في $t: الأصل=$src_n صف والاسترجاع=$got_n صف"; bad=$((bad+1))
             fi
-          done
-          echo "جداول اتقارنت: $total، فيها اختلاف: $bad"
+          done < src_fingerprints.txt
+          echo "جداول اتقارنت بالقيم: $total، فيها اختلاف: $bad"
           if [ "$total" -lt 10 ] || [ "$bad" -gt 0 ]; then
             echo "::error::اختبار الاسترجاع فشل"; exit 1
           fi
-          echo "اختبار الاسترجاع نجح: كل الجداول رجعت بنفس العدد"
+          echo "اختبار الاسترجاع نجح: كل الجداول رجعت بنفس القيم بالظبط"
 
       - uses: actions/setup-node@v7
         with:

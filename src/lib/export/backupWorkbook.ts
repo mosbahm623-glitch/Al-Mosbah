@@ -11,7 +11,7 @@ export async function buildBackupWorkbook(sheets: Sheet[]): Promise<Workbook> {
   wb.created = new Date()
 
   const cover = wb.addWorksheet('ملخص', { views: [{ rightToLeft: true, showGridLines: false }] })
-  cover.columns = [{ width: 30 }, { width: 16 }]
+  cover.columns = [{ width: 30 }, { width: 16 }, { width: 18 }]
   const title = cover.addRow(['Legacy ERP — نسخة احتياطية'])
   cover.mergeCells(1, 1, 1, 2)
   title.height = 36
@@ -24,9 +24,9 @@ export async function buildBackupWorkbook(sheets: Sheet[]): Promise<Workbook> {
   ])
   meta.getCell(1).font = { bold: true }
   cover.addRow([])
-  header(cover.addRow(['الورقة', 'عدد الصفوف']))
+  header(cover.addRow(['الورقة', 'عدد الصفوف', 'ملاحظة']))
   for (const s of sheets) {
-    const r = cover.addRow([s.name, s.rows.length])
+    const r = cover.addRow([s.name, s.rows.length, s.note ?? ''])
     r.eachCell((c) => {
       c.border = border
     })
@@ -37,13 +37,22 @@ export async function buildBackupWorkbook(sheets: Sheet[]): Promise<Workbook> {
   const fmt = { money: MONEY, int: '0', date: 'yyyy-mm-dd', time: 'yyyy-mm-dd hh:mm' } as const
   for (const s of sheets) {
     const ws = wb.addWorksheet(s.name, {
-      views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }],
+      views: [{ rightToLeft: true, state: 'frozen', ySplit: s.banner ? 2 : 1 }],
       properties: { tabColor: { argb: s.tab ?? (s.name === 'القيود المحذوفة' ? 'FFC74634' : 'FF312D2A') } },
     })
     ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
     ws.columns = s.cols.map((c) => ({
       width: c.w ?? (c.kind === 'money' ? 16 : c.kind === 'date' ? 13 : c.kind === 'time' ? 19 : 14),
     }))
+    if (s.banner) {
+      const b = ws.addRow([s.banner])
+      ws.mergeCells(1, 1, 1, Math.max(2, s.cols.length))
+      b.height = 26
+      b.getCell(1).font = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } }
+      b.getCell(1).fill = solid(s.tab ?? HEAD_FILL)
+      b.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }
+    }
+    const top = s.banner ? 2 : 1 // the header row
     header(ws.addRow(s.cols.map((c) => c.h)))
     s.rows.forEach((r, i) => {
       const row = ws.addRow(
@@ -71,14 +80,14 @@ export async function buildBackupWorkbook(sheets: Sheet[]): Promise<Workbook> {
         if (i % 2 === 1) cell.fill = solid(SOFT_FILL)
       })
     })
-    if (s.rows.length > 0) ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: s.cols.length } }
+    if (s.rows.length > 0) ws.autoFilter = { from: { row: top, column: 1 }, to: { row: top, column: s.cols.length } }
     // totals of money columns (SUBTOTAL follows the filter)
     const m = s.cols.findIndex((c) => c.kind === 'money')
     if (m >= 0 && s.rows.length > 0) {
       const letter = ws.getColumn(m + 1).letter
       const tot = ws.addRow([])
       tot.getCell(Math.max(1, m)).value = 'الإجمالي (حسب الفلتر)'
-      tot.getCell(m + 1).value = { formula: `SUBTOTAL(109,${letter}2:${letter}${s.rows.length + 1})` }
+      tot.getCell(m + 1).value = { formula: `SUBTOTAL(109,${letter}${top + 1}:${letter}${s.rows.length + top})` }
       tot.getCell(m + 1).numFmt = MONEY
       tot.eachCell((c) => {
         c.font = { bold: true }

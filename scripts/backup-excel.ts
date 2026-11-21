@@ -3,6 +3,7 @@
 // Usage: SUPABASE_DB_URL=... npx tsx scripts/backup-excel.ts OUTPUT.xlsx
 import pg from 'pg'
 import { buildBackupSheets, type BackupData } from '../src/lib/export/backupSheets'
+import { rawSheets } from '../src/lib/export/backupRaw'
 import { buildBackupWorkbook } from '../src/lib/export/backupWorkbook'
 import type { Row } from '../src/lib/export/backupTypes'
 
@@ -64,6 +65,6 @@ await client.query('rollback')
 await client.end()
 
 const { sheets, rowsTotal } = buildBackupSheets(data)
-const wb = await buildBackupWorkbook(sheets)
+const wb = await buildBackupWorkbook([...sheets, ...rawSheets(data)])
 await wb.xlsx.writeFile(out)
-console.log(`${out}: ${sheets.length} sheets, ${rowsTotal} rows`)
+console.log(`${out}: ${sheets.length} app sheets + raw tables, ${rowsTotal} rows`)

@@ -3,6 +3,7 @@ import { ACTION, KIND, LEVEL, ROLE, STATUS, tr } from './backupLabels'
 import { sheetName } from './sheetName'
 
 const PROJECT_TAB = 'FF1F5FA8'
+const CLOSED_TAB = 'FF7D7770'
 
 /** Every table the backup reads (plus the deleted entries), as plain rows. */
 export type BackupData = {
@@ -276,7 +277,9 @@ export function buildBackupSheets(d: BackupData): { sheets: Sheet[]; rowsTotal: 
       name: sheetName(str(p.name), taken),
       rows: byProject.get(str(p.id)) ?? [],
       cols: inProject,
-      tab: PROJECT_TAB,
+      tab: p.status === 'closed' ? CLOSED_TAB : PROJECT_TAB,
+      banner: `${str(p.name)} — ${p.status === 'closed' ? 'مقفول' : 'شغال'}`,
+      note: p.status === 'closed' ? 'مقفول' : 'شغال',
     })
 
   return { sheets, rowsTotal }

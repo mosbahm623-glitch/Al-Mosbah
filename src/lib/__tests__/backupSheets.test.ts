@@ -86,12 +86,26 @@ describe('downloadBackup: a tab for every project', () => {
   it('puts each project’s own entries in its tab, without the project column', async () => {
     await downloadBackup('u1')
     const ws = sentBook().getWorksheet('فيلا شامل')!
-    const head = (ws.getRow(1).values as unknown[]).slice(1)
+    // row 1 is the state banner, row 2 the header
+    expect(String(ws.getRow(1).getCell(1).value)).toBe('فيلا شامل — شغال')
+    const head = (ws.getRow(2).values as unknown[]).slice(1)
     expect(head).not.toContain('المشروع')
     expect(head).toContain('رقم القيد')
     expect(rowsOf('فيلا شامل').map((r) => r[0])).toEqual([20260001, 20260002])
     expect(rowsOf('القيود (2)').map((r) => r[0])).toEqual([20260003])
     expect(rowsOf('مقفول').map((r) => r[0])).toEqual([20260004])
+  })
+
+  it('says on the tab and on the cover whether the project is running or closed', async () => {
+    await downloadBackup('u1')
+    expect(String(sentBook().getWorksheet('مقفول')!.getRow(1).getCell(1).value)).toContain('مقفول')
+    const cover = sentBook().getWorksheet('ملخص')!
+    let note = ''
+    cover.eachRow((r) => {
+      if (String(r.getCell(1).value && (r.getCell(1).value as { text?: string }).text) === 'فيلا شامل')
+        note = String(r.getCell(3).value)
+    })
+    expect(note).toBe('شغال')
   })
 
   it('still makes a tab for a project with no entries', async () => {

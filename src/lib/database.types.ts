@@ -143,7 +143,6 @@ export type Database = {
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }
       restore_entry: { Args: { p_id: string }; Returns: boolean }
-      reset_data: { Args: { p_groups?: string[] }; Returns: undefined }
       send_test_notification: { Args: { p_users?: string[] | null }; Returns: number }
       low_balance_overview: { Args: never; Returns: Json }
       send_low_balance_reminder: { Args: never; Returns: Json }

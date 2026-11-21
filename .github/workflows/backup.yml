@@ -166,7 +166,14 @@ jobs:
           m["From"] = me
           m["To"] = me
           m["Subject"] = f"نسخة احتياطية المصباح {stamp}"
-          m.set_content("النسخة الاحتياطية الأخيرة مرفقة (إكسيل). نسخة الاسترجاع الكاملة (.dump) على Google Drive.")
+          m.set_content("النسخة الاحتياطية الأخيرة مرفقة: إكسيل وملف الاسترجاع الكامل (.dump).")
+          dump = f"legacy_backup_{stamp}.dump"
+          # Gmail بيرفض أكتر من 25 ميجا، فلو الـ dump كبر عن 18 ميجا بيفضل على Drive بس
+          if os.path.getsize(dump) <= 18 * 1024 * 1024:
+              with open(dump, "rb") as f:
+                  m.add_attachment(f.read(), maintype="application", subtype="octet-stream", filename=dump)
+          else:
+              m.set_content("النسخة الاحتياطية الأخيرة مرفقة (إكسيل). ملف الاسترجاع (.dump) كبير على الإيميل، موجود على Google Drive.")
           with open(f"legacy_backup_{stamp}.xlsx", "rb") as f:
               m.add_attachment(f.read(), maintype="application",
                                subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",

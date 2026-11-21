@@ -2,7 +2,7 @@ name: Daily backup
 
 # نسخة احتياطية من قاعدة البيانات (من غير تشفير)، بتتعمل مرتين في اليوم، وبتترفع على Google Drive بتاع صاحب التطبيق:
 #   - mosbah_<تاريخ>.dump  للاسترجاع
-#   - mosbah_<تاريخ>.xlsx  كل الجداول في ملف Excel للقراءة (من غير كلمات المرور والتوكنات)
+#   - mosbah_<تاريخ>.xlsx  نفس إكسيل صفحة النسخ الاحتياطي في التطبيق (عربي، بأسماء المشاريع والحالات)
 # المستودع عام: النسخة ما بتتحفظش هنا ولا في Artifacts، بتروح على Drive بس.
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
@@ -65,14 +65,22 @@ jobs:
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
           ls -l mosbah_*.dump
 
-      - name: Export all tables to Excel
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Export the Excel backup (same layout as the app's Backup page)
         id: excel
         continue-on-error: true
+        env:
+          TZ: Africa/Cairo
         run: |
           set -euo pipefail
           umask 077
-          python3 -m pip install --quiet --break-system-packages openpyxl psycopg2-binary
-          python3 scripts/export_excel.py "mosbah_${STAMP}.xlsx"
+          npm ci --ignore-scripts
+          npm i --no-save --ignore-scripts pg tsx
+          npx tsx scripts/backup-excel.ts "mosbah_${STAMP}.xlsx"
           ls -l "mosbah_${STAMP}.xlsx"
 
       - name: Upload to Google Drive and prune old copies

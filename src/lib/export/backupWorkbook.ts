@@ -1,9 +1,10 @@
+import type { Workbook } from 'exceljs'
 import { HEAD_FILL, INK, MONEY, SOFT_FILL, border, downloadWorkbook, header, solid, toDate } from './excelCommon'
 import { todayISO } from '../core/format'
 import { day, type Sheet } from './backupTypes'
 
-/** Lays the prepared sheets out as one Arabic (right-to-left) Excel file and downloads it. */
-export async function writeBackupWorkbook(sheets: Sheet[]): Promise<void> {
+/** Lays the prepared sheets out as one Arabic (right-to-left) Excel workbook. */
+export async function buildBackupWorkbook(sheets: Sheet[]): Promise<Workbook> {
   const ExcelJS = (await import('exceljs')).default
   const wb = new ExcelJS.Workbook()
   wb.creator = 'Legacy ERP'
@@ -88,5 +89,10 @@ export async function writeBackupWorkbook(sheets: Sheet[]): Promise<void> {
     }
   }
 
-  await downloadWorkbook(wb, `Legacy ERP-نسخة-احتياطية-${todayISO()}.xlsx`)
+  return wb
+}
+
+/** Builds the workbook and downloads it. */
+export async function writeBackupWorkbook(sheets: Sheet[]): Promise<void> {
+  await downloadWorkbook(await buildBackupWorkbook(sheets), `Legacy ERP-نسخة-احتياطية-${todayISO()}.xlsx`)
 }

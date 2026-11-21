@@ -1,11 +1,10 @@
 name: Daily backup
 
-# نسخة احتياطية يومية من قاعدة البيانات، مشفّرة، وبتترفع على Google Drive بتاع صاحب التطبيق.
+# نسخة احتياطية يومية من قاعدة البيانات (من غير تشفير)، وبتترفع على Google Drive بتاع صاحب التطبيق.
 # المستودع عام: النسخة ما بتتحفظش هنا ولا في Artifacts، بتروح على Drive بس.
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
 #   RCLONE_CONF       محتوى ملف إعداد rclone لـ Google Drive (remote اسمه gdrive)
-#   BACKUP_PASSPHRASE كلمة سر تشفير النسخة (لازم تتحفظ في مكان تاني، من غيرها النسخة ما تتفتحش)
 
 on:
   schedule:
@@ -25,14 +24,13 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
       RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
       DRIVE_DIR: gdrive:mosbah-backups
       KEEP_DAYS: '30'
     steps:
       - name: Check secrets
         run: |
-          for v in SUPABASE_DB_URL BACKUP_PASSPHRASE RCLONE_CONF; do
+          for v in SUPABASE_DB_URL RCLONE_CONF; do
             if [ -z "${!v}" ]; then echo "::error::السر $v مش متضاف"; exit 1; fi
           done
 
@@ -59,10 +57,7 @@ jobs:
           tables=$(/usr/lib/postgresql/17/bin/pg_restore --list "mosbah_$stamp.dump" | grep -c "TABLE DATA" || true)
           echo "جداول فيها بيانات: $tables"
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
-            --symmetric --cipher-algo AES256 -o "mosbah_$stamp.dump.gpg" "mosbah_$stamp.dump"
-          rm "mosbah_$stamp.dump"
-          ls -l mosbah_*.gpg
+          ls -l mosbah_*.dump
 
       - name: Upload to Google Drive and prune old copies
         run: |
@@ -70,7 +65,7 @@ jobs:
           umask 077
           mkdir -p ~/.config/rclone
           printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
-          rclone copy "mosbah_${STAMP}.dump.gpg" "$DRIVE_DIR"
-          rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.dump.gpg"
+          rclone copy "mosbah_${STAMP}.dump" "$DRIVE_DIR"
+          rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.dump"
           rclone delete "$DRIVE_DIR" --min-age "${KEEP_DAYS}d"
           rm -f ~/.config/rclone/rclone.conf

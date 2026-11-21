@@ -30,6 +30,10 @@ jobs:
       DRIVE_DIR: gdrive:mosbah-backups
       KEEP_DAYS: '30'
     steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
       - name: Check secrets
         run: |
           for v in SUPABASE_DB_URL RCLONE_CONF; do

@@ -1,8 +1,8 @@
 name: Daily backup
 
 # نسخة احتياطية من قاعدة البيانات (من غير تشفير)، بتتعمل مرتين في اليوم، وبتترفع على Google Drive بتاع صاحب التطبيق:
-#   - mosbah_<تاريخ>.dump  للاسترجاع
-#   - mosbah_<تاريخ>.xlsx  نفس إكسيل صفحة النسخ الاحتياطي في التطبيق (عربي، بأسماء المشاريع والحالات)
+#   - legacy_backup_<تاريخ>.dump  للاسترجاع
+#   - legacy_backup_<تاريخ>.xlsx  نفس إكسيل صفحة النسخ الاحتياطي في التطبيق (عربي، بأسماء المشاريع والحالات)
 # المستودع عام: النسخة ما بتتحفظش هنا ولا في Artifacts، بتروح على Drive بس.
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
@@ -59,12 +59,12 @@ jobs:
           /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
             --format=custom --no-owner --no-privileges \
             --schema=public --schema=private --schema=auth --schema=storage --schema=supabase_migrations \
-            --file="mosbah_$stamp.dump"
+            --file="legacy_backup_$stamp.dump"
           # فحص إن الملف سليم وفيه جداول
-          tables=$(/usr/lib/postgresql/17/bin/pg_restore --list "mosbah_$stamp.dump" | grep -c "TABLE DATA" || true)
+          tables=$(/usr/lib/postgresql/17/bin/pg_restore --list "legacy_backup_$stamp.dump" | grep -c "TABLE DATA" || true)
           echo "جداول فيها بيانات: $tables"
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
-          ls -l mosbah_*.dump
+          ls -l legacy_backup_*.dump
 
       - uses: actions/setup-node@v7
         with:
@@ -80,8 +80,8 @@ jobs:
           set -euo pipefail
           umask 077
           npm ci --ignore-scripts
-          npx tsx scripts/backup-excel.ts "mosbah_${STAMP}.xlsx"
-          ls -l "mosbah_${STAMP}.xlsx"
+          npx tsx scripts/backup-excel.ts "legacy_backup_${STAMP}.xlsx"
+          ls -l "legacy_backup_${STAMP}.xlsx"
 
       - name: Upload to Google Drive and prune old copies
         run: |
@@ -89,11 +89,11 @@ jobs:
           umask 077
           mkdir -p ~/.config/rclone
           printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
-          rclone copy "mosbah_${STAMP}.dump" "$DRIVE_DIR"
-          rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.dump"
-          if [ -f "mosbah_${STAMP}.xlsx" ]; then
-            rclone copy "mosbah_${STAMP}.xlsx" "$DRIVE_DIR"
-            rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.xlsx"
+          rclone copy "legacy_backup_${STAMP}.dump" "$DRIVE_DIR"
+          rclone lsl "$DRIVE_DIR" | grep "legacy_backup_${STAMP}.dump"
+          if [ -f "legacy_backup_${STAMP}.xlsx" ]; then
+            rclone copy "legacy_backup_${STAMP}.xlsx" "$DRIVE_DIR"
+            rclone lsl "$DRIVE_DIR" | grep "legacy_backup_${STAMP}.xlsx"
           fi
           rclone delete "$DRIVE_DIR" --min-age "${KEEP_DAYS}d"
           rm -f ~/.config/rclone/rclone.conf
@@ -109,7 +109,7 @@ jobs:
           if [ -z "${GMAIL_USER:-}" ] || [ -z "${GMAIL_APP_PASSWORD:-}" ]; then
             echo "::notice::أسرار الإيميل مش متضافة، تخطّيت إرسال الإيميل"; exit 0
           fi
-          [ -f "mosbah_${STAMP}.xlsx" ] || { echo "::notice::مفيش ملف إكسيل أبعته"; exit 0; }
+          [ -f "legacy_backup_${STAMP}.xlsx" ] || { echo "::notice::مفيش ملف إكسيل أبعته"; exit 0; }
           python3 - <<'PY'
           import os, smtplib, ssl
           from email.message import EmailMessage
@@ -120,10 +120,10 @@ jobs:
           m["To"] = me
           m["Subject"] = f"نسخة احتياطية المصباح {stamp}"
           m.set_content("النسخة الاحتياطية الأخيرة مرفقة (إكسيل). نسخة الاسترجاع الكاملة (.dump) على Google Drive.")
-          with open(f"mosbah_{stamp}.xlsx", "rb") as f:
+          with open(f"legacy_backup_{stamp}.xlsx", "rb") as f:
               m.add_attachment(f.read(), maintype="application",
                                subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                               filename=f"mosbah_{stamp}.xlsx")
+                               filename=f"legacy_backup_{stamp}.xlsx")
           with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
               s.login(me, os.environ["GMAIL_APP_PASSWORD"])
               s.send_message(m)

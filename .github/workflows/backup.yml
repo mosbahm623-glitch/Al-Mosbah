@@ -54,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          stamp=$(date -u +%Y-%m-%d_%H%M)
+          stamp=$(TZ=Africa/Cairo date +%Y-%m-%d_%H-%M)  # التاريخ والساعة بتوقيت مصر
           echo "STAMP=$stamp" >> "$GITHUB_ENV"
           /usr/lib/postgresql/17/bin/pg_dump "$SUPABASE_DB_URL" \
             --format=custom --no-owner --no-privileges \

@@ -25,6 +25,19 @@ jobs:
   backup:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    services:
+      # قاعدة بيانات مؤقتة بنجرّب عليها استرجاع النسخة (بتتمسح مع التشغيل)
+      restore-test:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: restore-test-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
@@ -65,6 +78,40 @@ jobs:
           echo "جداول فيها بيانات: $tables"
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
           ls -l legacy_backup_*.dump
+
+      - name: Test restore into a temporary database and compare row counts
+        id: restore
+        continue-on-error: true
+        env:
+          PGBIN: /usr/lib/postgresql/17/bin
+          TESTDB: postgresql://postgres:restore-test-only@localhost:5432/postgres
+        run: |
+          set -uo pipefail
+          f="legacy_backup_${STAMP}.dump"
+          for r in anon authenticated service_role authenticator supabase_admin supabase_auth_admin supabase_storage_admin dashboard_user; do
+            "$PGBIN/psql" "$TESTDB" -qAt -c "create role $r nologin" 2>/dev/null || true
+          done
+          "$PGBIN/pg_restore" --no-owner --no-privileges --dbname="$TESTDB" "$f" 2> restore_errors.txt || true
+          echo "أخطاء الاسترجاع (غالبًا إضافات خاصة بـ Supabase): $(grep -c 'error:' restore_errors.txt || true)"
+          grep 'error:' restore_errors.txt | sed 's/^pg_restore: //' | sort | uniq -c | sort -rn | head -8 || true
+          bad=0; total=0
+          tables=$("$PGBIN/psql" "$SUPABASE_DB_URL" -qAt -c "select quote_ident(schemaname)||'.'||quote_ident(tablename) from pg_tables where schemaname in ('public','private','auth','storage') order by 1")
+          for t in $tables; do
+            a=$("$PGBIN/psql" "$SUPABASE_DB_URL" -qAt -c "select count(*) from $t" 2>/dev/null || echo ERR)
+            b=$("$PGBIN/psql" "$TESTDB" -qAt -c "select count(*) from $t" 2>/dev/null || echo MISSING)
+            total=$((total+1))
+            if [ "$a" = "ERR" ]; then continue; fi
+            diff=$(( ${a:-0} - ${b:-0} )); [ "$diff" -lt 0 ] && diff=$(( -diff ))
+            tol=$(( ${a:-0} / 100 )); [ "$tol" -lt 2 ] && tol=2
+            if [ "$b" = "MISSING" ] || [ "$diff" -gt "$tol" ]; then
+              echo "::warning::اختلاف في $t: الأصل=$a والاسترجاع=$b"; bad=$((bad+1))
+            fi
+          done
+          echo "جداول اتقارنت: $total، فيها اختلاف: $bad"
+          if [ "$total" -lt 10 ] || [ "$bad" -gt 0 ]; then
+            echo "::error::اختبار الاسترجاع فشل"; exit 1
+          fi
+          echo "اختبار الاسترجاع نجح: كل الجداول رجعت بنفس العدد"
 
       - uses: actions/setup-node@v7
         with:
@@ -130,8 +177,8 @@ jobs:
           print("email sent")
           PY
 
-      - name: Fail if the Excel export failed (the .dump is already safe on Drive)
-        if: steps.excel.outcome == 'failure'
+      - name: Fail if the Excel export or the restore test failed (the .dump is already safe on Drive)
+        if: steps.excel.outcome == 'failure' || steps.restore.outcome == 'failure'
         run: |
-          echo "::error::تصدير Excel فشل، لكن نسخة .dump اترفعت على Drive"
+          echo "::error::تصدير Excel أو اختبار الاسترجاع فشل، لكن نسخة .dump اترفعت على Drive، شوف الخطوة الفاشلة"
           exit 1

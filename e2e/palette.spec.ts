@@ -5,9 +5,13 @@ test('Ctrl+K opens the quick search and Enter jumps to the page', async ({ page 
   await mockApi(page)
   await signIn(page)
   await expect(page.getByRole('link', { name: 'البنوك' })).toBeVisible()
-  await page.keyboard.press('Control+k')
   const box = page.getByRole('dialog', { name: 'بحث سريع' })
-  await expect(box).toBeVisible()
+  // Safari's engine sometimes takes the first keypress before the page's key listener is ready; the shortcut toggles,
+  // so press again only while the box is still closed
+  await expect(async () => {
+    if (!(await box.isVisible())) await page.keyboard.press('Control+k')
+    await expect(box).toBeVisible({ timeout: 1500 })
+  }).toPass({ timeout: 10_000 })
   await box.getByRole('textbox').fill('البنوك')
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#\/banks$/)

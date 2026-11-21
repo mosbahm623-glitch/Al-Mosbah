@@ -80,7 +80,6 @@ jobs:
           set -euo pipefail
           umask 077
           npm ci --ignore-scripts
-          npm i --no-save --ignore-scripts pg tsx
           npx tsx scripts/backup-excel.ts "mosbah_${STAMP}.xlsx"
           ls -l "mosbah_${STAMP}.xlsx"
 

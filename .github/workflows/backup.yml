@@ -11,7 +11,7 @@ name: Daily backup
 
 on:
   schedule:
-    - cron: '23 1,13 * * *' # 01:23 و13:23 UTC (مرتين في اليوم)
+    - cron: '7 4,16 * * *' # 04:07 و16:07 UTC = حوالي 6 الصبح و6 المغرب بتوقيت مصر الشتوي (7 دقايق بعد الساعة عشان GitHub بيتأخر على أول الساعة)
   workflow_dispatch:
 
 permissions:

@@ -7,6 +7,7 @@ name: Daily backup
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
 #   RCLONE_CONF       محتوى ملف إعداد rclone لـ Google Drive (remote اسمه gdrive)
+#   GMAIL_USER / GMAIL_APP_PASSWORD  (اختياري) إيميل Gmail وApp Password، عشان الإكسيل يتبعت على نفس الإيميل بعد كل نسخة
 
 on:
   schedule:
@@ -97,6 +98,38 @@ jobs:
           fi
           rclone delete "$DRIVE_DIR" --min-age "${KEEP_DAYS}d"
           rm -f ~/.config/rclone/rclone.conf
+
+      - name: Email the Excel backup
+        # بيتخطى لو أسرار الإيميل مش متضافة، والنسخة نفسها مش بتتأثر
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GMAIL_USER:-}" ] || [ -z "${GMAIL_APP_PASSWORD:-}" ]; then
+            echo "::notice::أسرار الإيميل مش متضافة، تخطّيت إرسال الإيميل"; exit 0
+          fi
+          [ -f "mosbah_${STAMP}.xlsx" ] || { echo "::notice::مفيش ملف إكسيل أبعته"; exit 0; }
+          python3 - <<'PY'
+          import os, smtplib, ssl
+          from email.message import EmailMessage
+          stamp = os.environ["STAMP"]
+          me = os.environ["GMAIL_USER"]
+          m = EmailMessage()
+          m["From"] = me
+          m["To"] = me
+          m["Subject"] = f"نسخة احتياطية المصباح {stamp}"
+          m.set_content("النسخة الاحتياطية الأخيرة مرفقة (إكسيل). نسخة الاسترجاع الكاملة (.dump) على Google Drive.")
+          with open(f"mosbah_{stamp}.xlsx", "rb") as f:
+              m.add_attachment(f.read(), maintype="application",
+                               subtype="vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                               filename=f"mosbah_{stamp}.xlsx")
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context()) as s:
+              s.login(me, os.environ["GMAIL_APP_PASSWORD"])
+              s.send_message(m)
+          print("email sent")
+          PY
 
       - name: Fail if the Excel export failed (the .dump is already safe on Drive)
         if: steps.excel.outcome == 'failure'

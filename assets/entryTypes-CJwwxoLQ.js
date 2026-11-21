@@ -1,0 +1,1 @@
+var e=`id,seq,rev,kind,category,item,amount,entry_date,created_at,notes,advance_id,status,reject_reason,edit_reason,invoices:entry_attachments(count),contractor:contractors(name),bank:bank_accounts(name),entered_by_name,creator:profiles!entries_created_by_profile_fkey(full_name)`;export{e as t};

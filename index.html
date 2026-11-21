@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/Al-Mosbah/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#312D2A" />
+    <link rel="apple-touch-icon" href="/Al-Mosbah/pwa-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Legacy ERP" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Legacy ERP</title>
+    <script>
+      ;(function () {
+        try {
+          var t = localStorage.getItem('mosbah-theme')
+          if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          document.documentElement.dataset.theme = t
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/rolldown-runtime-COiEfhsA.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/useAsync-CUF4lx13.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/status-fsijBWVJ.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/AuthProvider-CH83cFYV.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/createLucideIcon-D-NRTALr.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/x-Rz1mVQr2.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/paged-MptderKK.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/entryTypes-CJwwxoLQ.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/enteredBy-E1JFYi8d.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/money-4Dv9E1Wt.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/catalog-DBxxcVB3.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/entries-FLLcK4lB.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/attachments-Bn5uRiti.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/lookups-KyJ2K4An.js"></script>
+    <script type="module" crossorigin src="/Al-Mosbah/assets/main-I6uHbPkm.js"></script>
+    <link rel="stylesheet" crossorigin href="/Al-Mosbah/assets/main-1if29897.css">
+  <link rel="manifest" href="/Al-Mosbah/manifest.webmanifest"></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

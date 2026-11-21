@@ -1,15 +1,16 @@
 name: Daily backup
 
-# نسخة احتياطية يومية من قاعدة البيانات، مشفّرة، وبتترفع على Google Drive بتاع صاحب التطبيق.
+# نسخة احتياطية من قاعدة البيانات (من غير تشفير)، بتتعمل مرتين في اليوم، وبتترفع على Google Drive بتاع صاحب التطبيق:
+#   - mosbah_<تاريخ>.dump  للاسترجاع
+#   - mosbah_<تاريخ>.xlsx  كل الجداول في ملف Excel للقراءة (من غير كلمات المرور والتوكنات)
 # المستودع عام: النسخة ما بتتحفظش هنا ولا في Artifacts، بتروح على Drive بس.
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
 #   RCLONE_CONF       محتوى ملف إعداد rclone لـ Google Drive (remote اسمه gdrive)
-#   BACKUP_PASSPHRASE كلمة سر تشفير النسخة (لازم تتحفظ في مكان تاني، من غيرها النسخة ما تتفتحش)
 
 on:
   schedule:
-    - cron: '23 1 * * *' # 01:23 UTC كل يوم
+    - cron: '23 1,13 * * *' # 01:23 و13:23 UTC (مرتين في اليوم)
   workflow_dispatch:
 
 permissions:
@@ -25,14 +26,13 @@ jobs:
     timeout-minutes: 30
     env:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
-      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
       RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
       DRIVE_DIR: gdrive:mosbah-backups
       KEEP_DAYS: '30'
     steps:
       - name: Check secrets
         run: |
-          for v in SUPABASE_DB_URL BACKUP_PASSPHRASE RCLONE_CONF; do
+          for v in SUPABASE_DB_URL RCLONE_CONF; do
             if [ -z "${!v}" ]; then echo "::error::السر $v مش متضاف"; exit 1; fi
           done
 
@@ -59,10 +59,17 @@ jobs:
           tables=$(/usr/lib/postgresql/17/bin/pg_restore --list "mosbah_$stamp.dump" | grep -c "TABLE DATA" || true)
           echo "جداول فيها بيانات: $tables"
           if [ "$tables" -lt 10 ]; then echo "::error::النسخة شكلها ناقصة"; exit 1; fi
-          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
-            --symmetric --cipher-algo AES256 -o "mosbah_$stamp.dump.gpg" "mosbah_$stamp.dump"
-          rm "mosbah_$stamp.dump"
-          ls -l mosbah_*.gpg
+          ls -l mosbah_*.dump
+
+      - name: Export all tables to Excel
+        id: excel
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 -m pip install --quiet --break-system-packages openpyxl psycopg2-binary
+          python3 scripts/export_excel.py "mosbah_${STAMP}.xlsx"
+          ls -l "mosbah_${STAMP}.xlsx"
 
       - name: Upload to Google Drive and prune old copies
         run: |
@@ -70,7 +77,17 @@ jobs:
           umask 077
           mkdir -p ~/.config/rclone
           printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
-          rclone copy "mosbah_${STAMP}.dump.gpg" "$DRIVE_DIR"
-          rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.dump.gpg"
+          rclone copy "mosbah_${STAMP}.dump" "$DRIVE_DIR"
+          rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.dump"
+          if [ -f "mosbah_${STAMP}.xlsx" ]; then
+            rclone copy "mosbah_${STAMP}.xlsx" "$DRIVE_DIR"
+            rclone lsl "$DRIVE_DIR" | grep "mosbah_${STAMP}.xlsx"
+          fi
           rclone delete "$DRIVE_DIR" --min-age "${KEEP_DAYS}d"
           rm -f ~/.config/rclone/rclone.conf
+
+      - name: Fail if the Excel export failed (the .dump is already safe on Drive)
+        if: steps.excel.outcome == 'failure'
+        run: |
+          echo "::error::تصدير Excel فشل، لكن نسخة .dump اترفعت على Drive"
+          exit 1

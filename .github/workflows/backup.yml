@@ -8,7 +8,7 @@ name: Daily backup
 
 on:
   schedule:
-    - cron: '23 1 * * *' # 01:23 UTC كل يوم
+    - cron: '23 1,13 * * *' # 01:23 و13:23 UTC (مرتين في اليوم)
   workflow_dispatch:
 
 permissions:

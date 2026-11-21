@@ -87,10 +87,11 @@ export default function ContractorStatement({
         { label: 'المقاول', value: name },
         { label: 'الفترة', value: periodText(from, to) },
         { label: 'المشاريع المقفولة', value: includeClosed ? 'مضمّنة' : 'مستبعدة' },
-        ...filterMeta(filter),
+        // the بند narrows the recorded expenses only: the dues and payments below have no بند, so say so
+        ...filterMeta(filter).map((f) => (f.label === 'البند' ? { ...f, label: 'البند (على المصروفات بس)' } : f)),
       ]}
       kpis={[
-        { label: 'إجمالي المدفوعات', value: money(spentTotal), tone: 'err' },
+        { label: 'إجمالي المصروفات المسجلة باسمه', value: money(spentTotal), tone: 'err' },
         { label: 'عدد القيود', value: String(spent.length), tone: 'blue' },
       ]}
       sections={[
@@ -114,7 +115,7 @@ export default function ContractorStatement({
           footer: [`إجمالي ${g.name}`, null, null, null, g.total],
         })),
         {
-          heading: 'المستحقات والمدفوعات',
+          heading: filter.category ? 'المستحقات والمدفوعات (مش متأثرة بفلتر البند)' : 'المستحقات والمدفوعات',
           cols: [
             { h: 'التاريخ', kind: 'date' },
             { h: 'النوع' },
@@ -129,7 +130,7 @@ export default function ContractorStatement({
           empty: 'مفيش مستحقات أو مدفوعات في الفترة دي.',
         },
       ]}
-      note="إجمالي المدفوعات = كل المصروفات المسجلة باسم المقاول. الرصيد في جدول المستحقات = المستحق − المدفوع، والرصيد الموجب معناه إن للمقاول فلوس عندنا، وهو منفصل عن إجمالي المدفوعات."
+      note="إجمالي المصروفات المسجلة باسمه = كل المصروفات المسجلة باسم المقاول. الرصيد في جدول المستحقات = المستحق − المدفوع، والرصيد الموجب معناه إن للمقاول فلوس عندنا، وهو منفصل عن إجمالي المدفوعات."
     />
   )
 }

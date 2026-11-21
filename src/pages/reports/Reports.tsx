@@ -53,9 +53,7 @@ export default function Reports() {
   // nothing is drawn until "عرض التقرير" is pressed; changing any choice hides it again
   const [shown, setShown] = useState<{ key: string; n: number } | null>(null)
 
-  const firstProject = projects.data?.[0]?.id ?? ''
-  const pickedProject = type === 'period' ? projectId : projectId || firstProject
-  const pickedAdvance = advanceId || advances.data?.[0]?.id || ''
+  // nothing is picked for the person: a report of a project / custody / contractor / bank is asked for by choosing it
   // with a project chosen, only the contractors who worked on it are offered
   const projectsOnly = filterAll.project ? projectContractors.data?.get(filterAll.project) : undefined
   const contractorList = useMemo(
@@ -65,8 +63,10 @@ export default function Reports() {
         : (contractors.data ?? []),
     [contractors.data, projectContractors.data, filterAll.project],
   )
-  const pickedContractor = contractorList.find((c) => c.id === contractorId)?.id ?? contractorList[0]?.id ?? ''
-  const pickedBank = bankId || banks.data?.[0]?.id || ''
+  // a contractor who did not work on the chosen project is not swapped for another one behind the person's back
+  const pickedContractor = contractorList.find((c) => c.id === contractorId)?.id ?? ''
+  const contractorNotOnProject = Boolean(contractorId && !pickedContractor && filterAll.project)
+  const pickedBank = bankId
   const bank = banks.data?.find((b) => b.id === pickedBank)
 
   // only the filters this report offers take part
@@ -74,8 +74,18 @@ export default function Reports() {
     const f = only(filterAll, FILTERS[type])
     return projectsOnly && f.contractor && !projectsOnly.has(f.contractor) ? { ...f, contractor: '' } : f
   }, [filterAll, type, projectsOnly])
+  // with a contractor chosen, only the projects he worked on are offered (the mirror of the contractor list above)
+  const contractorForProjects =
+    type === 'contractor' ? (contractorList.find((c) => c.id === pickedContractor)?.name ?? '') : filterAll.contractor
+  const projectOptions = useMemo(() => {
+    const names = (projects.data ?? []).map((p) => p.name)
+    const byProject = projectContractors.data
+    return contractorForProjects && byProject
+      ? names.filter((n) => byProject.get(n)?.has(contractorForProjects))
+      : names
+  }, [projects.data, projectContractors.data, contractorForProjects])
   const filterOptions = {
-    project: (projects.data ?? []).map((p) => p.name),
+    project: projectOptions,
     contractor: contractorList.map((c) => c.name),
     bank: (banks.data ?? []).map((b) => b.name),
     category: (categories.data ?? []).map((c) => c.name),
@@ -83,53 +93,34 @@ export default function Reports() {
 
   const rangeOk = !hasPeriod(type) || !from || !to || from <= to
   const partsOk = type !== 'advance' || parts.given || parts.spent || parts.returned
-  const target = {
+  const targets: Record<ReportType, string> = {
     journal: day,
     period: 'all',
-    project: pickedProject,
+    project: projectId,
     category: 'all',
     budget: 'all',
-    advance: pickedAdvance,
+    advance: advanceId,
     contractor: pickedContractor,
     contractors: 'all',
     bank: pickedBank,
     pending: 'all',
     approvals: day,
-  }[type]
-  const key = useMemo(
-    () =>
-      JSON.stringify([
-        type,
-        target,
-        hasPeriod(type) ? [from, to] : '',
-        type === 'period' ? projectId : '',
-        type === 'category' ? kindFilter : '',
-        type === 'budget' ? budgetMode : '',
-        type === 'pending' ? [pendingStatus, creatorId] : '',
-        type === 'contractor' ? includeClosed : '',
-        hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes, withEnteredBy] : '',
-        type === 'advance' ? parts : '',
-        filter,
-      ]),
-    [
-      type,
-      target,
-      from,
-      to,
-      projectId,
-      kindFilter,
-      budgetMode,
-      pendingStatus,
-      creatorId,
-      includeClosed,
-      withContractor,
-      withBank,
-      withNotes,
-      withEnteredBy,
-      parts,
-      filter,
-    ],
-  )
+  }
+  const target = targets[type]
+  // a plain string (cheap to build) that changes whenever any choice that shapes the report changes
+  const key = JSON.stringify([
+    type,
+    target,
+    hasPeriod(type) ? [from, to] : '',
+    type === 'period' ? projectId : '',
+    type === 'category' ? kindFilter : '',
+    type === 'budget' ? budgetMode : '',
+    type === 'pending' ? [pendingStatus, creatorId] : '',
+    type === 'contractor' ? includeClosed : '',
+    hasColumns(type) ? [withContractor, type === 'advance' ? '' : withBank, withNotes, withEnteredBy] : '',
+    type === 'advance' ? parts : '',
+    filter,
+  ])
   const visible = shown?.key === key && Boolean(target) && rangeOk && partsOk
   const cols = { withContractor, withBank, withNotes, withEnteredBy }
   const n = shown?.n ?? 0
@@ -181,7 +172,7 @@ export default function Reports() {
 
           {type === 'contractor' && filtersBox}
           {type === 'project' &&
-            pickerSelect('المشروع', pickedProject, setProjectId, projectChoices, projects.loading, 'مفيش مشاريع')}
+            pickerSelect('المشروع', projectId, setProjectId, projectChoices, projects.loading, 'مفيش مشاريع')}
           {type === 'period' &&
             pickerSelect(
               'المشروع',
@@ -195,7 +186,7 @@ export default function Reports() {
           {type === 'advance' &&
             pickerSelect(
               'العهدة',
-              pickedAdvance,
+              advanceId,
               setAdvanceId,
               advances.data?.map((a) => ({
                 id: a.id,
@@ -279,6 +270,11 @@ export default function Reports() {
           )}
           {hasPeriod(type) && <p className="muted small">سيب التواريخ فاضية لو عايز كل الفترات.</p>}
           {!rangeOk && <p className="msg msg-error">تاريخ البداية بعد تاريخ النهاية.</p>}
+          {contractorNotOnProject && (
+            <p className="msg msg-error">
+              المقاول ده ماشتغلش على المشروع المختار. اختار مقاول تاني أو شيل فلتر المشروع.
+            </p>
+          )}
 
           {type === 'contractor' && (
             <label className="check">
@@ -322,10 +318,10 @@ export default function Reports() {
           cols={cols}
           projectId={projectId}
           projectName={projects.data?.find((p) => p.id === projectId)?.name ?? ''}
-          pickedProject={pickedProject}
+          pickedProject={projectId}
           kindFilter={kindFilter}
           budgetMode={budgetMode}
-          pickedAdvance={pickedAdvance}
+          pickedAdvance={advanceId}
           parts={parts}
           pickedContractor={pickedContractor}
           contractorName={contractorList.find((c) => c.id === pickedContractor)?.name ?? ''}

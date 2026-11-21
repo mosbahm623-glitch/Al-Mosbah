@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import type { Cell } from '../../lib/core/tableTypes'
-import { fetchBankMovements, type BankMovement } from '../../lib/banks/banks'
+import { fetchBankMovements, movementSign, type BankMovement } from '../../lib/banks/banks'
 import { money, periodText, todayISO } from '../../lib/core/format'
 import { runLedger } from '../../lib/reports/reportBuilders'
 import { useAsync } from '../../lib/core/useAsync'
@@ -35,13 +35,14 @@ export default function BankStatement({
       narrowed ? 0 : opening,
       data
         .filter((m) => matches(filter, { project: m.project_name, contractor: m.contractor, category: m.category }))
-        .map((m) => ({ ...m, date: m.entry_date, delta: m.kind === 'income' ? m.amount : -m.amount })),
+        .map((m) => ({ ...m, date: m.entry_date, delta: movementSign(m) * m.amount })),
       from,
       to,
     )
-    const sum = (kind: 'income' | 'expense') =>
-      ledger.rows.filter((r) => r.kind === kind).reduce((s, r) => s + toCents(r.amount), 0) / 100
-    return { ledger, income: sum('income'), expense: sum('expense') }
+    // a transfer into this bank counts as money in and a transfer out as money out, the same as on the bank's own page
+    const sum = (sign: 1 | -1) =>
+      ledger.rows.filter((r) => movementSign(r) === sign).reduce((s, r) => s + toCents(r.amount), 0) / 100
+    return { ledger, income: sum(1), expense: sum(-1) }
   }, [data, opening, from, to, filter])
 
   if (failed) return <p className="msg msg-error">مقدرناش نحمّل الكشف، جرّب تاني</p>
@@ -57,8 +58,8 @@ export default function BankStatement({
       m.category,
       m.item,
       m.contractor,
-      m.kind === 'income' ? m.amount : null,
-      m.kind === 'expense' ? m.amount : null,
+      movementSign(m) > 0 ? m.amount : null,
+      movementSign(m) < 0 ? m.amount : null,
       m.run,
     ]),
   ]
@@ -94,7 +95,7 @@ export default function BankStatement({
       note={
         isFiltering(filter)
           ? 'الفلترة شغّالة: الرصيد محسوب على القيود المعروضة بس، من غير الرصيد الافتتاحي للبنك. القيود المعتمدة بس.'
-          : 'الرصيد = الرصيد الافتتاحي للبنك + الوارد − المصروف. القيود المعتمدة بس.'
+          : 'الرصيد = الرصيد الافتتاحي للبنك + الوارد − المصروف. الوارد والمصروف فيهم التحويلات بين البنوك. القيود المعتمدة بس.'
       }
     />
   )

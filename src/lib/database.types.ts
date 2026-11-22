@@ -139,6 +139,7 @@ export type Database = {
       dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }
       duplicate_entry_groups: { Args: never; Returns: Json[] }
       transfer_between_advances: { Args: { p_from: string; p_to: string; p_amount: number; p_date: string; p_notes: string | null }; Returns: string }
+      merge_contractors: { Args: { p_keep: string; p_drop: string[] }; Returns: Json }
       cancel_advance_transfer: { Args: { p_id: string }; Returns: undefined }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }

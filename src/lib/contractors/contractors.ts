@@ -123,3 +123,11 @@ export const saveContractorTxn = (row: TxnInput, id?: string) =>
     : supabase.from('contractor_transactions').insert(row)
 
 export const deleteContractorTxn = (id: string) => supabase.from('contractor_transactions').delete().eq('id', id)
+
+export type MergeResult = { entries: number; transactions: number; settlements: number }
+
+/** Admin only: moves everything of the `drop` contractors to `keep` and removes the extra names. Null on failure. */
+export async function mergeContractors(keep: string, drop: string[]): Promise<MergeResult | null> {
+  const { data, error } = await supabase.rpc('merge_contractors', { p_keep: keep, p_drop: drop })
+  return error || !data ? null : (data as MergeResult)
+}

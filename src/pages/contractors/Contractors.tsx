@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Merge, Plus } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { useAuth } from '../../auth/AuthProvider'
@@ -7,15 +7,17 @@ import { fetchContractorSummaries, type ContractorRow } from '../../lib/contract
 import { money } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import ContractorDialog from './ContractorDialog'
+import MergeDialog from './MergeDialog'
 
 const owed = (c: ContractorRow) => c.due - c.paid
 
 /** Every contractor with what we owe him, what was paid, and what is left. */
 export default function Contractors() {
-  const { can } = useAuth()
+  const { can, isAdmin } = useAuth()
   const canEdit = can('contractors', 'edit')
   const list = useAsync<ContractorRow[]>(fetchContractorSummaries)
   const [adding, setAdding] = useState(false)
+  const [merging, setMerging] = useState(false)
   const [q, setQ] = useState('')
   const [onlyOwed, setOnlyOwed] = useState(false)
 
@@ -34,12 +36,20 @@ export default function Contractors() {
       <PageHead
         title="مستحقات المقاولين"
         actions={
-          canEdit && (
-            <button className="btn btn-icon" onClick={() => setAdding(true)}>
-              <Plus size={18} aria-hidden="true" />
-              مقاول جديد
-            </button>
-          )
+          <>
+            {isAdmin && all.length > 1 && (
+              <button className="btn btn-ghost btn-icon" onClick={() => setMerging(true)}>
+                <Merge size={18} aria-hidden="true" />
+                توحيد أسماء
+              </button>
+            )}
+            {canEdit && (
+              <button className="btn btn-icon" onClick={() => setAdding(true)}>
+                <Plus size={18} aria-hidden="true" />
+                مقاول جديد
+              </button>
+            )}
+          </>
         }
       />
 
@@ -105,6 +115,7 @@ export default function Contractors() {
         </section>
       )}
 
+      {merging && <MergeDialog contractors={all} onClose={() => setMerging(false)} onSaved={list.reload} />}
       {adding && <ContractorDialog onClose={() => setAdding(false)} onSaved={list.reload} />}
     </div>
   )

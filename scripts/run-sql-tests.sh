@@ -13,7 +13,7 @@ done
 psql -f supabase/tests/ci/seed.sql
 [ -z "${EXTRA_SQL:-}" ] || psql -c "$EXTRA_SQL" # used only to prove the tests fail when protection is removed
 fail=0
-TESTS="counted_entries rls_advances rls_users rls_and_totals installment_approval low_balance_alert owner_banks project_shares advance_transfers"
+TESTS="counted_entries rls_advances rls_users rls_and_totals installment_approval low_balance_alert owner_banks project_shares advance_transfers merge_contractors"
 for t in $TESTS; do
   f="supabase/tests/$t.sql"
   echo "== $f"

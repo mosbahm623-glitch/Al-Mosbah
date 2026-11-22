@@ -11,7 +11,8 @@ name: Daily backup
 
 on:
   schedule:
-    - cron: '7 4,16 * * *' # 04:07 و16:07 UTC = حوالي 6 الصبح و6 المغرب بتوقيت مصر الشتوي (7 دقايق بعد الساعة عشان GitHub بيتأخر على أول الساعة)
+    # بيحاول كل ساعة، لأن GitHub بيأخر أو بيتخطى المواعيد التلقائية. لو فيه نسخة أحدث من 11 ساعة على Drive بيقف فورًا، يعني النتيجة نسختين في اليوم تقريبًا حتى لو ميعاد فاته.
+    - cron: '7 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -54,7 +55,27 @@ jobs:
             if [ -z "${!v}" ]; then echo "::error::السر $v مش متضاف"; exit 1; fi
           done
 
+      - name: Skip if a backup newer than 11 hours already exists on Drive
+        id: guard
+        if: github.event_name == 'schedule'
+        run: |
+          set -uo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq rclone
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          recent=$(rclone lsf "$DRIVE_DIR" --files-only --include 'legacy_backup_*.dump' --max-age 11h || true)
+          rm -f ~/.config/rclone/rclone.conf
+          if [ -n "$recent" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "فيه نسخة حديثة على Drive، مفيش داعي لنسخة جديدة: $recent"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "مفيش نسخة أحدث من 11 ساعة، هنعمل نسخة جديدة"
+          fi
+
       - name: Install tools (postgresql-client 17, rclone)
+        if: steps.guard.outputs.skip != 'true'
         run: |
           sudo apt-get install -y curl ca-certificates gnupg lsb-release
           sudo install -d /usr/share/postgresql-common/pgdg
@@ -64,6 +85,7 @@ jobs:
           sudo apt-get install -y postgresql-client-17 rclone
 
       - name: Dump database (and fingerprint every table at the same instant)
+        if: steps.guard.outputs.skip != 'true'
         env:
           PGBIN: /usr/lib/postgresql/17/bin
         run: |
@@ -100,6 +122,7 @@ jobs:
           ls -l legacy_backup_*.dump
 
       - name: Test restore into a temporary database and compare every value
+        if: steps.guard.outputs.skip != 'true'
         id: restore
         continue-on-error: true
         env:
@@ -133,11 +156,13 @@ jobs:
           echo "اختبار الاسترجاع نجح: كل الجداول رجعت بنفس القيم بالظبط"
 
       - uses: actions/setup-node@v7
+        if: steps.guard.outputs.skip != 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Export the Excel backup (same layout as the app's Backup page)
+        if: steps.guard.outputs.skip != 'true'
         id: excel
         continue-on-error: true
         env:
@@ -150,6 +175,7 @@ jobs:
           ls -l "legacy_backup_${STAMP}.xlsx"
 
       - name: Upload to Google Drive and prune old copies
+        if: steps.guard.outputs.skip != 'true'
         run: |
           set -euo pipefail
           umask 077
@@ -165,6 +191,7 @@ jobs:
           rm -f ~/.config/rclone/rclone.conf
 
       - name: Email the Excel backup
+        if: steps.guard.outputs.skip != 'true'
         # بيتخطى لو أسرار الإيميل مش متضافة، والنسخة نفسها مش بتتأثر
         continue-on-error: true
         env:
@@ -204,7 +231,7 @@ jobs:
           PY
 
       - name: Fail if the Excel export or the restore test failed (the .dump is already safe on Drive)
-        if: steps.excel.outcome == 'failure' || steps.restore.outcome == 'failure'
+        if: steps.guard.outputs.skip != 'true' && (steps.excel.outcome == 'failure' || steps.restore.outcome == 'failure')
         run: |
           echo "::error::تصدير Excel أو اختبار الاسترجاع فشل، لكن نسخة .dump اترفعت على Drive، شوف الخطوة الفاشلة"
           exit 1

@@ -9,7 +9,7 @@ import { useAsync } from '../../lib/core/useAsync'
 import ContractorDialog from './ContractorDialog'
 import MergeDialog from './MergeDialog'
 
-const owed = (c: ContractorRow) => c.left
+const owed = (c: ContractorRow) => c.due - c.paid
 
 /** Every contractor with what we owe him, what was paid, and what is left. */
 export default function Contractors() {

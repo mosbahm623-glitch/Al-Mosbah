@@ -3,7 +3,6 @@ import { Pencil, Plus, Wallet } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
 import { useAuth } from '../../auth/AuthProvider'
-import { buildAccounts } from '../../lib/contractors/accounts'
 import { fetchContractorLedger, type LedgerTxn, type Spent } from '../../lib/contractors/contractors'
 import { dateText, money } from '../../lib/core/format'
 import { fetchContractorNames, fetchProjectNames, type Named } from '../../lib/core/lookups'
@@ -28,13 +27,29 @@ export default function ContractorDetail({ id }: { id: string }) {
   const [dialog, setDialog] = useState<Dialog>(null)
   const name = names.data?.find((c) => c.id === id)?.name
 
-  const view = useMemo(
-    () => ({
-      projects: buildAccounts(ledger.data?.txns ?? [], ledger.data?.spent ?? []),
-      spent: (ledger.data?.spent ?? []).reduce((s, e) => s + toCents(e.amount), 0) / 100,
-    }),
-    [ledger.data],
-  )
+  const view = useMemo(() => {
+    const groups = new Map<string, { key: string; name: string; txns: LedgerTxn[] }>()
+    for (const t of ledger.data?.txns ?? []) {
+      const key = t.project_id ?? 'none'
+      const g = groups.get(key) ?? { key, name: t.project?.name ?? 'من غير مشروع', txns: [] }
+      g.txns.push(t)
+      groups.set(key, g)
+    }
+    const projects = [...groups.values()]
+      .map((g) => {
+        const due = g.txns.filter((t) => t.kind === 'due').reduce((s, t) => s + toCents(t.amount), 0) / 100
+        const paid = g.txns.filter((t) => t.kind === 'payment').reduce((s, t) => s + toCents(t.amount), 0) / 100
+        const lines = g.txns.map((t, i) => ({
+          t,
+          run:
+            g.txns.slice(0, i + 1).reduce((sum, x) => sum + toCents(x.kind === 'due' ? x.amount : -x.amount), 0) / 100,
+        }))
+        return { ...g, due, paid, lines }
+      })
+      .sort((x, y) => (x.key === 'none' ? 1 : y.key === 'none' ? -1 : x.name.localeCompare(y.name, 'ar')))
+    const spent = (ledger.data?.spent ?? []).reduce((s, e) => s + toCents(e.amount), 0) / 100
+    return { projects, spent }
+  }, [ledger.data])
 
   if ((names.loading && !names.data) || (ledger.loading && !ledger.data)) return <p className="muted">جارٍ التحميل...</p>
   if (names.failed || ledger.failed) return <p className="msg msg-error">مقدرناش نحمّل المقاول، جرّب تاني</p>
@@ -72,6 +87,7 @@ export default function ContractorDetail({ id }: { id: string }) {
 
       {view.projects.length ? (
         view.projects.map((p) => {
+          const left = p.due - p.paid
           return (
             <section className="panel" key={p.key}>
               <div className="panel-head">
@@ -96,15 +112,11 @@ export default function ContractorDetail({ id }: { id: string }) {
                 )}
               </div>
               <Stats
-                items={
-                  p.hasDue
-                    ? [
-                        { label: 'المستحقات', value: p.due },
-                        { label: 'المدفوع', value: p.paid, tone: 'ok' },
-                        { label: 'المتبقي علينا', value: p.left, tone: p.left > 0 ? 'err' : 'ok' },
-                      ]
-                    : [{ label: 'المدفوع (من القيود)', value: p.paid, tone: 'ok' }]
-                }
+                items={[
+                  { label: 'المستحقات', value: p.due },
+                  { label: 'المدفوع', value: p.paid, tone: 'ok' },
+                  { label: 'المتبقي علينا', value: left, tone: left > 0 ? 'err' : 'ok' },
+                ]}
               />
               <div className="table-wrap">
                 <table className="table">
@@ -120,34 +132,28 @@ export default function ContractorDetail({ id }: { id: string }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {p.lines.map(({ txn: t, entry, kind, date, amount, run, key }) => (
-                      <Fragment key={key}>
+                    {p.lines.map(({ t, run }) => (
+                      <Fragment key={t.id}>
                         <tr>
-                          <td>{dateText(date)}</td>
-                          <td>{kind === 'due' ? 'مستحق' : entry ? 'دفعة (قيد)' : 'دفعة'}</td>
-                          <td className="sm-hide muted">
-                            {t ? (t.notes ?? '') : [entry?.item, entry?.category].filter(Boolean).join(' · ')}
-                          </td>
-                          <td className="num">{kind === 'due' ? money(amount) : ''}</td>
-                          <td className="num tone-text-ok">{kind === 'payment' ? money(amount) : ''}</td>
-                          <td className={`num strong ${run !== null && run > 0 ? 'tone-text-err' : ''}`}>
-                            {run === null ? '' : money(run)}
-                          </td>
+                          <td>{dateText(t.txn_date)}</td>
+                          <td>{t.kind === 'due' ? 'مستحق' : 'دفعة'}</td>
+                          <td className="sm-hide muted">{t.notes ?? ''}</td>
+                          <td className="num">{t.kind === 'due' ? money(t.amount) : ''}</td>
+                          <td className="num tone-text-ok">{t.kind === 'payment' ? money(t.amount) : ''}</td>
+                          <td className={`num strong ${run > 0 ? 'tone-text-err' : ''}`}>{money(run)}</td>
                           {canEdit && (
                             <td>
-                              {t && (
-                                <button
-                                  className="btn btn-ghost btn-icon"
-                                  onClick={() => setDialog({ kind: t.kind, row: t })}
-                                  aria-label="تعديل"
-                                >
-                                  <Pencil size={16} aria-hidden="true" />
-                                </button>
-                              )}
+                              <button
+                                className="btn btn-ghost btn-icon"
+                                onClick={() => setDialog({ kind: t.kind, row: t })}
+                                aria-label="تعديل"
+                              >
+                                <Pencil size={16} aria-hidden="true" />
+                              </button>
                             </td>
                           )}
                         </tr>
-                        {(t?.items ?? [])
+                        {t.items
                           .slice()
                           .sort((a, b) => a.position - b.position)
                           .map((it) => (
@@ -173,8 +179,8 @@ export default function ContractorDetail({ id }: { id: string }) {
         </section>
       )}
       <p className="muted small panel-note">
-        حساب المقاول لكل مشروع لوحده: المتبقي = المستحقات − المدفوع في المشروع نفسه، والمدفوع بيشمل المصروفات المسجلة
-        باسمه في القيود (إجماليها {money(view.spent)} ج.م). مشروع من غير مستحق بيعرض المدفوع بس.
+        حساب المقاول لكل مشروع لوحده: المتبقي = المستحقات − المدفوع في المشروع نفسه. مصروفات مسجلة باسمه في القيود:{' '}
+        {money(view.spent)} ج.م (للعلم بس، مش داخلة في الرصيد).
       </p>
 
       {dialog && (

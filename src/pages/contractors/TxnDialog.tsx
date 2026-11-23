@@ -124,8 +124,12 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
           <div className="field">
             تفصيل الأعمال (اختياري)
             {rows.map((r, i) => (
-              <div className="field-row" key={i}>
+              <div
+                key={i}
+                style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '0.5rem', marginBottom: '0.6rem' }}
+              >
                 <input
+                  style={{ gridColumn: '1 / -1' }}
                   aria-label="البيان"
                   placeholder="البيان"
                   value={r.item}

@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import TableReport from '../../components/TableReport'
 import { TYPE_LABEL, money, periodText, todayISO, type ProjectType } from '../../lib/core/format'
 import { fetchApprovedExpenses, type ExpenseRow as Row } from '../../lib/entries/entries'
+import { applyDistributions, fetchDistributions } from '../../lib/contractors/distribution'
 import { categoryTotals } from '../../lib/reports/reportBuilders'
 import { useAsync } from '../../lib/core/useAsync'
 import { sumMoney } from '../../lib/core/money'
@@ -20,8 +21,20 @@ export default function CategoryReport({
   filter: ReportFilter
 }) {
   const load = useCallback(async () => {
-    const rows = await fetchApprovedExpenses(from, to)
-    return { data: rows, error: rows === null }
+    const [rows, dists] = await Promise.all([fetchApprovedExpenses(from, to), fetchDistributions()])
+    // payments spread over work show as the work (same total); if the distributions can't be read, show the payments
+    const shown =
+      rows && dists
+        ? applyDistributions(rows, dists, (base, it, amount, d) => ({
+            ...base,
+            id: `${d.id}:${it.id}`,
+            category: it.category,
+            amount,
+            bank: null,
+            contractor: d.contractor,
+          }))
+        : rows
+    return { data: shown, error: rows === null }
   }, [from, to])
   const { data, failed } = useAsync<Row[]>(load)
 

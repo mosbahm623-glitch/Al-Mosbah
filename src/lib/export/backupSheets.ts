@@ -13,6 +13,7 @@ export type BackupData = {
   items: Row[]
   contractors: Row[]
   ctx: Row[]
+  dueItems: Row[]
   banks: Row[]
   transfers: Row[]
   advances: Row[]

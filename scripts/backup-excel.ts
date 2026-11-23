@@ -47,6 +47,7 @@ const data: BackupData = {
   items: await read('expense_items'),
   contractors: await read('contractors'),
   ctx: await read('contractor_transactions'),
+  dueItems: await read('contractor_due_items'),
   banks: await read('bank_accounts'),
   transfers: await read('bank_transfers'),
   advances: await read('advances'),

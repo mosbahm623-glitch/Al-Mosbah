@@ -14,7 +14,7 @@ import {
 } from '../advances/advances'
 import { saveBank } from '../banks/banks'
 import { addExpenseItem, createBank, createCategory, createContractor, fetchCategories } from '../entries/catalog'
-import { fetchAllContractorTxns, fetchContractorLedger } from '../contractors/contractors'
+import { fetchAllContractorTxns, fetchContractorLedger, saveContractorTxn } from '../contractors/contractors'
 import {
   deleteEntry,
   fetchApprovedExpenses,
@@ -192,6 +192,51 @@ describe('contractors', () => {
     expect(await fetchContractorLedger('k1')).toBeNull()
     plan({ contractor_transactions: [fail], entries: [ok([])] })
     expect(await fetchContractorLedger('k1')).toBeNull()
+  })
+  it('saves a due with its work items: the amount is their total and the old items are replaced', async () => {
+    plan({
+      contractor_transactions: [ok({ id: 't1' })],
+      contractor_due_items: [ok(null), ok(null)],
+    })
+    const base = {
+      contractor_id: 'k1',
+      kind: 'due' as const,
+      amount: 1,
+      txn_date: '2026-11-23',
+      project_id: null,
+      notes: null,
+    }
+    const items = [
+      { item: 'دهان', category: 'دهانات', amount: 20000.1 },
+      { item: 'سباكة', category: null, amount: 15000.2 },
+    ]
+    expect((await saveContractorTxn(base, 't1', items)).error).toBeNull()
+    const txn = used.find((u) => u.table === 'contractor_transactions')!
+    expect(txn.calls[0]).toEqual(['update', [{ ...base, amount: 35000.3 }]])
+    const rows = used.filter((u) => u.table === 'contractor_due_items')
+    expect(rows[0].calls[0][0]).toBe('delete')
+    expect(rows[1].calls[0]).toEqual([
+      'insert',
+      [
+        [
+          { transaction_id: 't1', item: 'دهان', category: 'دهانات', amount: 20000.1, position: 0 },
+          { transaction_id: 't1', item: 'سباكة', category: null, amount: 15000.2, position: 1 },
+        ],
+      ],
+    ])
+  })
+  it('leaves the items alone when saving a payment', async () => {
+    plan({ contractor_transactions: [ok({ id: 't2' })] })
+    const base = {
+      contractor_id: 'k1',
+      kind: 'payment' as const,
+      amount: 500,
+      txn_date: '2026-11-23',
+      project_id: null,
+      notes: null,
+    }
+    expect((await saveContractorTxn(base, 't2')).error).toBeNull()
+    expect(used.some((u) => u.table === 'contractor_due_items')).toBe(false)
   })
   it('reads every contractor transaction for the summary', async () => {
     plan({ contractor_transactions: [ok([{ kind: 'due' }])] })

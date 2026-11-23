@@ -58,29 +58,35 @@ test('a custody return is recorded', async ({ page }) => {
   expect(sent.find((r) => r.path.endsWith('/advance_returns'))?.body).toMatchObject({ advance_id: ADV, amount: 1500 })
 })
 
+const withProject = (path: string) =>
+  path.endsWith('/projects') ? [{ id: '22222222-2222-4222-8222-222222222221', name: 'فيلا شامل' }] : answers(path)
+
 test('a contractor payment is recorded', async ({ page }) => {
-  const sent = await mockApi(page, { answer: answers })
+  const sent = await mockApi(page, { answer: withProject })
   await signIn(page)
   await page.goto(`/#/contractors/${CONTRACTOR}`)
   await page.getByRole('button', { name: 'تسجيل دفعة' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('المبلغ (ج.م)').fill('2500')
+  await dialog.getByLabel('المشروع').selectOption({ index: 1 })
   await dialog.getByRole('button', { name: /حفظ/ }).click()
   await expect.poll(() => sent.some((r) => r.path.endsWith('/contractor_transactions'))).toBe(true)
   expect(sent.find((r) => r.path.endsWith('/contractor_transactions'))?.body).toMatchObject({
     contractor_id: CONTRACTOR,
     kind: 'payment',
     amount: 2500,
+    project_id: expect.any(String),
   })
 })
 
 test('a contractor due is recorded', async ({ page }) => {
-  const sent = await mockApi(page, { answer: answers })
+  const sent = await mockApi(page, { answer: withProject })
   await signIn(page)
   await page.goto(`/#/contractors/${CONTRACTOR}`)
   await page.getByRole('button', { name: 'مستحق جديد' }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel('المبلغ (ج.م)').fill('8000')
+  await dialog.getByLabel('المشروع').selectOption({ index: 1 })
   await dialog.getByRole('button', { name: /حفظ/ }).click()
   await expect.poll(() => sent.some((r) => r.path.endsWith('/contractor_transactions'))).toBe(true)
   expect(sent.find((r) => r.path.endsWith('/contractor_transactions'))?.body).toMatchObject({

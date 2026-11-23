@@ -44,10 +44,13 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
     void guard(send)
   }
 
+  /** an old line saved before projects were required may stay without one */
+  const legacy = !!row && !row.project_id
   const split = kind === 'due' && rows.length > 0
   const rowsTotal = itemsTotal(rows.map((r) => ({ amount: Number(r.amount) || 0 })))
 
   async function send() {
+    if (!projectId && !legacy) return setError('اختار المشروع، حساب المقاول بيتسجل على مشروع')
     const value = split ? rowsTotal : Number(amount)
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
     if (split && rows.some((r) => !r.item.trim() || !(Number(r.amount) > 0)))
@@ -110,9 +113,9 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
           </label>
         </div>
         <label className="field">
-          المشروع (اختياري)
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-            <option value="">من غير مشروع</option>
+          المشروع
+          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} required={!legacy}>
+            <option value="">{legacy ? 'من غير مشروع' : 'اختار المشروع'}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}

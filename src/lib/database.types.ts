@@ -69,6 +69,21 @@ export type Database = {
         { amount: number; category?: string | null; created_at?: string; id?: string; item: string; position?: number; transaction_id: string },
         { amount?: number; category?: string | null; created_at?: string; id?: string; item?: string; position?: number; transaction_id?: string }
       >
+      payment_distributions: T<
+        { contractor_id: string; created_at: string; created_by: string | null; id: string; project_id: string },
+        { contractor_id: string; created_at?: string; created_by?: string | null; id?: string; project_id: string },
+        { contractor_id?: string; created_at?: string; created_by?: string | null; id?: string; project_id?: string }
+      >
+      payment_distribution_items: T<
+        { amount: number; category: string; distribution_id: string; id: string; item: string; position: number },
+        { amount: number; category: string; distribution_id: string; id?: string; item: string; position?: number },
+        { amount?: number; category?: string; distribution_id?: string; id?: string; item?: string; position?: number }
+      >
+      payment_distribution_entries: T<
+        { amount: number; distribution_id: string; entry_id: string; id: string },
+        { amount: number; distribution_id: string; entry_id: string; id?: string },
+        { amount?: number; distribution_id?: string; entry_id?: string; id?: string }
+      >
       contractors: T<
         { created_at: string; id: string; name: string },
         { created_at?: string; id?: string; name: string },
@@ -144,6 +159,8 @@ export type Database = {
       dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }
       duplicate_entry_groups: { Args: never; Returns: Json[] }
       transfer_between_advances: { Args: { p_from: string; p_to: string; p_amount: number; p_date: string; p_notes: string | null }; Returns: string }
+      distribute_payments: { Args: { p_project: string; p_contractor: string; p_entries: string[]; p_items: Json }; Returns: string }
+      undo_payment_distribution: { Args: { p_id: string }; Returns: undefined }
       merge_contractors: { Args: { p_keep: string; p_drop: string[] }; Returns: Json }
       cancel_advance_transfer: { Args: { p_id: string }; Returns: undefined }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }

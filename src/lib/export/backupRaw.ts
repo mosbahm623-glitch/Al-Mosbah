@@ -30,7 +30,7 @@ const README: [string, string][] = [
   ['القيمة الفاضية', 'الخلية الفاضية معناها NULL، والتواريخ مكتوبة نص بصيغة ISO، والـ JSON مكتوب نص.'],
   [
     'الجداول',
-    'raw_entries، raw_projects، raw_expense_categories، raw_expense_items، raw_contractors، raw_contractor_transactions، raw_contractor_due_items، raw_bank_accounts، raw_bank_transfers، raw_advances، raw_advance_installments، raw_advance_returns، raw_profiles، raw_user_permissions، raw_user_advance_access، raw_user_bank_access، raw_entry_history، raw_backup_log، raw_entry_counters، raw_deleted_entries.',
+    'raw_entries، raw_projects، raw_expense_categories، raw_expense_items، raw_contractors، raw_contractor_transactions، raw_contractor_due_items، raw_payment_distributions، raw_payment_distribution_items، raw_payment_distribution_entries، raw_bank_accounts، raw_bank_transfers، raw_advances، raw_advance_installments، raw_advance_returns، raw_profiles، raw_user_permissions، raw_user_advance_access، raw_user_bank_access، raw_entry_history، raw_backup_log، raw_entry_counters، raw_deleted_entries.',
   ],
   [
     'مش موجود هنا',
@@ -57,6 +57,9 @@ export function rawSheets(d: BackupData): Sheet[] {
     ['raw_contractors', d.contractors],
     ['raw_contractor_transactions', d.ctx],
     ['raw_contractor_due_items', d.dueItems],
+    ['raw_payment_distributions', d.dists],
+    ['raw_payment_distribution_items', d.distItems],
+    ['raw_payment_distribution_entries', d.distEntries],
     ['raw_bank_accounts', d.banks],
     ['raw_bank_transfers', d.transfers],
     ['raw_advances', d.advances],

@@ -8,6 +8,7 @@ import { dateText, money } from '../../lib/core/format'
 import { fetchContractorNames, fetchProjectNames, type Named } from '../../lib/core/lookups'
 import { toCents } from '../../lib/core/money'
 import { useAsync } from '../../lib/core/useAsync'
+import ContractorWork from './ContractorWork'
 import TxnDialog from './TxnDialog'
 
 type Dialog = { kind: 'due' | 'payment'; row?: LedgerTxn; project?: string } | null
@@ -178,6 +179,7 @@ export default function ContractorDetail({ id }: { id: string }) {
           <p className="empty muted">مفيش مستحقات أو مدفوعات لسه.</p>
         </section>
       )}
+      <ContractorWork id={id} name={name} canEdit={canEdit} />
       <p className="muted small panel-note">
         حساب المقاول لكل مشروع لوحده: المتبقي = المستحقات − المدفوع في المشروع نفسه. مصروفات مسجلة باسمه في القيود:{' '}
         {money(view.spent)} ج.م (للعلم بس، مش داخلة في الرصيد).

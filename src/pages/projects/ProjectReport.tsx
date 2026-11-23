@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ArrowRight, FileSpreadsheet, Printer } from 'lucide-react'
 import { money, todayText, TYPE_LABEL } from '../../lib/core/format'
 import { useProjectData } from '../../lib/projects/useProjectData'
@@ -15,6 +15,8 @@ import { enteredByOf } from '../../lib/entries/enteredBy'
 import { toCents } from '../../lib/core/money'
 import { NO_FILTER, filterMeta, isFiltering, matches, type ReportFilter } from '../../lib/reports/reportFilter'
 import { STATUS } from '../../lib/core/status'
+import { applyDistributions, fetchDistributions } from '../../lib/contractors/distribution'
+import { useAsync } from '../../lib/core/useAsync'
 
 type Group = { name: string; rows: Entry[]; total: number }
 
@@ -30,16 +32,35 @@ export default function ProjectReport({
 }) {
   const preparedBy = usePreparedBy()
   const { project, entries: allEntries, loading, failed: loadFailed } = useProjectData(id)
-  // only approved entries count in the report
-  const entries = useMemo(
-    () =>
-      allEntries?.filter(
-        (e) =>
-          e.status === STATUS.approved &&
-          matches(filter, { contractor: e.contractor?.name, bank: e.bank?.name, category: e.category }),
-      ),
-    [allEntries, filter],
+  const dists = useAsync(
+    useCallback(async () => {
+      const data = await fetchDistributions({ projectId: id })
+      return { data, error: data === null }
+    }, [id]),
   )
+  // only approved entries count in the report; payments spread over work show as the work (same total)
+  const entries = useMemo(() => {
+    const approved = allEntries?.filter((e) => e.status === STATUS.approved)
+    const shown =
+      approved && dists.data
+        ? applyDistributions(approved, dists.data, (base, it, amount, d) => ({
+            ...base,
+            id: `${d.id}:${it.id}`,
+            item: it.item,
+            category: it.category,
+            amount,
+            notes: 'من دفعات موزّعة على أعمال',
+            contractor: d.contractor,
+            bank: null,
+            advance_id: null,
+            invoices: undefined,
+            edit_reason: null,
+          }))
+        : approved
+    return shown?.filter((e) =>
+      matches(filter, { contractor: e.contractor?.name, bank: e.bank?.name, category: e.category }),
+    )
+  }, [allEntries, dists.data, filter])
   const [ownContractor, setWithContractor] = useState(true)
   const [ownBank, setBankWanted] = useState(true)
   const [ownNotes, setWithNotes] = useState(true)

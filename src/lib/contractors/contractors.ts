@@ -3,6 +3,7 @@ import { fetchPaged } from '../core/paged'
 import { toCents } from '../core/money'
 import { STATUS } from '../core/status'
 
+export type DueItem = { id?: string; item: string; category: string | null; amount: number }
 export type LedgerTxn = {
   id: string
   project_id: string | null
@@ -11,6 +12,7 @@ export type LedgerTxn = {
   txn_date: string
   notes: string | null
   project: { name: string } | null
+  items: (DueItem & { position: number })[]
 }
 export type Spent = {
   id: string
@@ -28,7 +30,9 @@ export async function fetchContractorLedger(contractorId: string) {
     fetchPaged<LedgerTxn>((a, b) =>
       supabase
         .from('contractor_transactions')
-        .select('id,project_id,kind,amount,txn_date,notes,project:projects(name)')
+        .select(
+          'id,project_id,kind,amount,txn_date,notes,project:projects(name),items:contractor_due_items(id,item,category,amount,position)',
+        )
         .eq('contractor_id', contractorId)
         .order('txn_date')
         .order('id')
@@ -116,11 +120,46 @@ export type TxnInput = {
   notes: string | null
 }
 
-/** A new due / payment, or (with an id) an edit of an existing one. */
-export const saveContractorTxn = (row: TxnInput, id?: string) =>
-  id
-    ? supabase.from('contractor_transactions').update(row).eq('id', id)
-    : supabase.from('contractor_transactions').insert(row)
+/** Total of a due's work items, in money (cents-safe). */
+export const itemsTotal = (items: { amount: number }[]) => items.reduce((s, i) => s + toCents(i.amount), 0) / 100
+
+/**
+ * A new due / payment, or (with an id) an edit of an existing one. A due may carry work items:
+ * they replace the old ones and `amount` is kept equal to their total. Returns an error, if any.
+ */
+export async function saveContractorTxn(row: TxnInput, id?: string, items?: DueItem[]) {
+  const amount = items?.length ? itemsTotal(items) : row.amount
+  const saved = id
+    ? await supabase
+        .from('contractor_transactions')
+        .update({ ...row, amount })
+        .eq('id', id)
+        .select('id')
+        .single()
+    : await supabase
+        .from('contractor_transactions')
+        .insert({ ...row, amount })
+        .select('id')
+        .single()
+  if (saved.error || !saved.data) return { error: saved.error ?? true }
+  if (items === undefined) return { error: null }
+  const txn = saved.data.id as string
+  if (id) {
+    const del = await supabase.from('contractor_due_items').delete().eq('transaction_id', txn)
+    if (del.error) return { error: del.error }
+  }
+  if (!items.length) return { error: null }
+  const ins = await supabase.from('contractor_due_items').insert(
+    items.map((i, position) => ({
+      transaction_id: txn,
+      item: i.item,
+      category: i.category,
+      amount: i.amount,
+      position,
+    })),
+  )
+  return { error: ins.error }
+}
 
 export const deleteContractorTxn = (id: string) => supabase.from('contractor_transactions').delete().eq('id', id)
 

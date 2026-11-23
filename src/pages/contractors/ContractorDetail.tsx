@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState } from 'react'
 import { Pencil, Plus, Wallet } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
@@ -165,26 +165,40 @@ export default function ContractorDetail({ id }: { id: string }) {
               </thead>
               <tbody>
                 {view.lines.map(({ t, run }) => (
-                  <tr key={t.id}>
-                    <td>{dateText(t.txn_date)}</td>
-                    <td>{t.kind === 'due' ? 'مستحق' : 'دفعة'}</td>
-                    <td className="sm-hide">{t.project?.name ?? '—'}</td>
-                    <td className="sm-hide muted">{t.notes ?? ''}</td>
-                    <td className="num">{t.kind === 'due' ? money(t.amount) : ''}</td>
-                    <td className="num tone-text-ok">{t.kind === 'payment' ? money(t.amount) : ''}</td>
-                    <td className={`num strong ${run > 0 ? 'tone-text-err' : ''}`}>{money(run)}</td>
-                    {canEdit && (
-                      <td>
-                        <button
-                          className="btn btn-ghost btn-icon"
-                          onClick={() => setDialog({ kind: t.kind, row: t })}
-                          aria-label="تعديل"
-                        >
-                          <Pencil size={16} aria-hidden="true" />
-                        </button>
-                      </td>
-                    )}
-                  </tr>
+                  <Fragment key={t.id}>
+                    <tr>
+                      <td>{dateText(t.txn_date)}</td>
+                      <td>{t.kind === 'due' ? 'مستحق' : 'دفعة'}</td>
+                      <td className="sm-hide">{t.project?.name ?? '—'}</td>
+                      <td className="sm-hide muted">{t.notes ?? ''}</td>
+                      <td className="num">{t.kind === 'due' ? money(t.amount) : ''}</td>
+                      <td className="num tone-text-ok">{t.kind === 'payment' ? money(t.amount) : ''}</td>
+                      <td className={`num strong ${run > 0 ? 'tone-text-err' : ''}`}>{money(run)}</td>
+                      {canEdit && (
+                        <td>
+                          <button
+                            className="btn btn-ghost btn-icon"
+                            onClick={() => setDialog({ kind: t.kind, row: t })}
+                            aria-label="تعديل"
+                          >
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                    {t.items
+                      .slice()
+                      .sort((a, b) => a.position - b.position)
+                      .map((it) => (
+                        <tr key={it.id} className="muted small">
+                          <td />
+                          <td colSpan={2}>↳ {it.item}</td>
+                          <td className="sm-hide">{it.category ?? ''}</td>
+                          <td className="num">{money(it.amount)}</td>
+                          <td colSpan={canEdit ? 3 : 2} />
+                        </tr>
+                      ))}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

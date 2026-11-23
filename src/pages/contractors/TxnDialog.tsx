@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import Dialog from '../../components/Dialog'
 import FormActions from '../../components/FormActions'
-import { deleteContractorTxn, saveContractorTxn, type LedgerTxn } from '../../lib/contractors/contractors'
+import { deleteContractorTxn, itemsTotal, saveContractorTxn, type LedgerTxn } from '../../lib/contractors/contractors'
 import { todayISO } from '../../lib/core/format'
 import type { Named } from '../../lib/core/lookups'
 import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
@@ -28,6 +28,12 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
   const [date, setDate] = useState(() => row?.txn_date ?? todayISO())
   const [projectId, setProjectId] = useState(row?.project_id ?? project ?? '')
   const [notes, setNotes] = useState(row?.notes ?? '')
+  const [rows, setRows] = useState<{ item: string; category: string; amount: string }[]>(() =>
+    (row?.items ?? [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((i) => ({ item: i.item, category: i.category ?? '', amount: String(i.amount) })),
+  )
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const guard = useSubmitGuard()
@@ -38,9 +44,14 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
     void guard(send)
   }
 
+  const split = kind === 'due' && rows.length > 0
+  const rowsTotal = itemsTotal(rows.map((r) => ({ amount: Number(r.amount) || 0 })))
+
   async function send() {
-    const value = Number(amount)
+    const value = split ? rowsTotal : Number(amount)
     if (!Number.isFinite(value) || value <= 0) return setError('المبلغ لازم يكون أكبر من صفر')
+    if (split && rows.some((r) => !r.item.trim() || !(Number(r.amount) > 0)))
+      return setError('كل بند محتاج بيان ومبلغ أكبر من صفر')
     setSaving(true)
     setError(null)
     const { error: err } = await saveContractorTxn(
@@ -53,6 +64,9 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
         notes: notes.trim() || null,
       },
       row?.id,
+      kind === 'due'
+        ? rows.map((r) => ({ item: r.item.trim(), category: r.category.trim() || null, amount: Number(r.amount) }))
+        : undefined,
     )
     setSaving(false)
     if (err) return setError('ما اتحفظش، جرّب تاني')
@@ -81,7 +95,14 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
         <div className="field-row">
           <label className="field">
             المبلغ (ج.م)
-            <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" required autoFocus />
+            <input
+              value={split ? String(rowsTotal) : amount}
+              onChange={(e) => setAmount(e.target.value)}
+              inputMode="decimal"
+              readOnly={split}
+              required
+              autoFocus
+            />
           </label>
           <label className="field">
             التاريخ
@@ -99,6 +120,53 @@ export default function TxnDialog({ contractorId, name, kind, projects, row, pro
             ))}
           </select>
         </label>
+        {kind === 'due' && (
+          <div className="field">
+            تفصيل الأعمال (اختياري)
+            {rows.map((r, i) => (
+              <div className="field-row" key={i}>
+                <input
+                  aria-label="البيان"
+                  placeholder="البيان"
+                  value={r.item}
+                  onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, item: e.target.value } : x)))}
+                />
+                <input
+                  aria-label="البند"
+                  placeholder="البند"
+                  value={r.category}
+                  onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, category: e.target.value } : x)))}
+                />
+                <input
+                  aria-label="المبلغ"
+                  placeholder="المبلغ"
+                  inputMode="decimal"
+                  value={r.amount}
+                  onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, amount: e.target.value } : x)))}
+                />
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  aria-label="حذف البند"
+                  onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                if (!rows.length && Number(amount) > 0) return setRows([{ item: notes.trim(), category: '', amount }])
+                setRows([...rows, { item: '', category: '', amount: '' }])
+              }}
+            >
+              ＋ بند شغل
+            </button>
+            {split && <span className="muted small">المبلغ = مجموع البنود، ومش بيدخل في مصروف المشروع.</span>}
+          </div>
+        )}
         <label className="field">
           ملاحظات
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />

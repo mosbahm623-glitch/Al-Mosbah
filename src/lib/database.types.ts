@@ -64,6 +64,11 @@ export type Database = {
         { amount: number; contractor_id: string; created_at?: string; id?: string; kind: string; notes?: string | null; project_id?: string | null; txn_date?: string },
         { amount?: number; contractor_id?: string; created_at?: string; id?: string; kind?: string; notes?: string | null; project_id?: string | null; txn_date?: string }
       >
+      contractor_due_items: T<
+        { amount: number; category: string | null; created_at: string; id: string; item: string; position: number; transaction_id: string },
+        { amount: number; category?: string | null; created_at?: string; id?: string; item: string; position?: number; transaction_id: string },
+        { amount?: number; category?: string | null; created_at?: string; id?: string; item?: string; position?: number; transaction_id?: string }
+      >
       contractors: T<
         { created_at: string; id: string; name: string },
         { created_at?: string; id?: string; name: string },

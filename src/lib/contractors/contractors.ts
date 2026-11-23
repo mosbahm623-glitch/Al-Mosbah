@@ -17,6 +17,7 @@ export type LedgerTxn = {
 export type Spent = {
   id: string
   seq: number
+  project_id: string
   category: string
   item: string | null
   amount: number
@@ -42,7 +43,7 @@ export async function fetchContractorLedger(contractorId: string) {
     fetchPaged<Spent>((a, b) =>
       supabase
         .from('entries')
-        .select('id,seq,category,item,amount,entry_date,project:projects(name,status)')
+        .select('id,seq,project_id,category,item,amount,entry_date,project:projects(name,status)')
         .eq('contractor_id', contractorId)
         .eq('status', STATUS.approved)
         .order('entry_date')
@@ -59,6 +60,7 @@ export type SummaryTxn = {
   kind: 'due' | 'payment'
   amount: number
   txn_date: string
+  project_id: string | null
   contractor: { name: string } | null
   project: { name: string } | null
 }
@@ -68,44 +70,69 @@ export const fetchAllContractorTxns = () =>
   fetchPaged<SummaryTxn>((a, b) =>
     supabase
       .from('contractor_transactions')
-      .select('kind,amount,txn_date,contractor_id,contractor:contractors(name),project:projects(name)')
+      .select('kind,amount,txn_date,contractor_id,project_id,contractor:contractors(name),project:projects(name)')
       .order('id')
       .range(a, b)
       .returns<SummaryTxn[]>(),
   )
 
-export type ContractorRow = { id: string; name: string; due: number; paid: number; spent: number }
+/** `paid` and `left` count only the projects that have a due; `spent` is everything recorded under his name. */
+export type ContractorRow = { id: string; name: string; due: number; paid: number; spent: number; left: number }
 
-/** What we owe each contractor (dues − payments) next to what was spent under his name. */
+/**
+ * What we owe each contractor, project by project: dues minus payments, where a payment is a ledger payment or an
+ * approved expense entry under his name. Projects without a due do not count towards what is owed (nothing to measure
+ * the payments against); `spent` is everything recorded under his name, shown for information.
+ */
 export async function fetchContractorSummaries(): Promise<{ data: ContractorRow[] | null; error: unknown }> {
   const [people, txns, spent] = await Promise.all([
     supabase.from('contractors').select('id,name').order('name').returns<{ id: string; name: string }[]>(),
     fetchAllContractorTxns(),
     // spending is shown for information only, so a user who cannot see entries just gets zeros
-    fetchPaged<{ contractor_id: string; amount: number }>((a, b) =>
+    fetchPaged<{ contractor_id: string; project_id: string; amount: number }>((a, b) =>
       supabase
         .from('entries')
-        .select('contractor_id,amount')
+        .select('contractor_id,project_id,amount')
         .not('contractor_id', 'is', null)
         .eq('status', STATUS.approved)
         .order('id')
         .range(a, b)
-        .returns<{ contractor_id: string; amount: number }[]>(),
+        .returns<{ contractor_id: string; project_id: string; amount: number }[]>(),
     ),
   ])
   if (people.error || !people.data || !txns) return { data: null, error: people.error ?? true }
-  const by = new Map<string, { due: number; paid: number; spent: number }>()
-  const slot = (id: string) => {
-    const v = by.get(id) ?? { due: 0, paid: 0, spent: 0 }
-    by.set(id, v)
-    return v
+  type Acc = { due: number; paid: number }
+  const by = new Map<string, Map<string, Acc>>()
+  const slot = (contractor: string, project: string | null) => {
+    const projects = by.get(contractor) ?? new Map<string, Acc>()
+    by.set(contractor, projects)
+    const acc = projects.get(project ?? 'none') ?? { due: 0, paid: 0 }
+    projects.set(project ?? 'none', acc)
+    return acc
   }
-  for (const t of txns) slot(t.contractor_id)[t.kind === 'due' ? 'due' : 'paid'] += toCents(t.amount)
-  for (const e of spent ?? []) slot(e.contractor_id).spent += toCents(e.amount)
+  const spentBy = new Map<string, number>()
+  for (const t of txns) slot(t.contractor_id, t.project_id)[t.kind === 'due' ? 'due' : 'paid'] += toCents(t.amount)
+  for (const e of spent ?? []) {
+    slot(e.contractor_id, e.project_id).paid += toCents(e.amount)
+    spentBy.set(e.contractor_id, (spentBy.get(e.contractor_id) ?? 0) + toCents(e.amount))
+  }
   return {
     data: people.data.map((c) => {
-      const v = by.get(c.id) ?? { due: 0, paid: 0, spent: 0 }
-      return { id: c.id, name: c.name, due: v.due / 100, paid: v.paid / 100, spent: v.spent / 100 }
+      let due = 0
+      let paid = 0
+      for (const acc of by.get(c.id)?.values() ?? []) {
+        if (acc.due === 0) continue
+        due += acc.due
+        paid += acc.paid
+      }
+      return {
+        id: c.id,
+        name: c.name,
+        due: due / 100,
+        paid: paid / 100,
+        spent: (spentBy.get(c.id) ?? 0) / 100,
+        left: (due - paid) / 100,
+      }
     }),
     error: null,
   }

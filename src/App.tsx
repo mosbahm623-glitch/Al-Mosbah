@@ -25,6 +25,7 @@ const Search = lazy(() => import('./pages/Search'))
 const Duplicates = lazy(() => import('./pages/reports/Duplicates'))
 const Notifications = lazy(() => import('./pages/Notifications'))
 const BulkInvoices = lazy(() => import('./pages/BulkInvoices'))
+const MergeNames = lazy(() => import('./pages/MergeNames'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
 const SharedProject = lazy(() => import('./pages/SharedProject'))
 import PageErrorBoundary from './components/PageErrorBoundary'
@@ -54,6 +55,7 @@ function Content({ route }: { route: string }) {
   if (route === 'recent') return <Recent />
   if (route === 'search') return <Search />
   if (route === 'bulk-invoices') return <BulkInvoices />
+  if (route === 'merge-names') return <MergeNames />
   if (route === 'projects') return <Projects />
   const report = /^projects\/([0-9a-f-]{36})\/report$/.exec(route)
   if (report) return <ProjectReport id={report[1]} />

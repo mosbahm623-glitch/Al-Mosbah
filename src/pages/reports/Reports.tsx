@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
+import { Merge } from 'lucide-react'
 import PageHead from '../../components/PageHead'
+import { useAuth } from '../../auth/AuthProvider'
+import MergeCategoriesDialog from './MergeCategoriesDialog'
 import { TYPE_LABEL, todayISO, type ProjectType } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import { fetchSummaries, type ProjectSummary } from '../../lib/projects/projects'
@@ -23,6 +26,8 @@ export default function Reports() {
   const contractors = useAsync<Named[]>(fetchContractorNames)
   const people = useAsync<{ id: string; full_name: string | null }[]>(fetchPeople)
   const categories = useAsync<Category[]>(fetchCategories)
+  const { isAdmin } = useAuth()
+  const [merging, setMerging] = useState(false)
   const projectContractors = useAsync<Map<string, Set<string>>>(
     useCallback(async () => {
       const m = await fetchProjectContractors()
@@ -135,7 +140,17 @@ export default function Reports() {
   return (
     <div className="page-stack">
       <div className="no-print">
-        <PageHead title="التقارير والتصدير" />
+        <PageHead
+          title="التقارير والتصدير"
+          actions={
+            isAdmin && (categories.data ?? []).length > 1 ? (
+              <button className="btn btn-ghost btn-icon" onClick={() => setMerging(true)}>
+                <Merge size={18} aria-hidden="true" />
+                توحيد أسماء البنود
+              </button>
+            ) : undefined
+          }
+        />
       </div>
       {(projects.failed || advances.failed || banks.failed || contractors.failed) && (
         <p className="msg msg-error no-print">مقدرناش نحمّل بعض الاختيارات، جرّب تاني</p>
@@ -332,6 +347,13 @@ export default function Reports() {
           creatorName={people.data?.find((u) => u.id === creatorId)?.full_name ?? ''}
         />
       </div>
+      {merging && (
+        <MergeCategoriesDialog
+          categories={categories.data ?? []}
+          onClose={() => setMerging(false)}
+          onSaved={categories.reload}
+        />
+      )}
     </div>
   )
 }

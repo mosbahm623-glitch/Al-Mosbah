@@ -12,7 +12,7 @@ import {
 
 type Props = { projectId: string; projectName: string; onClose: () => void }
 
-/** Admin only: make, copy or cancel the read-only link a client uses to follow his project live. */
+/** Admin and owner: make, copy or cancel the read-only link a client uses to follow his project live. */
 export default function ShareDialog({ projectId, projectName, onClose }: Props) {
   const [share, setShare] = useState<ProjectShare | null>(null)
   const [loading, setLoading] = useState(true)

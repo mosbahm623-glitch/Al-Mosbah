@@ -162,6 +162,7 @@ export type Database = {
       distribute_payments: { Args: { p_project: string; p_contractor: string; p_entries: string[]; p_items: Json }; Returns: string }
       undo_payment_distribution: { Args: { p_id: string }; Returns: undefined }
       merge_contractors: { Args: { p_keep: string; p_drop: string[] }; Returns: Json }
+      merge_categories: { Args: { p_keep: string; p_drop: string[] }; Returns: Json }
       cancel_advance_transfer: { Args: { p_id: string }; Returns: undefined }
       delete_entry: { Args: { p_id: string; p_rev: number; p_reason: string }; Returns: boolean }
       edit_entry: { Args: { p_id: string; p_rev: number; p_reason: string; p_row: Json }; Returns: boolean }

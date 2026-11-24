@@ -15,7 +15,7 @@ import EntryDialog from '../../components/EntryDialog'
 import EntryList from './EntryList'
 
 export default function ProjectDetail({ id }: { id: string }) {
-  const { can, isAdmin } = useAuth()
+  const { can, isStaff } = useAuth()
   const canEdit = can('projects', 'edit')
   const { project, projects, entries, loading, failed, reload } = useProjectData(id)
   const [dialog, setDialog] = useState<'entry' | 'edit' | 'share' | null>(null)
@@ -71,7 +71,7 @@ export default function ProjectDetail({ id }: { id: string }) {
               <FileText size={18} aria-hidden="true" />
               تقرير / تصدير
             </a>
-            {isAdmin && (
+            {isStaff && (
               <button className="btn btn-ghost btn-icon" onClick={() => setDialog('share')}>
                 <Link2 size={18} aria-hidden="true" />
                 مشاركة مع العميل

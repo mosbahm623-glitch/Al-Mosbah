@@ -25,3 +25,11 @@ export async function createBank(name: string) {
 /** Remembers an expense name under its category so it shows up as a suggestion next time. */
 export const addExpenseItem = (name: string, categoryId: string) =>
   supabase.from('expense_items').insert({ name, category_id: categoryId })
+
+export type MergeCategoriesResult = { entries: number; dues: number; distributions: number }
+
+/** Admin only: moves everything of the `drop` categories to `keep` and removes the extra names. Null on failure. */
+export async function mergeCategories(keep: string, drop: string[]): Promise<MergeCategoriesResult | null> {
+  const { data, error } = await supabase.rpc('merge_categories', { p_keep: keep, p_drop: drop })
+  return error || !data ? null : (data as MergeCategoriesResult)
+}

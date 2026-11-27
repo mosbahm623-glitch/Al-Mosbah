@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import Stats from '../../components/Stats'
-import { Plus, Search } from 'lucide-react'
+import { BellRing, Plus, Search } from 'lucide-react'
 import { useAuth } from '../../auth/AuthProvider'
 import Segmented from '../../components/Segmented'
 import { advanceBalance, fetchAdvanceSummaries, type AdvanceSummary } from '../../lib/advances/advances'
@@ -9,6 +9,7 @@ import { money } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import AdvanceChip from './AdvanceChip'
 import AdvanceDialog from './AdvanceDialog'
+import AlertSettingsDialog from './AlertSettingsDialog'
 
 const STATUS = [
   { value: 'all', label: 'الكل' },
@@ -17,11 +18,12 @@ const STATUS = [
 ] as const
 
 export default function Advances() {
-  const { isStaff } = useAuth()
+  const { isAdmin, isStaff } = useAuth()
   const advances = useAsync<AdvanceSummary[]>(fetchAdvanceSummaries)
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<(typeof STATUS)[number]['value']>('all')
   const [adding, setAdding] = useState(false)
+  const [alerts, setAlerts] = useState(false)
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase()
@@ -38,10 +40,18 @@ export default function Advances() {
         title="العهد"
         actions={
           isStaff && (
-            <button className="btn btn-icon" onClick={() => setAdding(true)}>
-              <Plus size={18} aria-hidden="true" />
-              عهدة جديدة
-            </button>
+            <>
+              <button className="btn btn-icon" onClick={() => setAdding(true)}>
+                <Plus size={18} aria-hidden="true" />
+                عهدة جديدة
+              </button>
+              {isAdmin && (
+                <button className="btn btn-ghost btn-icon" onClick={() => setAlerts(true)}>
+                  <BellRing size={18} aria-hidden="true" />
+                  إعدادات التنبيه
+                </button>
+              )}
+            </>
           )
         }
       />
@@ -118,6 +128,7 @@ export default function Advances() {
         </section>
       )}
 
+      {alerts && <AlertSettingsDialog onClose={() => setAlerts(false)} />}
       {adding && <AdvanceDialog onClose={() => setAdding(false)} onSaved={advances.reload} />}
     </div>
   )

@@ -4,7 +4,9 @@ import {
   BellRing,
   CheckCheck,
   CheckSquare,
+  CircleX,
   FlaskConical,
+  HandCoins,
   TriangleAlert,
   Trash2,
   type LucideIcon,
@@ -56,6 +58,8 @@ const KIND: Record<Notice['kind'], { icon: LucideIcon; label: string }> = {
   low_balance: { icon: TriangleAlert, label: 'تنبيه رصيد' },
   test: { icon: FlaskConical, label: 'تجريبي' },
   pending_entry: { icon: CheckSquare, label: 'قيد مستني موافقة' },
+  advance_low: { icon: HandCoins, label: 'تنبيه عهدة' },
+  rejected: { icon: CircleX, label: 'مرفوض' },
 }
 function KindIcon({ kind }: { kind: Notice['kind'] }) {
   const { icon: Icon, label } = KIND[kind]

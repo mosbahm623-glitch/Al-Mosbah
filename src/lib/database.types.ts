@@ -154,6 +154,8 @@ export type Database = {
     Views: { [_ in never]: never }
     Functions: {
       advance_summaries: { Args: never; Returns: Json[] }
+      advance_alert_settings: { Args: never; Returns: { [key: string]: Json | undefined } }
+      save_advance_alert_settings: { Args: { p_admin: boolean; p_holder: boolean; p_owner: boolean; p_rows: Json }; Returns: undefined }
       bank_movements: { Args: { p_bank: string }; Returns: Json[] }
       bank_summaries: { Args: never; Returns: Json[] }
       dashboard_summary: { Args: never; Returns: { [key: string]: Json | undefined } }

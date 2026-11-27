@@ -3,10 +3,13 @@ name: Daily backup
 # نسخة احتياطية من قاعدة البيانات (من غير تشفير)، بتتعمل مرتين في اليوم، وبتترفع على Google Drive بتاع صاحب التطبيق:
 #   - legacy_backup_<تاريخ>.dump  للاسترجاع
 #   - legacy_backup_<تاريخ>.xlsx  نفس إكسيل صفحة النسخ الاحتياطي في التطبيق (عربي، بأسماء المشاريع والحالات)
+#   - فولدر mosbah-invoices        صور وملفات الفواتير نفسها (الـ dump فيه أسماءها بس). بيتنسخ الجديد بس،
+#                                  ومفيش حاجة بتتمسح منه: ملف اتمسح من التطبيق بيفضل على Drive.
 # المستودع عام: النسخة ما بتتحفظش هنا ولا في Artifacts، بتروح على Drive بس.
 # أسرار مطلوبة (Settings > Secrets and variables > Actions):
 #   SUPABASE_DB_URL   رابط الاتصال بقاعدة البيانات (Session pooler)
 #   RCLONE_CONF       محتوى ملف إعداد rclone لـ Google Drive (remote اسمه gdrive)
+#   SUPABASE_S3_ACCESS_KEY_ID / SUPABASE_S3_SECRET_ACCESS_KEY  مفتاح S3 من Storage في Supabase (لنسخ الفواتير)
 #   GMAIL_USER / GMAIL_APP_PASSWORD  (اختياري) إيميل Gmail وApp Password، عشان الإكسيل يتبعت على نفس الإيميل بعد كل نسخة
 
 on:
@@ -43,6 +46,8 @@ jobs:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       RCLONE_CONF: ${{ secrets.RCLONE_CONF }}
       DRIVE_DIR: gdrive:mosbah-backups
+      # فولدر لوحده برة DRIVE_DIR، عشان مسح النسخ الأقدم من KEEP_DAYS ما يلمسش الفواتير
+      INVOICES_DIR: gdrive:mosbah-invoices
       KEEP_DAYS: '30'
     steps:
       - uses: actions/checkout@v7
@@ -190,6 +195,35 @@ jobs:
           rclone delete "$DRIVE_DIR" --min-age "${KEEP_DAYS}d"
           rm -f ~/.config/rclone/rclone.conf
 
+      - name: Copy new invoice files to Google Drive
+        if: steps.guard.outputs.skip != 'true'
+        id: invoices
+        continue-on-error: true
+        env:
+          RCLONE_CONFIG_SUPA_TYPE: s3
+          RCLONE_CONFIG_SUPA_PROVIDER: Other
+          RCLONE_CONFIG_SUPA_ENDPOINT: https://kytaxbhajnmdstyiorus.supabase.co/storage/v1/s3
+          RCLONE_CONFIG_SUPA_REGION: eu-west-1
+          RCLONE_CONFIG_SUPA_ACCESS_KEY_ID: ${{ secrets.SUPABASE_S3_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_SUPA_SECRET_ACCESS_KEY: ${{ secrets.SUPABASE_S3_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_SUPA_ACCESS_KEY_ID:-}" ] || [ -z "${RCLONE_CONFIG_SUPA_SECRET_ACCESS_KEY:-}" ]; then
+            echo "::warning::مفاتيح S3 مش متضافة، الفواتير ما اتنسختش"; exit 0
+          fi
+          umask 077
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
+          trap 'rm -f ~/.config/rclone/rclone.conf' EXIT
+          count=$(rclone lsf supa:invoices --recursive --files-only | wc -l)
+          echo "ملفات الفواتير في Supabase: $count"
+          if [ "$count" -eq 0 ]; then echo "::error::مفيش ولا ملف ظاهر، راجع المفتاح"; exit 1; fi
+          # copy مش sync: عمره ما يمسح من Drive. الموجود بنفس الحجم ما بيتنزلش تاني
+          rclone copy supa:invoices "$INVOICES_DIR" --size-only
+          # تأكيد إن كل ملف في Supabase موجود على Drive بنفس الحجم
+          rclone check supa:invoices "$INVOICES_DIR" --one-way --size-only
+          echo "كل الفواتير موجودة على Drive"
+
       - name: Email the Excel backup
         if: steps.guard.outputs.skip != 'true'
         # بيتخطى لو أسرار الإيميل مش متضافة، والنسخة نفسها مش بتتأثر
@@ -230,8 +264,10 @@ jobs:
           print("email sent")
           PY
 
-      - name: Fail if the Excel export or the restore test failed (the .dump is already safe on Drive)
-        if: steps.guard.outputs.skip != 'true' && (steps.excel.outcome == 'failure' || steps.restore.outcome == 'failure')
+      - name: Fail if the Excel export, the restore test or the invoice copy failed (the .dump is already safe on Drive)
+        if: >-
+          steps.guard.outputs.skip != 'true' &&
+          (steps.excel.outcome == 'failure' || steps.restore.outcome == 'failure' || steps.invoices.outcome == 'failure')
         run: |
-          echo "::error::تصدير Excel أو اختبار الاسترجاع فشل، لكن نسخة .dump اترفعت على Drive، شوف الخطوة الفاشلة"
+          echo "::error::تصدير Excel أو اختبار الاسترجاع أو نسخ الفواتير فشل، لكن نسخة .dump اترفعت على Drive، شوف الخطوة الفاشلة"
           exit 1

@@ -342,7 +342,9 @@
   flex: none;
   margin-top: 0.15rem;
 }
-.notice-low_balance {
+.notice-low_balance,
+.notice-advance_low,
+.notice-rejected {
   color: var(--err, #b91c1c);
 }
 .notice-pending_entry {
@@ -354,6 +356,26 @@
 .notice-text {
   display: grid;
   gap: 0.15rem;
+}
+.notice-text .muted {
+  white-space: pre-line;
+}
+
+/* custody alert settings */
+.alert-list {
+  display: grid;
+  gap: 0.6rem;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+.alert-balance {
+  display: block;
+}
+.alert-row {
+  display: grid;
+  grid-template-columns: 1fr 8rem;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 /* bank logo */

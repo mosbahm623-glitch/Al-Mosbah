@@ -2,7 +2,7 @@ import { supabase } from '../supabase'
 
 export type Notice = {
   id: number
-  kind: 'low_balance' | 'test' | 'pending_entry'
+  kind: 'low_balance' | 'test' | 'pending_entry' | 'advance_low' | 'rejected'
   title: string
   body: string | null
   url: string | null

@@ -1,14 +1,13 @@
 import { useRef, useState } from 'react'
-import { Mic, Phone, PhoneOff, Square } from 'lucide-react'
+import { Phone, PhoneOff } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import { todayISO } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
-import { askVoice, fetchVoiceData, saveDraft, type VoiceData } from '../../lib/voice/data'
-import { toDrafts, toHeard, type Draft } from '../../lib/voice/drafts'
+import { fetchVoiceData, saveDraft, type VoiceData } from '../../lib/voice/data'
+import { toDrafts, type Draft } from '../../lib/voice/drafts'
 import { toReport, type VoiceReport } from '../../lib/voice/report'
 import { useLive } from '../../lib/voice/useLive'
-import { useRecorder } from '../../lib/voice/useRecorder'
 import DraftCard from './DraftCard'
 import ReportOffer from './ReportOffer'
 import { useDuplicates } from './useDuplicates'
@@ -23,31 +22,10 @@ export default function VoiceEntry() {
   const [done, setDone] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
-  const [thinking, setThinking] = useState(false)
   const [saving, setSaving] = useState<string | null>(null)
   const guard = useSubmitGuard()
   const duplicate = useDuplicates(drafts, demo ? null : data.data)
 
-  async function understand(audio: string) {
-    if (!data.data) return
-    setThinking(true)
-    setError(null)
-    setReport(null)
-    const today = todayISO()
-    const r = await askVoice(audio, data.data, drafts.map(toHeard), today)
-    setThinking(false)
-    if (!r.answer) return setError(r.error)
-    setDemo(r.answer.demo)
-    setReply(r.answer.reply)
-    setErrors({})
-    const asked = r.answer.report?.kind ? r.answer.report : null
-    if (asked) setReport(toReport(asked, data.data))
-    // asking for a report must never wipe the cards
-    if (asked && r.answer.drafts.length === 0) return
-    setDrafts(toDrafts(r.answer.drafts, r.answer.demo ? null : data.data, drafts, today))
-  }
-
-  const recorder = useRecorder((wav) => void understand(wav), setError)
   // the model sends the call's whole list each time; cards that were there before the call stay as they are
   const beforeCall = useRef<Draft[]>([])
   const offer = (asked: Parameters<typeof toReport>[0], trial: boolean) => {
@@ -78,8 +56,8 @@ export default function VoiceEntry() {
     remove(draft.id)
   }
 
-  // the cards are frozen while a recording is being made or understood, so a spoken correction can't undo typing
-  const frozen = calling || recorder.recording || thinking || saving !== null
+  // the cards are frozen during the call, so what the model sends can't undo typing
+  const frozen = calling || saving !== null
 
   return (
     <div className="page-stack quick-page">
@@ -92,15 +70,6 @@ export default function VoiceEntry() {
       <div className="voice-mic">
         <button
           type="button"
-          className={recorder.recording ? 'btn btn-danger' : 'btn'}
-          onClick={() => (recorder.recording ? recorder.stop() : void recorder.start())}
-          disabled={!data.data || thinking || calling || saving !== null}
-        >
-          {recorder.recording ? <Square size={20} aria-hidden="true" /> : <Mic size={20} aria-hidden="true" />}
-          {recorder.recording ? `إيقاف (${recorder.seconds} ث)` : thinking ? 'بفهم كلامك...' : 'سجّل'}
-        </button>
-        <button
-          type="button"
           className={calling ? 'btn btn-danger' : 'btn'}
           onClick={() => {
             if (calling) return call.stop()
@@ -111,7 +80,7 @@ export default function VoiceEntry() {
             beforeCall.current = drafts
             void call.start(todayISO(), data.data)
           }}
-          disabled={!data.data || recorder.recording || thinking || saving !== null}
+          disabled={!data.data || saving !== null}
         >
           {calling ? <PhoneOff size={20} aria-hidden="true" /> : <Phone size={20} aria-hidden="true" />}
           {call.state === 'connecting' ? 'بيتصل...' : calling ? 'إنهاء المكالمة' : 'مكالمة لحظية'}

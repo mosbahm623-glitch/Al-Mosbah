@@ -5,7 +5,6 @@ vi.mock('../supabase', () => ({ supabase: {} }))
 
 import { contextOf, hintsOf } from '../voice/data'
 import { missingOf, toDrafts, toHeard, type Lists } from '../voice/drafts'
-import { encodeWav, toBase64 } from '../voice/wav'
 import { toReport } from '../voice/report'
 
 const lists: Lists = {
@@ -78,18 +77,6 @@ describe('voice context', () => {
       { item: 'أسمنت', category: 'قديم', contractor: null },
     ]
     expect(hintsOf(rows)).toEqual([{ item: 'أسمنت', category: 'خامات', contractor: 'أحمد' }])
-  })
-})
-
-describe('wav', () => {
-  it('writes a PCM header and clamps loud samples', () => {
-    const bytes = encodeWav(new Float32Array([0, 2, -2]), 16000)
-    const view = new DataView(bytes.buffer)
-    expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('RIFF')
-    expect(view.getUint32(24, true)).toBe(16000)
-    expect(view.getInt16(46, true)).toBe(32767)
-    expect(view.getInt16(48, true)).toBe(-32768)
-    expect(atob(toBase64(bytes)).length).toBe(50)
   })
 })
 

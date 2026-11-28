@@ -5,8 +5,7 @@ import { fetchBankNames, fetchContractorNames } from '../core/lookups'
 import { STATUS } from '../core/status'
 import { fetchSummaries, pickableProjects } from '../projects/projects'
 import { saveEntry, type SaveError } from '../offline/entrySave'
-import { needsBank, needsCategory, type Draft, type HeardDraft, type Lists } from './drafts'
-import type { HeardReport } from './report'
+import { needsBank, needsCategory, type Draft, type Lists } from './drafts'
 
 type Hint = { item: string; category: string; contractor: string | null }
 export type VoiceData = Lists & { history: Hint[] }
@@ -69,27 +68,12 @@ export const contextOf = (d: VoiceData) => ({
   history: d.history,
 })
 
-export type Answer = { demo: boolean; reply: string; drafts: HeardDraft[]; report?: HeardReport }
-
 const ERRORS: Record<string, string> = {
   no_key: 'مفتاح Gemini لسه ما اتحطش في أسرار Supabase',
   busy: 'Gemini عليه ضغط دلوقتي، استنى دقيقة وجرّب تاني',
   quota: 'خلص حد الطلبات أو الرصيد في Gemini، جرّب بعد شوية',
   too_long: 'التسجيل طويل، قسّمه على مرتين',
   forbidden: 'التسجيل بالصوت للأدمن بس',
-}
-
-export async function askVoice(
-  audio: string,
-  data: VoiceData,
-  drafts: HeardDraft[],
-  today: string,
-): Promise<{ answer: Answer | null; error: string | null }> {
-  const res = await supabase.functions.invoke<Answer>('voice-entry', {
-    body: { audio, today, drafts, context: contextOf(data) },
-  })
-  if (!res.error && res.data) return { answer: res.data, error: null }
-  return { answer: null, error: await messageOf(res.error, 'ما عرفتش أفهم التسجيل، اتأكد من النت وجرّب تاني') }
 }
 
 /** The function's own error code as a message to show. */

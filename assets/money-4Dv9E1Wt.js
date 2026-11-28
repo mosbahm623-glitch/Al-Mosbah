@@ -1,0 +1,1 @@
+var e=e=>Math.round(e*100),t=t=>{let n=0;for(let r of t)n+=e(r);return n/100};export{e as n,t};

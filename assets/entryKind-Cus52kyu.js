@@ -1,0 +1,1 @@
+var e=e=>e.kind===`expense`&&e.amount<0,t=t=>t.kind===`income`||e(t),n=t=>t.kind===`income`?`وارد`:e(t)?`مرتجع`:`مصروف`,r=e=>({sign:t(e)?`+`:`−`,value:Math.abs(e.amount)}),i=e=>e.kind===`income`?e.category:`${e.category} · ${e.item??``}`,a=e=>t(e)?`tone-text-ok`:`tone-text-err`;export{n as a,e as i,i as n,r as o,t as r,a as t};

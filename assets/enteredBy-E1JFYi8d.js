@@ -1,0 +1,1 @@
+var e=e=>e.creator?.full_name??e.entered_by_name??null;export{e as t};

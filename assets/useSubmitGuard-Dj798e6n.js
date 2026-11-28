@@ -1,0 +1,1 @@
+import{h as e}from"./useAsync-FJB23W52.js";var t=e();function n(){let e=!1;return async function(t){if(!e){e=!0;try{return await t()}finally{e=!1}}}}function r(){let[e]=(0,t.useState)(n);return e}export{r as t};

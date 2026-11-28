@@ -1,0 +1,1 @@
+import{h as e}from"./useAsync-FJB23W52.js";var t=e(),n=1e4,r=null,i=new Set;function a(e){r={preset:e,at:Date.now()},i.forEach(t=>t(e)),window.location.hash=`#/reports`}function o(e){let a=(0,t.useRef)(e);(0,t.useEffect)(()=>{a.current=e}),(0,t.useEffect)(()=>{let e=e=>a.current(e);return r&&Date.now()-r.at<n&&e(r.preset),i.add(e),()=>{i.delete(e)}},[])}export{o as n,a as t};

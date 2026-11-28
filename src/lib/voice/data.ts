@@ -72,6 +72,7 @@ export type Answer = { demo: boolean; reply: string; drafts: HeardDraft[] }
 
 const ERRORS: Record<string, string> = {
   no_key: 'مفتاح Gemini لسه ما اتحطش في أسرار Supabase',
+  busy: 'Gemini عليه ضغط دلوقتي، استنى دقيقة وجرّب تاني',
   quota: 'خلص حد الطلبات أو الرصيد في Gemini، جرّب بعد شوية',
   too_long: 'التسجيل طويل، قسّمه على مرتين',
   forbidden: 'التسجيل بالصوت للأدمن بس',

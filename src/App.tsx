@@ -28,6 +28,7 @@ const BulkInvoices = lazy(() => import('./pages/BulkInvoices'))
 const MergeContractorNames = lazy(() => import('./pages/MergeContractorNames'))
 const MergeCategoryNames = lazy(() => import('./pages/MergeCategoryNames'))
 const QuickEntry = lazy(() => import('./pages/QuickEntry'))
+const VoiceEntry = lazy(() => import('./pages/voice/VoiceEntry'))
 const SharedProject = lazy(() => import('./pages/SharedProject'))
 import PageErrorBoundary from './components/PageErrorBoundary'
 import Layout from './layout/Layout'
@@ -55,6 +56,7 @@ function Content({ route }: { route: string }) {
   if (route === 'reports' || route === 'reports/journal') return <Reports />
   if (route === 'recent') return <Recent />
   if (route === 'search') return <Search />
+  if (route === 'voice-entry') return <VoiceEntry />
   if (route === 'bulk-invoices') return <BulkInvoices />
   if (route === 'merge-contractors') return <MergeContractorNames />
   if (route === 'merge-categories') return <MergeCategoryNames />

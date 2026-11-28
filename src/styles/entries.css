@@ -158,3 +158,23 @@
 .share-item {
   min-width: 9rem;
 }
+
+/* ===== Voice entry ===== */
+.voice-mic {
+  display: flex;
+  justify-content: center;
+}
+.voice-mic .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 220px;
+  min-height: 56px;
+  font-size: 1.1rem;
+}
+.voice-card {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}

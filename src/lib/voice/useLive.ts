@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { askLive } from './data'
+import { askLive, type VoiceData } from './data'
 import type { HeardDraft } from './drafts'
 import { openAudio } from './liveAudio'
 
@@ -23,7 +23,10 @@ type Message = {
 export type CallState = 'off' | 'connecting' | 'on'
 
 /** A live spoken conversation that fills the cards as it goes. It never saves anything. */
-export function useLive(onDrafts: (drafts: HeardDraft[], reply: string) => void, onFail: (message: string) => void) {
+export function useLive(
+  onDrafts: (drafts: HeardDraft[], reply: string, demo: boolean) => void,
+  onFail: (message: string) => void,
+) {
   const [state, setState] = useState<CallState>('off')
   const [heard, setHeard] = useState('')
   const hangUp = useRef<(() => void) | null>(null)
@@ -34,7 +37,7 @@ export function useLive(onDrafts: (drafts: HeardDraft[], reply: string) => void,
 
   const stop = useCallback(() => hangUp.current?.(), [])
 
-  const start = useCallback(async (today: string) => {
+  const start = useCallback(async (today: string, data: VoiceData) => {
     if (hangUp.current) return
     let over = false
     let socket: WebSocket | null = null
@@ -59,7 +62,7 @@ export function useLive(onDrafts: (drafts: HeardDraft[], reply: string) => void,
       return end('مقدرتش أفتح المايك. اسمح للتطبيق يستخدمه من إعدادات المتصفح')
     }
     if (over) return audio.close()
-    const session = await askLive(today)
+    const session = await askLive(today, data)
     if (over) return
     if (!session.token) return end(session.error)
 
@@ -97,7 +100,7 @@ export function useLive(onDrafts: (drafts: HeardDraft[], reply: string) => void,
       if (content?.turnComplete) fresh = true
       for (const call of m.toolCall?.functionCalls ?? []) {
         const ok = call.name === 'set_drafts' && Array.isArray(call.args?.drafts)
-        if (ok) handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''))
+        if (ok) handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''), session.demo)
         send({
           toolResponse: {
             functionResponses: [{ id: call.id, name: call.name, response: { output: ok ? 'shown' : 'invalid' } }],

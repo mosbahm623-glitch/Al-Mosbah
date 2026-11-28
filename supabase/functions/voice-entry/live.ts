@@ -1,16 +1,16 @@
-// The live call (trial only): the app talks to Google directly with a one-use token, so the real key never leaves here.
-// Everything the model is told is locked into the token, and it is only ever told the invented lists.
-import { ANSWER_SCHEMA, DEMO_CONTEXT, INSTRUCTIONS } from './prompt.ts'
+// The live call: the app talks to Google directly with a one-use token, so the real key never leaves here.
+// Everything the model is told is locked into the token. The caller picks the lists: invented ones in trial mode.
+import { ANSWER_SCHEMA, INSTRUCTIONS } from './prompt.ts'
 
 const CALL = `
 إنت دلوقتي في مكالمة صوتية مباشرة. اتكلم بالعامية المصرية وبجمل قصيرة جدًا.
 أول ما تفهم قيد أو تعديل أو إجابة، نادي set_drafts بالقايمة كاملة، وبعدها اسأل بصوتك عن أول حاجة ناقصة.
-انت مبتحفظش أي حاجة: متقولش إن القيد اتسجل أو اتحفظ.`
+انت مبتحفظش أي حاجة: متقولش إن القيد اتسجل أو اتحفظ. لما القيد يكمل قوله يقفل المكالمة ويراجع الكارت ويدوس حفظ.`
 
 const inMinutes = (n: number) => new Date(Date.now() + n * 60_000).toISOString()
 
-export function tokenRequest(model: string, today: string) {
-  const text = `${INSTRUCTIONS}\n${CALL}\nالبيانات:\n${JSON.stringify({ today, ...DEMO_CONTEXT })}`
+function tokenRequest(model: string, today: string, context: object) {
+  const text = `${INSTRUCTIONS}\n${CALL}\nالبيانات:\n${JSON.stringify({ today, ...context })}`
   return {
     uses: 1,
     expireTime: inMinutes(10),
@@ -31,11 +31,11 @@ export function tokenRequest(model: string, today: string) {
   }
 }
 
-export async function liveToken(model: string, key: string, today: string) {
+export async function liveToken(model: string, key: string, today: string, context: object) {
   const res = await fetch('https://generativelanguage.googleapis.com/v1beta/auth_tokens', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify(tokenRequest(model, today)),
+    body: JSON.stringify(tokenRequest(model, today, context)),
     signal: AbortSignal.timeout(15_000),
   }).catch((e) => {
     console.error('gemini live token', 'no answer', String(e))

@@ -55,3 +55,42 @@ for (const demo of [false, true]) {
     },
   )
 }
+
+test('a live call fills the cards and saves nothing', async ({ page }) => {
+  const sent = await mockApi(page, {})
+  await page.route('**/functions/v1/voice-entry', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ token: 'auth_tokens/x', model: 'live-model' }),
+    }),
+  )
+  const received: string[] = []
+  await page.routeWebSocket(/generativelanguage/, (socket) => {
+    socket.onMessage((raw) => {
+      const text = String(raw)
+      received.push(text)
+      if (text.includes('"setup"')) socket.send(JSON.stringify({ setupComplete: {} }))
+      if (text.includes('realtimeInput') && !received.some((m) => m.includes('asked'))) {
+        received.push('asked')
+        socket.send(
+          JSON.stringify({
+            toolCall: {
+              functionCalls: [{ id: '1', name: 'set_drafts', args: { reply: 'قيد واحد', drafts: [HEARD] } }],
+            },
+          }),
+        )
+      }
+    })
+  })
+  await signIn(page)
+  await page.goto('/#/voice-entry')
+  await page.getByRole('button', { name: /مكالمة لحظية/ }).click()
+  await expect(page.getByText('قيد واحد', { exact: true })).toBeVisible()
+  await expect.poll(() => received.some((m) => m.includes('toolResponse'))).toBe(true)
+  await expect(page.getByRole('button', { name: /حفظ/ })).toHaveCount(0)
+  await page.getByRole('button', { name: 'إنهاء المكالمة' }).click()
+  await expect(page.getByRole('button', { name: /مكالمة لحظية/ })).toBeVisible()
+  expect(sent.some((r) => r.method === 'POST' && r.path.endsWith('/entries'))).toBe(false)
+})

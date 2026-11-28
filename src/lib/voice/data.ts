@@ -88,12 +88,28 @@ export async function askVoice(
     body: { audio, today, drafts, context: contextOf(data) },
   })
   if (!res.error && res.data) return { answer: res.data, error: null }
-  const response = (res.error as { context?: Response } | null)?.context
+  return { answer: null, error: await messageOf(res.error, 'ما عرفتش أفهم التسجيل، اتأكد من النت وجرّب تاني') }
+}
+
+/** The function's own error code as a message to show. */
+async function messageOf(error: unknown, fallback: string) {
+  const response = (error as { context?: Response } | null)?.context
   const code = await response
     ?.json()
     .then((b: { error?: string }) => b.error ?? '')
     .catch(() => '')
-  return { answer: null, error: ERRORS[code ?? ''] ?? 'ما عرفتش أفهم التسجيل، اتأكد من النت وجرّب تاني' }
+  return ERRORS[code ?? ''] ?? fallback
+}
+
+/** A one-use pass for a live call (trial only: the server gives the model invented lists). */
+export async function askLive(today: string) {
+  const res = await supabase.functions.invoke<{ token?: string; model?: string }>('voice-entry', {
+    body: { mode: 'live', today },
+  })
+  const { token, model } = res.data ?? {}
+  if (!res.error && token && model) return { token, model, error: undefined }
+  const error = await messageOf(res.error, 'ما قدرتش أبدأ المكالمة، جرّب تاني')
+  return { token: undefined, model: undefined, error }
 }
 
 /** Is there already an entry (or custody payment) with the same money on the same day in the same place? */

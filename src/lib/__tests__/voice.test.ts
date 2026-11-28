@@ -1,3 +1,4 @@
+import { fromPcm, toPcm } from '../voice/pcm'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../supabase', () => ({ supabase: {} }))
@@ -88,5 +89,13 @@ describe('wav', () => {
     expect(view.getInt16(46, true)).toBe(32767)
     expect(view.getInt16(48, true)).toBe(-32768)
     expect(atob(toBase64(bytes)).length).toBe(50)
+  })
+})
+
+describe('live call audio', () => {
+  it('resamples to 16 kHz PCM and reads it back', () => {
+    const back = fromPcm(toPcm(new Float32Array(4800).fill(0.5), 48_000))
+    expect(back).toHaveLength(1600)
+    expect(back[800]).toBeCloseTo(0.5, 3)
   })
 })

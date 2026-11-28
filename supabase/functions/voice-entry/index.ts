@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { generate } from './gemini.ts'
+import { liveToken } from './live.ts'
 import { ANSWER_SCHEMA, DEMO_CONTEXT, INSTRUCTIONS } from './prompt.ts'
 
 const cors = {
@@ -32,6 +33,7 @@ function onlyDemoNames(draft: unknown) {
 
 // Turns a voice recording into draft entries. It never writes to the database: the person reviews and saves in the app.
 // Secrets: GEMINI_API_KEY (required) · VOICE_LIVE = "true" only once billing is on · GEMINI_MODEL (optional).
+// {mode: "live"} hands out a one-use token for the live call (GEMINI_LIVE_MODEL optional), always with invented lists.
 // While VOICE_LIVE is not "true" the real lists are never sent to Google: invented ones replace them here.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -57,11 +59,17 @@ Deno.serve(async (req) => {
   if (!key) return reply({ error: 'no_key' }, 503)
   const live = Deno.env.get('VOICE_LIVE') === 'true'
 
-  let body: { audio?: string; today?: string; context?: unknown; drafts?: unknown[] }
+  let body: { mode?: string; audio?: string; today?: string; context?: unknown; drafts?: unknown[] }
   try {
     body = await req.json()
   } catch {
     return reply({ error: 'bad_request' }, 400)
+  }
+  if (body.mode === 'live') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(body.today ?? '')) return reply({ error: 'bad_request' }, 400)
+    const model = Deno.env.get('GEMINI_LIVE_MODEL') || 'gemini-3.1-flash-live-preview'
+    const session = await liveToken(model, key, body.today!)
+    return reply(session, session.error ? (session.error === 'quota' ? 429 : 502) : 200)
   }
   if (typeof body.audio !== 'string' || !body.audio) return reply({ error: 'bad_request' }, 400)
   if (body.audio.length > MAX_AUDIO) return reply({ error: 'too_long' }, 413)

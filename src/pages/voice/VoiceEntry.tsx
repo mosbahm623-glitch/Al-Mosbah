@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Mic, Square } from 'lucide-react'
+import { Mic, Phone, PhoneOff, Square } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import { todayISO } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
 import { askVoice, fetchVoiceData, saveDraft, type VoiceData } from '../../lib/voice/data'
 import { toDrafts, toHeard, type Draft } from '../../lib/voice/drafts'
+import { useLive } from '../../lib/voice/useLive'
 import { useRecorder } from '../../lib/voice/useRecorder'
 import DraftCard from './DraftCard'
 import { useDuplicates } from './useDuplicates'
@@ -39,6 +40,14 @@ export default function VoiceEntry() {
   }
 
   const recorder = useRecorder((wav) => void understand(wav), setError)
+  // the call is a trial: its names are invented, so its cards can't be saved
+  const call = useLive((heard, said) => {
+    setDemo(true)
+    setReply(said)
+    setErrors({})
+    setDrafts((before) => toDrafts(heard, null, before, todayISO()))
+  }, setError)
+  const calling = call.state !== 'off'
   const remove = (id: string) => setDrafts((list) => list.filter((d) => d.id !== id))
 
   async function save(draft: Draft) {
@@ -52,7 +61,7 @@ export default function VoiceEntry() {
   }
 
   // the cards are frozen while a recording is being made or understood, so a spoken correction can't undo typing
-  const frozen = recorder.recording || thinking || saving !== null
+  const frozen = calling || recorder.recording || thinking || saving !== null
 
   return (
     <div className="page-stack quick-page">
@@ -67,12 +76,33 @@ export default function VoiceEntry() {
           type="button"
           className={recorder.recording ? 'btn btn-danger' : 'btn'}
           onClick={() => (recorder.recording ? recorder.stop() : void recorder.start())}
-          disabled={!data.data || thinking || saving !== null}
+          disabled={!data.data || thinking || calling || saving !== null}
         >
           {recorder.recording ? <Square size={20} aria-hidden="true" /> : <Mic size={20} aria-hidden="true" />}
           {recorder.recording ? `إيقاف (${recorder.seconds} ث)` : thinking ? 'بفهم كلامك...' : 'سجّل'}
         </button>
+        <button
+          type="button"
+          className={calling ? 'btn btn-danger' : 'btn'}
+          onClick={() => {
+            if (calling) return call.stop()
+            setError(null)
+            setReply('')
+            setDrafts([])
+            setDemo(true)
+            void call.start(todayISO())
+          }}
+          disabled={recorder.recording || thinking || saving !== null}
+        >
+          {calling ? <PhoneOff size={20} aria-hidden="true" /> : <Phone size={20} aria-hidden="true" />}
+          {call.state === 'connecting' ? 'بيتصل...' : calling ? 'إنهاء المكالمة' : 'مكالمة لحظية (تجربة)'}
+        </button>
       </div>
+      {call.state === 'on' && (
+        <p className="msg" role="status">
+          سامعك، اتكلم.{call.heard && ` «${call.heard}»`}
+        </p>
+      )}
       {data.failed && <p className="msg msg-error">مقدرناش نحمّل القوايم، جرّب تاني</p>}
       {error && <p className="msg msg-error">{error}</p>}
       {reply && (

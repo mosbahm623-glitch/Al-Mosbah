@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { generate } from './gemini.ts'
 import { ANSWER_SCHEMA, DEMO_CONTEXT, INSTRUCTIONS } from './prompt.ts'
 
 const cors = {
@@ -73,25 +74,18 @@ Deno.serve(async (req) => {
   })
   if (payload.length > MAX_CONTEXT) return reply({ error: 'too_long' }, 413)
 
-  const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash'
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({
+  const { res, failure } = await generate(
+    Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash',
+    key,
+    JSON.stringify({
       systemInstruction: { parts: [{ text: INSTRUCTIONS }] },
       contents: [
         { role: 'user', parts: [{ text: payload }, { inlineData: { mimeType: 'audio/wav', data: body.audio } }] },
       ],
       generationConfig: { responseMimeType: 'application/json', responseSchema: ANSWER_SCHEMA },
     }),
-    signal: AbortSignal.timeout(60_000),
-  }).catch(() => null)
-
-  if (!res) return reply({ error: 'ai_failed' }, 502)
-  if (!res.ok) {
-    console.error('gemini', res.status, (await res.text()).slice(0, 500))
-    return reply({ error: res.status === 429 ? 'quota' : 'ai_failed' }, res.status === 429 ? 429 : 502)
-  }
+  )
+  if (!res) return reply({ error: failure }, failure === 'quota' ? 429 : 502)
   try {
     const out = await res.json()
     const parts: { text?: string; thought?: boolean }[] = out.candidates[0].content.parts
@@ -103,7 +97,8 @@ Deno.serve(async (req) => {
     )
     if (!Array.isArray(answer.drafts)) throw new Error('shape')
     return reply({ demo: !live, reply: String(answer.reply ?? ''), drafts: answer.drafts.slice(0, 30) })
-  } catch {
+  } catch (e) {
+    console.error('gemini answer unreadable', String(e))
     return reply({ error: 'ai_failed' }, 502)
   }
 })

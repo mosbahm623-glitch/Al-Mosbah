@@ -11,6 +11,7 @@ import {
   HardHat,
   LayoutDashboard,
   Merge,
+  Mic,
   FolderKanban,
   Search,
   Upload,
@@ -39,6 +40,7 @@ export const NAV: NavGroup[] = [
     items: [
       { path: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard, module: 'dashboard' },
       { path: 'quick-entry', label: 'تسجيل قيد سريع', icon: PlusCircle, ownerOnly: true },
+      { path: 'voice-entry', label: 'التسجيل بالصوت', icon: Mic, adminOnly: true },
       { path: 'projects', label: 'المشاريع', icon: FolderKanban, module: 'projects' },
       { path: 'advances', label: 'العهد', icon: HandCoins, module: 'advances' },
       { path: 'banks', label: 'البنوك', icon: Landmark, module: 'banks' },

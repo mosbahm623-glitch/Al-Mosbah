@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { generate } from './gemini.ts'
-import { liveToken } from './live.ts'
+import { liveToken, OLD_MODEL } from './live.ts'
 import { ANSWER_SCHEMA, DEMO_CONTEXT, INSTRUCTIONS } from './prompt.ts'
 
 const cors = {
@@ -33,7 +33,7 @@ function onlyDemoNames(draft: unknown) {
 
 // Turns a voice recording into draft entries. It never writes to the database: the person reviews and saves in the app.
 // Secrets: GEMINI_API_KEY (required) · VOICE_LIVE = "true" only once billing is on · GEMINI_MODEL (optional).
-// {mode: "live"} hands out a one-use token for the live call (GEMINI_LIVE_MODEL optional).
+// {mode: "live"} hands out a one-use token for the live call (GEMINI_LIVE_MODEL optional); fallback: the older model.
 // While VOICE_LIVE is not "true" the real lists are never sent to Google: invented ones replace them here.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
@@ -53,13 +53,13 @@ Deno.serve(async (req) => {
   }
   if (!callerId) return reply({ error: 'unauthorized' }, 401)
   const { data: me } = await caller.from('profiles').select('role,is_active').eq('id', callerId).maybeSingle()
-  if (!me || me.role !== 'admin' || !me.is_active) return reply({ error: 'forbidden' }, 403)
+  if (!me || !['admin', 'owner'].includes(me.role) || !me.is_active) return reply({ error: 'forbidden' }, 403)
 
   const key = Deno.env.get('GEMINI_API_KEY')
   if (!key) return reply({ error: 'no_key' }, 503)
   const live = Deno.env.get('VOICE_LIVE') === 'true'
 
-  let body: { mode?: string; audio?: string; today?: string; context?: unknown; drafts?: unknown[] }
+  let body: { mode?: string; fallback?: boolean; audio?: string; today?: string; context?: unknown; drafts?: unknown[] }
   try {
     body = await req.json()
   } catch {
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
   }
   if (body.mode === 'live') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(body.today ?? '')) return reply({ error: 'bad_request' }, 400)
-    const model = Deno.env.get('GEMINI_LIVE_MODEL') || 'gemini-3.1-flash-live-preview'
+    const model = body.fallback ? OLD_MODEL : Deno.env.get('GEMINI_LIVE_MODEL') || 'gemini-3.8-live'
     const context = (live ? body.context : DEMO_CONTEXT) as object
     if (JSON.stringify(context ?? null).length > MAX_CONTEXT) return reply({ error: 'too_long' }, 413)
     const session = await liveToken(model, key, body.today!, context)

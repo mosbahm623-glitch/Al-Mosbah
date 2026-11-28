@@ -7,7 +7,7 @@ const MIC = `registerProcessor('mic', class extends AudioWorkletProcessor {
     if (input[0]) {
       this.chunk.push(input[0].slice())
       this.size += input[0].length
-      if (this.size >= sampleRate / 10) {
+      if (this.size >= sampleRate / 25) {
         const all = new Float32Array(this.size)
         this.chunk.reduce((at, part) => (all.set(part, at), at + part.length), 0)
         this.port.postMessage(all, [all.buffer])
@@ -19,7 +19,7 @@ const MIC = `registerProcessor('mic', class extends AudioWorkletProcessor {
   }
 })`
 
-/** Microphone in and the model's voice out. `listen` starts sending, a tenth of a second at a time. */
+/** Microphone in and the model's voice out. `listen` starts sending, 40ms at a time. */
 export async function openAudio() {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: true, noiseSuppression: true },
@@ -28,11 +28,14 @@ export async function openAudio() {
   const playing = new Set<AudioBufferSourceNode>()
   let next = 0
   let closed = false
+  // loaded while the call is still connecting, so the microphone starts the moment it opens
+  const url = URL.createObjectURL(new Blob([MIC], { type: 'text/javascript' }))
+  const loaded = context.audioWorklet.addModule(url).finally(() => URL.revokeObjectURL(url))
+  loaded.catch(() => undefined) // reported by `listen`
 
   return {
     async listen(send: (pcm: string) => void) {
-      const url = URL.createObjectURL(new Blob([MIC], { type: 'text/javascript' }))
-      await context.audioWorklet.addModule(url).finally(() => URL.revokeObjectURL(url))
+      await loaded
       await context.resume()
       if (closed) return
       const node = new AudioWorkletNode(context, 'mic')

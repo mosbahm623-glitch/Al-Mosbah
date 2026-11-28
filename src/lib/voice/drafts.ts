@@ -68,6 +68,10 @@ export const needsCategory = (t: DraftType) => t === 'expense' || t === 'refund'
 export const needsBank = (t: DraftType) => t !== 'custody_expense'
 export const needsCustody = (t: DraftType) => t === 'custody_expense' || t === 'custody_payment'
 
+/** An invoice photo (or «بدون فاتورة») and, on an expense, a contractor choice: custody expenses and all an owner's entries. */
+export const needsProof = (t: DraftType, owner: boolean) =>
+  t !== 'custody_payment' && (owner || t === 'custody_expense')
+
 /**
  * Turns what was heard into cards. With `lists` null (trial mode: the names are invented) they are shown as heard.
  * A card that already exists (same ref) keeps its id and the photos picked on it.
@@ -117,7 +121,7 @@ export const toHeard = (d: Draft): HeardDraft => ({
 })
 
 /** What still stops this card from being saved (same rules as the entry forms); empty when it is ready. */
-export function missingOf(d: Draft): string[] {
+export function missingOf(d: Draft, owner = false): string[] {
   const missing: string[] = []
   const value = Number(d.amount)
   if (needsCustody(d.type) && !d.custody) missing.push('العهدة')
@@ -127,8 +131,8 @@ export function missingOf(d: Draft): string[] {
   if (needsBank(d.type) && !d.bank) missing.push('البنك')
   if (!Number.isFinite(value) || value <= 0) missing.push('المبلغ')
   if (!d.date) missing.push('التاريخ')
-  if (d.type === 'custody_expense') {
-    if (!d.contractor && !d.noContractor) missing.push('المقاول أو «بدون مقاول»')
+  if (needsProof(d.type, owner)) {
+    if (needsCategory(d.type) && !d.contractor && !d.noContractor) missing.push('المقاول أو «بدون مقاول»')
     if (d.files.length === 0 && !d.noInvoice) missing.push('الفاتورة أو «بدون فاتورة»')
   }
   return missing

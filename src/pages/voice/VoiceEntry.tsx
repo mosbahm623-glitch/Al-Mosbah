@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Phone, PhoneOff } from 'lucide-react'
+import { useAuth } from '../../auth/AuthProvider'
 import PageHead from '../../components/PageHead'
 import { todayISO } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
@@ -12,9 +13,12 @@ import DraftCard from './DraftCard'
 import ReportOffer from './ReportOffer'
 import { useDuplicates } from './useDuplicates'
 
-/** Admin only: say the entries, check the cards, save. Nothing is saved by itself. */
+/** Admin and owner: say the entries, check the cards, save. Nothing is saved by itself. */
 export default function VoiceEntry() {
-  const data = useAsync<VoiceData>(fetchVoiceData)
+  const { isOwner, profile } = useAuth()
+  const ownerId = isOwner ? (profile?.id ?? null) : null
+  const load = useCallback(() => fetchVoiceData(ownerId), [ownerId])
+  const data = useAsync<VoiceData>(load)
   const [drafts, setDrafts] = useState<Draft[]>([])
   const [demo, setDemo] = useState(false)
   const [reply, setReply] = useState('')

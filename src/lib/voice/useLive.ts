@@ -60,62 +60,82 @@ export function useLive(
     hangUp.current = () => end()
     setState('connecting')
     setHeard('')
-    try {
-      audio = await openAudio()
-    } catch {
-      return end('مقدرتش أفتح المايك. اسمح للتطبيق يستخدمه من إعدادات المتصفح')
-    }
-    if (over) return audio.close()
-    const session = await askLive(today, data)
+    // the microphone and the pass are fetched together: the call starts as soon as the slower of the two is done
+    const opening = openAudio().then(
+      (opened) => (over ? opened.close() : (audio = opened), true),
+      () => false,
+    )
+    const asking = askLive(today, data)
+    if (!(await opening)) return end('مقدرتش أفتح المايك. اسمح للتطبيق يستخدمه من إعدادات المتصفح')
+    const first = await asking
     if (over) return
-    if (!session.token) return end(session.error)
-
-    socket = new WebSocket(`${ADDRESS}?access_token=${encodeURIComponent(session.token)}`)
-    socket.binaryType = 'arraybuffer'
-    const send = (message: unknown) => socket?.readyState === WebSocket.OPEN && socket.send(JSON.stringify(message))
-    const connect = setTimeout(() => end('المكالمة ما بدأتش، جرّب تاني'), CONNECT_MS)
-    timers.push(connect)
     // a new sentence replaces the one shown, once the model finished answering the old one
     let fresh = true
 
-    socket.onopen = () => send({ setup: { model: `models/${session.model}` } })
-    socket.onclose = (e) => end(`المكالمة اتقطعت (${e.code}${e.reason ? `: ${e.reason}` : ''})`)
-    socket.onmessage = (e: MessageEvent<ArrayBuffer | string>) => {
-      const m = JSON.parse(typeof e.data === 'string' ? e.data : new TextDecoder().decode(e.data)) as Message
-      if (m.setupComplete) {
-        clearTimeout(connect)
-        timers.push(setTimeout(() => end('المكالمة وصلت 5 دقايق وقفلت. ابدأ واحدة جديدة'), MAX_CALL_MS))
-        audio
-          ?.listen((data) => send({ realtimeInput: { audio: { data, mimeType: 'audio/pcm;rate=16000' } } }))
-          .then(
-            () => !over && setState('on'),
-            () => end('المايك ما اشتغلش، جرّب تاني'),
-          )
+    const connect = (session: typeof first, mayFallBack: boolean) => {
+      if (!session.token) return end(session.error)
+      const ws = new WebSocket(`${ADDRESS}?access_token=${encodeURIComponent(session.token)}`)
+      socket = ws
+      ws.binaryType = 'arraybuffer'
+      const send = (message: unknown) => ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(message))
+      let ready = false
+      /** The call never opened: try the older model once, then give up. */
+      const failed = async (message: string) => {
+        clearTimeout(waiting)
+        ws.onclose = ws.onmessage = null
+        ws.close()
+        if (!mayFallBack) return end(message)
+        const again = await askLive(today, data, true)
+        if (!over) connect(again, false)
       }
-      const content = m.serverContent
-      if (content?.interrupted) audio?.hush()
-      content?.modelTurn?.parts?.forEach((p) => p.inlineData?.data && audio?.play(p.inlineData.data))
-      const text = content?.inputTranscription?.text
-      if (text) {
-        const restart = fresh
-        fresh = false
-        setHeard((before) => (restart ? text : before + text))
+      const waiting = setTimeout(() => void failed('المكالمة ما بدأتش، جرّب تاني'), CONNECT_MS)
+      timers.push(waiting)
+
+      ws.onopen = () => send({ setup: { model: `models/${session.model}` } })
+      ws.onclose = (e) => {
+        const message = `المكالمة اتقطعت (${e.code}${e.reason ? `: ${e.reason}` : ''})`
+        if (ready) end(message)
+        else if (!over) void failed(message)
       }
-      if (content?.turnComplete) fresh = true
-      for (const call of m.toolCall?.functionCalls ?? []) {
-        const cards = call.name === 'set_drafts' && Array.isArray(call.args?.drafts)
-        const report = call.name === 'open_report' && Boolean(call.args?.kind)
-        if (cards)
-          handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''), session.demo)
-        if (report) handlers.current.onReport(call.args!, session.demo)
-        const ok = cards || report
-        send({
-          toolResponse: {
-            functionResponses: [{ id: call.id, name: call.name, response: { output: ok ? 'shown' : 'invalid' } }],
-          },
-        })
+      ws.onmessage = (e: MessageEvent<ArrayBuffer | string>) => {
+        const m = JSON.parse(typeof e.data === 'string' ? e.data : new TextDecoder().decode(e.data)) as Message
+        if (m.setupComplete) {
+          ready = true
+          clearTimeout(waiting)
+          timers.push(setTimeout(() => end('المكالمة وصلت 5 دقايق وقفلت. ابدأ واحدة جديدة'), MAX_CALL_MS))
+          audio
+            ?.listen((data) => send({ realtimeInput: { audio: { data, mimeType: 'audio/pcm;rate=16000' } } }))
+            .then(
+              () => !over && setState('on'),
+              () => end('المايك ما اشتغلش، جرّب تاني'),
+            )
+        }
+        const content = m.serverContent
+        if (content?.interrupted) audio?.hush()
+        content?.modelTurn?.parts?.forEach((p) => p.inlineData?.data && audio?.play(p.inlineData.data))
+        const text = content?.inputTranscription?.text
+        if (text) {
+          const restart = fresh
+          fresh = false
+          setHeard((before) => (restart ? text : before + text))
+        }
+        if (content?.turnComplete) fresh = true
+        for (const call of m.toolCall?.functionCalls ?? []) {
+          const cards = call.name === 'set_drafts' && Array.isArray(call.args?.drafts)
+          const report = call.name === 'open_report' && Boolean(call.args?.kind)
+          if (cards)
+            handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''), session.demo)
+          if (report) handlers.current.onReport(call.args!, session.demo)
+          const ok = cards || report
+          send({
+            toolResponse: {
+              functionResponses: [{ id: call.id, name: call.name, response: { output: ok ? 'shown' : 'invalid' } }],
+            },
+          })
+        }
       }
     }
+    connect(first, true)
   }, [])
 
   useEffect(() => () => stop(), [stop])

@@ -77,6 +77,8 @@ export type Sent = { method: string; path: string; body: unknown }
 type Options = {
   /** who is signed in: the admin (default), or an ordinary user with these page permissions */
   user?: { module: string; level: 'view' | 'edit' }[]
+  /** the signed in staff member is an owner, not the admin */
+  owner?: boolean
   /** extra answers for reads: return a value to answer, or undefined to leave it to the defaults */
   answer?: (path: string, search: string) => unknown
   /** other accounts shown in the users list */
@@ -139,7 +141,11 @@ const json = (route: Route, data: unknown, status = 200) =>
 /** Fakes the whole database API. Returns every write the app sent so a test can check it. */
 export async function mockApi(page: Page, options: Options = {}): Promise<Sent[]> {
   const sent: Sent[] = []
-  const PROFILE = options.user ? { ...ADMIN_PROFILE, role: 'user' } : ADMIN_PROFILE
+  const PROFILE = options.owner
+    ? { ...ADMIN_PROFILE, role: 'owner' }
+    : options.user
+      ? { ...ADMIN_PROFILE, role: 'user' }
+      : ADMIN_PROFILE
   await page.route('https://mock.supabase.co/**', async (route) => {
     const req = route.request()
     const url = new URL(req.url())

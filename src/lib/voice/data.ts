@@ -6,6 +6,7 @@ import { STATUS } from '../core/status'
 import { fetchSummaries, pickableProjects } from '../projects/projects'
 import { saveEntry, type SaveError } from '../offline/entrySave'
 import { needsBank, needsCategory, type Draft, type HeardDraft, type Lists } from './drafts'
+import type { HeardReport } from './report'
 
 type Hint = { item: string; category: string; contractor: string | null }
 export type VoiceData = Lists & { history: Hint[] }
@@ -68,7 +69,7 @@ export const contextOf = (d: VoiceData) => ({
   history: d.history,
 })
 
-export type Answer = { demo: boolean; reply: string; drafts: HeardDraft[] }
+export type Answer = { demo: boolean; reply: string; drafts: HeardDraft[]; report?: HeardReport }
 
 const ERRORS: Record<string, string> = {
   no_key: 'مفتاح Gemini لسه ما اتحطش في أسرار Supabase',

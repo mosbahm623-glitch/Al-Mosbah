@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { askLive, type VoiceData } from './data'
 import type { HeardDraft } from './drafts'
 import { openAudio } from './liveAudio'
+import type { HeardReport } from './report'
 
 const ADDRESS =
   'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained'
@@ -17,7 +18,9 @@ type Message = {
     interrupted?: boolean
     turnComplete?: boolean
   }
-  toolCall?: { functionCalls?: { id: string; name: string; args?: { reply?: string; drafts?: HeardDraft[] } }[] }
+  toolCall?: {
+    functionCalls?: { id: string; name: string; args?: HeardReport & { reply?: string; drafts?: HeardDraft[] } }[]
+  }
 }
 
 export type CallState = 'off' | 'connecting' | 'on'
@@ -25,14 +28,15 @@ export type CallState = 'off' | 'connecting' | 'on'
 /** A live spoken conversation that fills the cards as it goes. It never saves anything. */
 export function useLive(
   onDrafts: (drafts: HeardDraft[], reply: string, demo: boolean) => void,
+  onReport: (report: HeardReport, demo: boolean) => void,
   onFail: (message: string) => void,
 ) {
   const [state, setState] = useState<CallState>('off')
   const [heard, setHeard] = useState('')
   const hangUp = useRef<(() => void) | null>(null)
-  const handlers = useRef({ onDrafts, onFail })
+  const handlers = useRef({ onDrafts, onReport, onFail })
   useEffect(() => {
-    handlers.current = { onDrafts, onFail }
+    handlers.current = { onDrafts, onReport, onFail }
   })
 
   const stop = useCallback(() => hangUp.current?.(), [])
@@ -99,8 +103,12 @@ export function useLive(
       }
       if (content?.turnComplete) fresh = true
       for (const call of m.toolCall?.functionCalls ?? []) {
-        const ok = call.name === 'set_drafts' && Array.isArray(call.args?.drafts)
-        if (ok) handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''), session.demo)
+        const cards = call.name === 'set_drafts' && Array.isArray(call.args?.drafts)
+        const report = call.name === 'open_report' && Boolean(call.args?.kind)
+        if (cards)
+          handlers.current.onDrafts(call.args!.drafts!.slice(0, 30), String(call.args!.reply ?? ''), session.demo)
+        if (report) handlers.current.onReport(call.args!, session.demo)
+        const ok = cards || report
         send({
           toolResponse: {
             functionResponses: [{ id: call.id, name: call.name, response: { output: ok ? 'shown' : 'invalid' } }],

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import PageHead from '../../components/PageHead'
 import MergeCategoriesButton from './MergeCategoriesButton'
-import { TYPE_LABEL, todayISO, type ProjectType } from '../../lib/core/format'
+import { todayISO, type ProjectType } from '../../lib/core/format'
 import { useAsync } from '../../lib/core/useAsync'
 import { fetchSummaries, type ProjectSummary } from '../../lib/projects/projects'
 import { fetchAdvanceSummaries, type AdvanceSummary } from '../../lib/advances/advances'
@@ -11,6 +11,8 @@ import { type PendingStatus } from './PendingReport'
 import ReportPreview from './ReportPreview'
 import { FILTERS, GROUPS, hasColumns, hasPeriod, type ReportType } from './reportTypes'
 import ReportOptions from './ReportOptions'
+import ReportChoices from './ReportChoices'
+import { useReportPreset } from '../../lib/reports/preset'
 import { pickerSelect } from './pickerSelect'
 import ReportFilters from '../../components/ReportFilters'
 import { fetchCategories, type Category } from '../../lib/entries/catalog'
@@ -53,6 +55,20 @@ export default function Reports() {
   const [parts, setParts] = useState({ given: true, spent: true, returned: true })
   // nothing is drawn until "عرض التقرير" is pressed; changing any choice hides it again
   const [shown, setShown] = useState<{ key: string; n: number } | null>(null)
+
+  // a report asked for from another page (by voice) is filled in here and shown as soon as its choices are loaded
+  const [asked, setAsked] = useState(false)
+  useReportPreset((p) => {
+    setType(p.type)
+    setDay(p.from || todayISO())
+    setFrom(p.from)
+    setTo(p.to)
+    setFilterAll(NO_FILTER)
+    const picks = { project: setProjectId, period: setProjectId, advance: setAdvanceId, bank: setBankId }
+    if (p.type === 'contractor') setContractorId(p.id)
+    else if (p.type !== 'journal') picks[p.type](p.id)
+    setAsked(true)
+  })
 
   // nothing is picked for the person: a report of a project / custody / contractor / bank is asked for by choosing it
   // with a project chosen, only the contractors who worked on it are offered
@@ -124,6 +140,10 @@ export default function Reports() {
   ])
   const visible = shown?.key === key && Boolean(target) && rangeOk && partsOk
   const cols = { withContractor, withBank, withNotes, withEnteredBy }
+  if (asked && target && rangeOk) {
+    setAsked(false)
+    setShown({ key, n: (shown?.n ?? 0) + 1 })
+  }
   const n = shown?.n ?? 0
 
   const projectChoices = projects.data?.map((p) => ({ id: p.id, name: p.name }))
@@ -210,26 +230,13 @@ export default function Reports() {
             )}
           {type === 'bank' && pickerSelect('البنك', pickedBank, setBankId, bankChoices, banks.loading, 'مفيش بنوك')}
 
-          {type === 'category' && (
-            <label className="field">
-              نوع المشاريع
-              <select value={kindFilter} onChange={(e) => setKindFilter(e.target.value as 'all' | ProjectType)}>
-                <option value="all">كل الأنواع</option>
-                <option value="finishing">{TYPE_LABEL.finishing}</option>
-                <option value="furnishing">{TYPE_LABEL.furnishing}</option>
-              </select>
-            </label>
-          )}
-          {type === 'budget' && (
-            <label className="field">
-              المشاريع
-              <select value={budgetMode} onChange={(e) => setBudgetMode(e.target.value as BudgetMode)}>
-                <option value="all">كل المشاريع اللي ليها ميزانية</option>
-                <option value="near">اللي قربت من الميزانية (80% أو أكتر)</option>
-                <option value="over">اللي تجاوزت الميزانية</option>
-              </select>
-            </label>
-          )}
+          <ReportChoices
+            type={type}
+            kindFilter={kindFilter}
+            setKindFilter={setKindFilter}
+            budgetMode={budgetMode}
+            setBudgetMode={setBudgetMode}
+          />
           {type === 'pending' && (
             <label className="field">
               الحالة

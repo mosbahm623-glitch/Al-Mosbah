@@ -6,9 +6,11 @@ import { useAsync } from '../../lib/core/useAsync'
 import { useSubmitGuard } from '../../lib/core/useSubmitGuard'
 import { askVoice, fetchVoiceData, saveDraft, type VoiceData } from '../../lib/voice/data'
 import { toDrafts, toHeard, type Draft } from '../../lib/voice/drafts'
+import { toReport, type VoiceReport } from '../../lib/voice/report'
 import { useLive } from '../../lib/voice/useLive'
 import { useRecorder } from '../../lib/voice/useRecorder'
 import DraftCard from './DraftCard'
+import ReportOffer from './ReportOffer'
 import { useDuplicates } from './useDuplicates'
 
 /** Admin only: say the entries, check the cards, save. Nothing is saved by itself. */
@@ -17,6 +19,7 @@ export default function VoiceEntry() {
   const [drafts, setDrafts] = useState<Draft[]>([])
   const [demo, setDemo] = useState(false)
   const [reply, setReply] = useState('')
+  const [report, setReport] = useState<VoiceReport | null>(null)
   const [done, setDone] = useState<string[]>([])
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
@@ -29,6 +32,7 @@ export default function VoiceEntry() {
     if (!data.data) return
     setThinking(true)
     setError(null)
+    setReport(null)
     const today = todayISO()
     const r = await askVoice(audio, data.data, drafts.map(toHeard), today)
     setThinking(false)
@@ -36,20 +40,31 @@ export default function VoiceEntry() {
     setDemo(r.answer.demo)
     setReply(r.answer.reply)
     setErrors({})
+    const asked = r.answer.report?.kind ? r.answer.report : null
+    if (asked) setReport(toReport(asked, data.data))
+    // asking for a report must never wipe the cards
+    if (asked && r.answer.drafts.length === 0) return
     setDrafts(toDrafts(r.answer.drafts, r.answer.demo ? null : data.data, drafts, today))
   }
 
   const recorder = useRecorder((wav) => void understand(wav), setError)
   // the model sends the call's whole list each time; cards that were there before the call stay as they are
   const beforeCall = useRef<Draft[]>([])
-  const call = useLive((heard, said, trial) => {
-    if (!data.data) return
-    const added = toDrafts(heard, trial ? null : data.data, [], todayISO())
-    setDemo(trial)
-    setReply(said)
-    setErrors({})
-    setDrafts([...(trial ? [] : beforeCall.current), ...added])
-  }, setError)
+  const offer = (asked: Parameters<typeof toReport>[0], trial: boolean) => {
+    if (data.data && !trial) setReport(toReport(asked, data.data))
+  }
+  const call = useLive(
+    (heard, said, trial) => {
+      if (!data.data) return
+      const added = toDrafts(heard, trial ? null : data.data, [], todayISO())
+      setDemo(trial)
+      setReply(said)
+      setErrors({})
+      setDrafts([...(trial ? [] : beforeCall.current), ...added])
+    },
+    offer,
+    setError,
+  )
   const calling = call.state !== 'off'
   const remove = (id: string) => setDrafts((list) => list.filter((d) => d.id !== id))
 
@@ -68,7 +83,7 @@ export default function VoiceEntry() {
 
   return (
     <div className="page-stack quick-page">
-      <PageHead title="التسجيل بالصوت" note="قول القيود، راجعها، واحفظ. للتصحيح سجّل تاني: «لأ، المبلغ ٦٠٠٠»." />
+      <PageHead title="التسجيل بالصوت" note="قول القيود، راجعها، واحفظ. أو اطلب تقرير: «كشف حساب بنك كذا»." />
       {demo && (
         <p className="msg msg-error" role="status">
           وضع تجربة: الأسماء وهمية ومفيش حفظ. متقولش بيانات حقيقية.
@@ -92,6 +107,7 @@ export default function VoiceEntry() {
             if (!data.data) return
             setError(null)
             setReply('')
+            setReport(null)
             beforeCall.current = drafts
             void call.start(todayISO(), data.data)
           }}
@@ -113,6 +129,7 @@ export default function VoiceEntry() {
           {reply}
         </p>
       )}
+      {report && <ReportOffer report={report} onOpen={call.stop} />}
       {done.map((note, i) => (
         <p className="msg msg-ok" key={i}>
           {note}

@@ -107,7 +107,12 @@ Deno.serve(async (req) => {
         .join(''),
     )
     if (!Array.isArray(answer.drafts)) throw new Error('shape')
-    return reply({ demo: !live, reply: String(answer.reply ?? ''), drafts: answer.drafts.slice(0, 30) })
+    return reply({
+      demo: !live,
+      reply: String(answer.reply ?? ''),
+      drafts: answer.drafts.slice(0, 30),
+      report: live ? answer.report : undefined,
+    })
   } catch (e) {
     console.error('gemini answer unreadable', String(e))
     return reply({ error: 'ai_failed' }, 502)

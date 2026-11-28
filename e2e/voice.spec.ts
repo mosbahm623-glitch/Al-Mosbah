@@ -101,3 +101,38 @@ for (const demo of [false, true]) {
     await expect.poll(saved).toBe(true)
   })
 }
+
+test('a report asked for by voice opens ready on the reports page', async ({ page }) => {
+  const bank = { id: '99999999-9999-4999-8999-999999999991', name: 'CIB' }
+  const answer = (path: string) => {
+    if (path.endsWith('/bank_accounts')) return [bank]
+    if (path.endsWith('/rpc/bank_summaries')) return [{ ...bank, opening_balance: 0, balance: 0 }]
+    return undefined
+  }
+  await mockApi(page, { answer })
+  await page.route('**/functions/v1/voice-entry', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({
+        demo: false,
+        reply: 'جهزته',
+        drafts: [],
+        report: { kind: 'bank', name: 'CIB', from: '2026-11-01' },
+      }),
+    }),
+  )
+  await signIn(page)
+  await page.goto('/#/voice-entry')
+  await page.getByRole('button', { name: 'سجّل' }).click()
+  await page.waitForTimeout(1200)
+  await page.getByRole('button', { name: /إيقاف/ }).click()
+  await page.getByRole('button', { name: /افتح كشف حساب بنك: CIB/ }).click()
+  const form = page.getByRole('region', { name: 'خيارات التقرير' })
+  await expect(form.getByLabel('نوع التقرير')).toHaveValue('bank')
+  await expect(form.getByLabel('من تاريخ')).toHaveValue('2026-11-01')
+  // the statement is drawn without pressing "عرض التقرير"
+  await expect(page.locator('.reports-preview').getByText('CIB').first()).toBeVisible()
+  await page.screenshot({ path: 'test-results/voice-report.png', fullPage: true })
+})

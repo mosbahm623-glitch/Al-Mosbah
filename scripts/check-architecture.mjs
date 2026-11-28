@@ -33,7 +33,7 @@ export const LIB_DEPENDENCIES = {
   reports: ['core', 'projects'],
   export: ['core', 'entries', 'projects'],
   offline: ['core', 'entries', 'net'],
-  voice: ['core', 'entries', 'advances', 'projects', 'offline'],
+  voice: ['core', 'entries', 'advances', 'projects', 'offline', 'reports'],
 }
 
 export function listSourceFiles(dir) {

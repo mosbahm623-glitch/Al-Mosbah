@@ -6,6 +6,7 @@ vi.mock('../supabase', () => ({ supabase: {} }))
 import { contextOf, hintsOf } from '../voice/data'
 import { missingOf, toDrafts, toHeard, type Lists } from '../voice/drafts'
 import { encodeWav, toBase64 } from '../voice/wav'
+import { toReport } from '../voice/report'
 
 const lists: Lists = {
   projects: [{ id: 'p1', name: 'فيلا 50' }],
@@ -97,5 +98,26 @@ describe('live call audio', () => {
     const back = fromPcm(toPcm(new Float32Array(4800).fill(0.5), 48_000))
     expect(back).toHaveLength(1600)
     expect(back[800]).toBeCloseTo(0.5, 3)
+  })
+})
+
+describe('reports by voice', () => {
+  const lists: Lists = {
+    projects: [{ id: 'p', name: 'فيلا' }],
+    categories: [],
+    contractors: [],
+    banks: [],
+    custodies: [{ id: 'a', name: 'أحمد' }],
+  }
+  it('matches names, and a dated project report is a period report', () => {
+    expect(toReport({ kind: 'project', name: 'فيلا' }, lists).preset).toMatchObject({ type: 'project', id: 'p' })
+    expect(
+      toReport({ kind: 'project', name: 'فيلا', from: '2026-11-30', to: '2026-11-01' }, lists).preset,
+    ).toMatchObject({ type: 'period', from: '2026-11-01', to: '2026-11-30' })
+    expect(toReport({ kind: 'custody', name: 'أحمد' }, lists).preset).toMatchObject({ type: 'advance', id: 'a' })
+  })
+  it('offers nothing for an unknown name or kind', () => {
+    expect(toReport({ kind: 'bank', name: 'x' }, lists).preset).toBeNull()
+    expect(toReport({ kind: 'salary' }, lists).preset).toBeNull()
   })
 })

@@ -101,15 +101,15 @@ async function messageOf(error: unknown, fallback: string) {
   return ERRORS[code ?? ''] ?? fallback
 }
 
-/** A one-use pass for a live call (trial only: the server gives the model invented lists). */
-export async function askLive(today: string) {
-  const res = await supabase.functions.invoke<{ token?: string; model?: string }>('voice-entry', {
-    body: { mode: 'live', today },
+/** A one-use pass for a live call. `demo` unless the server said otherwise: invented names, nothing to save. */
+export async function askLive(today: string, data: VoiceData) {
+  const res = await supabase.functions.invoke<{ token?: string; model?: string; demo?: boolean }>('voice-entry', {
+    body: { mode: 'live', today, context: contextOf(data) },
   })
-  const { token, model } = res.data ?? {}
-  if (!res.error && token && model) return { token, model, error: undefined }
+  const { token, model, demo } = res.data ?? {}
+  if (!res.error && token && model) return { token, model, demo: demo !== false, error: undefined }
   const error = await messageOf(res.error, 'ما قدرتش أبدأ المكالمة، جرّب تاني')
-  return { token: undefined, model: undefined, error }
+  return { token: undefined, model: undefined, demo: true, error }
 }
 
 /** Is there already an entry (or custody payment) with the same money on the same day in the same place? */

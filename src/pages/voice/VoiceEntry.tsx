@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Mic, Phone, PhoneOff, Square } from 'lucide-react'
 import PageHead from '../../components/PageHead'
 import { todayISO } from '../../lib/core/format'
@@ -40,12 +40,15 @@ export default function VoiceEntry() {
   }
 
   const recorder = useRecorder((wav) => void understand(wav), setError)
-  // the call is a trial: its names are invented, so its cards can't be saved
-  const call = useLive((heard, said) => {
-    setDemo(true)
+  // the model sends the call's whole list each time; cards that were there before the call stay as they are
+  const beforeCall = useRef<Draft[]>([])
+  const call = useLive((heard, said, trial) => {
+    if (!data.data) return
+    const added = toDrafts(heard, trial ? null : data.data, [], todayISO())
+    setDemo(trial)
     setReply(said)
     setErrors({})
-    setDrafts((before) => toDrafts(heard, null, before, todayISO()))
+    setDrafts([...(trial ? [] : beforeCall.current), ...added])
   }, setError)
   const calling = call.state !== 'off'
   const remove = (id: string) => setDrafts((list) => list.filter((d) => d.id !== id))
@@ -86,21 +89,21 @@ export default function VoiceEntry() {
           className={calling ? 'btn btn-danger' : 'btn'}
           onClick={() => {
             if (calling) return call.stop()
+            if (!data.data) return
             setError(null)
             setReply('')
-            setDrafts([])
-            setDemo(true)
-            void call.start(todayISO())
+            beforeCall.current = drafts
+            void call.start(todayISO(), data.data)
           }}
-          disabled={recorder.recording || thinking || saving !== null}
+          disabled={!data.data || recorder.recording || thinking || saving !== null}
         >
           {calling ? <PhoneOff size={20} aria-hidden="true" /> : <Phone size={20} aria-hidden="true" />}
-          {call.state === 'connecting' ? 'بيتصل...' : calling ? 'إنهاء المكالمة' : 'مكالمة لحظية (تجربة)'}
+          {call.state === 'connecting' ? 'بيتصل...' : calling ? 'إنهاء المكالمة' : 'مكالمة لحظية'}
         </button>
       </div>
       {call.state === 'on' && (
         <p className="msg" role="status">
-          سامعك، اتكلم.{call.heard && ` «${call.heard}»`}
+          سامعك، اتكلم. وبعد ما تخلص اقفل المكالمة وراجع الكروت.{call.heard && ` «${call.heard}»`}
         </p>
       )}
       {data.failed && <p className="msg msg-error">مقدرناش نحمّل القوايم، جرّب تاني</p>}

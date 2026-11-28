@@ -4,6 +4,7 @@ import { ANSWER_SCHEMA, INSTRUCTIONS, REPORT_SCHEMA } from './prompt.ts'
 
 const CALL = `
 إنت دلوقتي في مكالمة صوتية مباشرة. اتكلم بالعامية المصرية وبجمل قصيرة جدًا.
+خلي ردك جملة واحدة، وفي set_drafts ابعت الحقول اللي ليها قيمة بس.
 أول ما تفهم قيد أو تعديل أو إجابة، نادي set_drafts بالقايمة كاملة، وبعدها اسأل بصوتك عن أول حاجة ناقصة.
 انت مبتحفظش أي حاجة: متقولش إن القيد اتسجل أو اتحفظ. لما القيد يكمل قوله يقفل المكالمة ويراجع الكارت ويدوس حفظ.`
 
@@ -16,8 +17,15 @@ const DRAFTS_SCHEMA = { ...ANSWER_SCHEMA, properties: DRAFT_FIELDS }
 
 const inMinutes = (n: number) => new Date(Date.now() + n * 60_000).toISOString()
 
+/** The older live model: kept as the way back when the newer one doesn't open a call. */
+export const OLD_MODEL = 'gemini-3.1-flash-live-preview'
+/** How long a silence ends the person's turn (Google's own default is about 800ms, and under 500 cuts sentences). */
+const SILENCE_MS = 500
+
 function tokenRequest(model: string, today: string, context: object) {
   const text = `${INSTRUCTIONS}\n${CALL}${REPORT_CALL}\nالبيانات:\n${JSON.stringify({ today, ...context })}`
+  // newer models call functions without waiting unless told to; the app answers them one at a time
+  const behavior = model === OLD_MODEL ? {} : { behavior: 'BLOCKING' }
   return {
     uses: 1,
     expireTime: inMinutes(10),
@@ -29,11 +37,17 @@ function tokenRequest(model: string, today: string, context: object) {
       tools: [
         {
           functionDeclarations: [
-            { name: 'set_drafts', description: 'يعرض كروت القيود على الشاشة', parameters: DRAFTS_SCHEMA },
-            { name: 'open_report', description: 'يعرض زرار يفتح التقرير المطلوب', parameters: REPORT_SCHEMA },
+            { ...behavior, name: 'set_drafts', description: 'يعرض كروت القيود على الشاشة', parameters: DRAFTS_SCHEMA },
+            {
+              ...behavior,
+              name: 'open_report',
+              description: 'يعرض زرار يفتح التقرير المطلوب',
+              parameters: REPORT_SCHEMA,
+            },
           ],
         },
       ],
+      realtimeInputConfig: { automaticActivityDetection: { silenceDurationMs: SILENCE_MS } },
       inputAudioTranscription: {},
     },
   }

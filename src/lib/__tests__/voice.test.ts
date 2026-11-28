@@ -5,7 +5,6 @@ vi.mock('../supabase', () => ({ supabase: {} }))
 
 import { contextOf, hintsOf } from '../voice/data'
 import { missingOf, toDrafts, toHeard, type Lists } from '../voice/drafts'
-import { encodeWav, toBase64 } from '../voice/wav'
 import { toReport } from '../voice/report'
 
 const lists: Lists = {
@@ -46,6 +45,20 @@ describe('voice drafts', () => {
     expect(missingOf({ ...d, noContractor: true, noInvoice: true })).toEqual([])
   })
 
+  it('asks an owner for contractor and invoice choices on his entries, not on a custody payment', () => {
+    const [d] = toDrafts([heard], lists, [], 'x')
+    expect(missingOf(d, true)).toEqual(['المقاول أو «بدون مقاول»', 'الفاتورة أو «بدون فاتورة»'])
+    const [income] = toDrafts([{ ...heard, type: 'income' }], lists, [], 'x')
+    expect(missingOf(income, true)).toEqual(['الفاتورة أو «بدون فاتورة»'])
+    const [paid] = toDrafts(
+      [{ type: 'custody_payment', custody: 'مهندس علي', bank: 'CIB', amount: 100, date: '2026-11-28' }],
+      lists,
+      [],
+      'x',
+    )
+    expect(missingOf(paid, true)).toEqual([])
+  })
+
   it('needs only custody, bank and amount for a custody payment', () => {
     const [d] = toDrafts(
       [{ type: 'custody_payment', custody: 'مهندس علي', bank: 'CIB', amount: 100, date: '2026-11-28' }],
@@ -69,7 +82,7 @@ describe('voice drafts', () => {
 
 describe('voice context', () => {
   it('sends names only', () => {
-    expect(JSON.stringify(contextOf({ ...lists, history: [] }))).not.toMatch(/p1|b1|a1|k1|c1|i1/)
+    expect(JSON.stringify(contextOf({ ...lists, history: [], owner: false }))).not.toMatch(/p1|b1|a1|k1|c1|i1/)
   })
 
   it('keeps the newest hint of each statement', () => {
@@ -78,18 +91,6 @@ describe('voice context', () => {
       { item: 'أسمنت', category: 'قديم', contractor: null },
     ]
     expect(hintsOf(rows)).toEqual([{ item: 'أسمنت', category: 'خامات', contractor: 'أحمد' }])
-  })
-})
-
-describe('wav', () => {
-  it('writes a PCM header and clamps loud samples', () => {
-    const bytes = encodeWav(new Float32Array([0, 2, -2]), 16000)
-    const view = new DataView(bytes.buffer)
-    expect(String.fromCharCode(...bytes.slice(0, 4))).toBe('RIFF')
-    expect(view.getUint32(24, true)).toBe(16000)
-    expect(view.getInt16(46, true)).toBe(32767)
-    expect(view.getInt16(48, true)).toBe(-32768)
-    expect(atob(toBase64(bytes)).length).toBe(50)
   })
 })
 

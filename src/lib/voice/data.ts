@@ -1,15 +1,15 @@
 import { supabase } from '../supabase'
 import { fetchAdvanceSummaries, addInstallment } from '../advances/advances'
 import { fetchCategories, type Category } from '../entries/catalog'
-import { fetchBankNames, fetchContractorNames } from '../core/lookups'
+import { fetchBankNames, fetchContractorNames, fetchMyBankIds } from '../core/lookups'
 import { STATUS } from '../core/status'
 import { fetchSummaries, pickableProjects } from '../projects/projects'
 import { saveEntry, type SaveError } from '../offline/entrySave'
-import { needsBank, needsCategory, type Draft, type HeardDraft, type Lists } from './drafts'
-import type { HeardReport } from './report'
+import { needsBank, needsCategory, needsProof, type Draft, type Lists } from './drafts'
 
 type Hint = { item: string; category: string; contractor: string | null }
-export type VoiceData = Lists & { history: Hint[] }
+/** `owner`: his entries wait for approval, need their invoice, and come out of his own banks only. */
+export type VoiceData = Lists & { history: Hint[]; owner: boolean }
 
 type Past = { item: string; category: string; contractor: { name: string } | null }
 
@@ -25,8 +25,8 @@ export function hintsOf(rows: Past[], limit = 150): Hint[] {
 }
 
 /** Everything a spoken entry is matched against. Null when any part failed: half a list would mislead the model. */
-export async function fetchVoiceData(): Promise<{ data: VoiceData | null; error: unknown }> {
-  const [projects, categories, contractors, banks, advances, past] = await Promise.all([
+export async function fetchVoiceData(ownerId: string | null): Promise<{ data: VoiceData | null; error: unknown }> {
+  const [projects, categories, contractors, banks, advances, past, mine] = await Promise.all([
     fetchSummaries(),
     fetchCategories(),
     fetchContractorNames(),
@@ -41,15 +41,18 @@ export async function fetchVoiceData(): Promise<{ data: VoiceData | null; error:
       .order('seq', { ascending: false })
       .limit(600)
       .returns<Past[]>(),
+    ownerId ? fetchMyBankIds(ownerId) : Promise.resolve({ data: null, error: null }),
   ])
-  const error = projects.error ?? categories.error ?? contractors.error ?? banks.error ?? advances.error ?? past.error
+  const error =
+    projects.error ?? categories.error ?? contractors.error ?? banks.error ?? advances.error ?? past.error ?? mine.error
   if (error) return { data: null, error }
   return {
     data: {
       projects: pickableProjects(projects.data ?? []).map((p) => ({ id: p.id, name: p.name })),
       categories: (categories.data ?? []) as Category[],
       contractors: contractors.data ?? [],
-      banks: banks.data ?? [],
+      banks: (banks.data ?? []).filter((b) => !ownerId || mine.data?.includes(b.id)),
+      owner: Boolean(ownerId),
       custodies: (advances.data ?? [])
         .filter((a) => a.status === 'open')
         .map((a) => ({ id: a.id, name: a.holder_name })),
@@ -69,27 +72,12 @@ export const contextOf = (d: VoiceData) => ({
   history: d.history,
 })
 
-export type Answer = { demo: boolean; reply: string; drafts: HeardDraft[]; report?: HeardReport }
-
 const ERRORS: Record<string, string> = {
   no_key: 'مفتاح Gemini لسه ما اتحطش في أسرار Supabase',
   busy: 'Gemini عليه ضغط دلوقتي، استنى دقيقة وجرّب تاني',
   quota: 'خلص حد الطلبات أو الرصيد في Gemini، جرّب بعد شوية',
-  too_long: 'التسجيل طويل، قسّمه على مرتين',
-  forbidden: 'التسجيل بالصوت للأدمن بس',
-}
-
-export async function askVoice(
-  audio: string,
-  data: VoiceData,
-  drafts: HeardDraft[],
-  today: string,
-): Promise<{ answer: Answer | null; error: string | null }> {
-  const res = await supabase.functions.invoke<Answer>('voice-entry', {
-    body: { audio, today, drafts, context: contextOf(data) },
-  })
-  if (!res.error && res.data) return { answer: res.data, error: null }
-  return { answer: null, error: await messageOf(res.error, 'ما عرفتش أفهم التسجيل، اتأكد من النت وجرّب تاني') }
+  too_long: 'القوايم أكبر من اللي المكالمة تستحمله',
+  forbidden: 'التسجيل بالصوت للأدمن والمالك بس',
 }
 
 /** The function's own error code as a message to show. */
@@ -103,9 +91,9 @@ async function messageOf(error: unknown, fallback: string) {
 }
 
 /** A one-use pass for a live call. `demo` unless the server said otherwise: invented names, nothing to save. */
-export async function askLive(today: string, data: VoiceData) {
+export async function askLive(today: string, data: VoiceData, fallback = false) {
   const res = await supabase.functions.invoke<{ token?: string; model?: string; demo?: boolean }>('voice-entry', {
-    body: { mode: 'live', today, context: contextOf(data) },
+    body: { mode: 'live', fallback, today, context: contextOf(data) },
   })
   const { token, model, demo } = res.data ?? {}
   if (!res.error && token && model) return { token, model, demo: demo !== false, error: undefined }
@@ -149,6 +137,8 @@ const SAVE_FAILED: Partial<Record<SaveError, string>> = {
   device: 'مفيش نت والقيد ما اتحفظش على الجهاز',
 }
 
+const waiting = (data: VoiceData) => (data.owner ? ' ومستنّي موافقة الأدمن' : '')
+
 export type Saved = { error: string } | { error: null; note: string }
 
 /** Saves one reviewed card through the same path as the entry forms (same permissions, approval and offline queue). */
@@ -159,7 +149,8 @@ export async function saveDraft(d: Draft, data: VoiceData): Promise<Saved> {
     const bankId = id(data.banks, d.bank)
     if (!advanceId || !bankId) return { error: 'اختار العهدة والبنك' }
     const { error } = await addInstallment(advanceId, Number(d.amount), d.date, bankId)
-    return error ? { error: 'ما اتحفظش، جرّب تاني' } : { error: null, note: 'اتسجلت الدفعة' }
+    if (error) return { error: 'ما اتحفظش، جرّب تاني' }
+    return { error: null, note: `اتسجلت الدفعة${waiting(data)}` }
   }
   const fromAdvance = d.type === 'custody_expense'
   if (fromAdvance && !advanceId) return { error: 'اختار العهدة' }
@@ -172,8 +163,8 @@ export async function saveDraft(d: Draft, data: VoiceData): Promise<Saved> {
     incomeLabel: d.type === 'income' ? d.item : '',
     contractorName: d.contractor,
     noContractor: d.noContractor,
-    requirePhoto: fromAdvance,
-    requireContractorChoice: fromAdvance,
+    requirePhoto: needsProof(d.type, data.owner),
+    requireContractorChoice: needsProof(d.type, data.owner),
     noInvoice: d.noInvoice,
     bankName: needsBank(d.type) ? d.bank : '',
     amount: d.amount,
@@ -190,5 +181,5 @@ export async function saveDraft(d: Draft, data: VoiceData): Promise<Saved> {
   if (r.status === 'error') return { error: SAVE_FAILED[r.error] ?? 'ما اتحفظش، راجع البيانات وجرّب تاني' }
   if (r.status === 'queued') return { error: null, note: 'اتحفظ على الجهاز وهيتبعت لما النت يرجع' }
   const photos = r.failedPhotos ? ` (${r.failedPhotos} صورة ما اترفعتش)` : ''
-  return { error: null, note: `اتسجّل القيد رقم ${r.seq ?? ''}${photos}` }
+  return { error: null, note: `اتسجّل القيد رقم ${r.seq ?? ''}${waiting(data)}${photos}` }
 }

@@ -1,5 +1,3 @@
-import { toBase64 } from './wav'
-
 /** Microphone samples at any rate, as the base64 16-bit PCM at `to` Hz that the live call takes. */
 export function toPcm(samples: Float32Array, from: number, to = 16_000) {
   const length = Math.floor((samples.length * to) / from)
@@ -25,4 +23,10 @@ export function fromPcm(data: string) {
   const samples = new Float32Array(view.byteLength / 2)
   for (let i = 0; i < samples.length; i++) samples[i] = view.getInt16(i * 2, true) / 0x8000
   return samples
+}
+
+function toBase64(bytes: Uint8Array) {
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(binary)
 }

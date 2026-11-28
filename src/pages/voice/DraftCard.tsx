@@ -7,6 +7,7 @@ import {
   needsCategory,
   needsCustody,
   needsProject,
+  needsProof,
   type Draft,
   type DraftType,
 } from '../../lib/voice/drafts'
@@ -28,7 +29,8 @@ const names = (list: { name: string }[]) => list.map((x) => x.name)
 
 /** One heard entry, to be checked, completed and saved. */
 export default function DraftCard({ draft: d, data, busy, error, duplicate, onChange, onSave, onRemove }: Props) {
-  const missing = data ? missingOf(d) : []
+  const missing = data ? missingOf(d, data.owner) : []
+  const proof = needsProof(d.type, Boolean(data?.owner))
   const mark = (label: string, field: string) => (d.suggested.includes(field) ? `${label} (اقتراح)` : label)
   const picker = (label: string, field: 'project' | 'category' | 'contractor' | 'bank' | 'custody', list: string[]) => (
     <SearchSelect
@@ -59,7 +61,7 @@ export default function DraftCard({ draft: d, data, busy, error, duplicate, onCh
         {needsProject(d.type) && picker('المشروع', 'project', names(data?.projects ?? []))}
         {needsCategory(d.type) && picker('البند', 'category', names(data?.categories ?? []))}
         {needsCategory(d.type) && picker('اسم المقاول', 'contractor', names(data?.contractors ?? []))}
-        {d.type === 'custody_expense' && (
+        {proof && needsCategory(d.type) && (
           <label className="check">
             <input
               type="checkbox"
@@ -109,12 +111,10 @@ export default function DraftCard({ draft: d, data, busy, error, duplicate, onCh
             files={d.files}
             onFiles={(files) => onChange({ files })}
             canRemove
-            required={d.type === 'custody_expense' && !d.noInvoice}
-            noInvoice={d.type === 'custody_expense' ? d.noInvoice : undefined}
+            required={proof && !d.noInvoice}
+            noInvoice={proof ? d.noInvoice : undefined}
             onNoInvoice={
-              d.type === 'custody_expense'
-                ? (noInvoice) => onChange(noInvoice ? { noInvoice, files: [] } : { noInvoice })
-                : undefined
+              proof ? (noInvoice) => onChange(noInvoice ? { noInvoice, files: [] } : { noInvoice }) : undefined
             }
           />
         )}
